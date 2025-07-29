@@ -6,7 +6,7 @@
 #SBATCH --time=120:00:00
 #SBATCH --mem=8G
 
-cd ~/nakhla/usr
+cd ~/matp/usr
 module load matlab/r2023b
 
 matlab -nosplash -nodisplay -singleCompThread -r "run_$RUNID" > $JOBID.log
