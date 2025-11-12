@@ -10,16 +10,19 @@ hasm = m >= eps^0.5;
 c_oxd  = reshape(reshape(c ,Nz*Nx,cal.ncmp)*cal.cmp_oxd,Nz,Nx,cal.noxd);
 cm_oxd = reshape(reshape(cm,Nz*Nx,cal.ncmp)*cal.cmp_oxd,Nz,Nx,cal.noxd);
 cx_oxd = reshape(reshape(cx,Nz*Nx,cal.ncmp)*cal.cmp_oxd,Nz,Nx,cal.noxd);
+cf_oxd = reshape(reshape(cf,Nz*Nx,cal.ncmp)*cal.cmp_oxd,Nz,Nx,cal.noxd);
 
 % update phase mineral end-member compositions
 c_mem  = reshape(reshape(c ,Nz*Nx,cal.ncmp)*cal.cmp_mem,Nz,Nx,cal.nmem);
 cm_mem = reshape(reshape(cm,Nz*Nx,cal.ncmp)*cal.cmp_mem,Nz,Nx,cal.nmem);
 cx_mem = reshape(reshape(cx,Nz*Nx,cal.ncmp)*cal.cmp_mem,Nz,Nx,cal.nmem);
+cf_mem = reshape(reshape(cf,Nz*Nx,cal.ncmp)*cal.cmp_mem,Nz,Nx,cal.nmem);
 
 % update phase mineral systems composition for solid assemblage
 c_msy  = reshape(reshape( c_mem,Nz*Nx,cal.nmem)*cal.msy_mem.',Nz,Nx,cal.nmsy);
 cm_msy = reshape(reshape(cm_mem,Nz*Nx,cal.nmem)*cal.msy_mem.',Nz,Nx,cal.nmsy);
 cx_msy = reshape(reshape(cx_mem,Nz*Nx,cal.nmem)*cal.msy_mem.',Nz,Nx,cal.nmsy);
+cf_msy = reshape(reshape(cf_mem,Nz*Nx,cal.nmem)*cal.msy_mem.',Nz,Nx,cal.nmsy);
 
 % update mineral systems oxide compositions for solid assemblage
 cx_msy_oxd = zeros(Nz,Nx,cal.nmsy,cal.noxd);
@@ -27,14 +30,17 @@ for j = 1:cal.nmsy
     cx_msy_oxd(:,:,j,:) = reshape(reshape(cx_mem(:,:,cal.msy_mem(j,:)==1),Nz*Nx,sum(cal.msy_mem(j,:)==1))*cal.mem_oxd(cal.msy_mem(j,:)==1,:)./sum(reshape(cx_mem(:,:,cal.msy_mem(j,:)==1),Nz*Nx,sum(cal.msy_mem(j,:)==1))+1e-32,2),Nz,Nx,1,cal.noxd);
 end
 
+cf_oxd_all = zeros(size(c,1),size(c,2),9);
 cm_oxd_all = zeros(size(c,1),size(c,2),9);
 cx_oxd_all = zeros(size(c,1),size(c,2),9);
  c_oxd_all = zeros(size(c,1),size(c,2),9);
 if cal.noxd>9
+    cf_oxd_all = cf_oxd(:,:,cal.ioxd);
     cm_oxd_all = cm_oxd(:,:,cal.ioxd);
     cx_oxd_all = cx_oxd(:,:,cal.ioxd);
      c_oxd_all =  c_oxd(:,:,cal.ioxd);
 else
+    cf_oxd_all(:,:,cal.ioxd) = cf_oxd;
     cm_oxd_all(:,:,cal.ioxd) = cm_oxd;
     cx_oxd_all(:,:,cal.ioxd) = cx_oxd;
      c_oxd_all(:,:,cal.ioxd) = c_oxd;
@@ -54,7 +60,7 @@ end
 % update phase densities
 rhom0  = reshape(DensityX(reshape(cm_oxd_all,Nz*Nx,9),Tref,Pref./1e8)    ,Nz,Nx);
 rhox0  = reshape(sum(reshape(cx_mem/100,Nz*Nx,cal.nmem)./cal.rhox0,2).^-1,Nz,Nx);
-rhof0  = cal.rhof0.*ones(size(T))                                               ;
+rhof0  = reshape(DensityX(reshape(cf_oxd_all,Nz*Nx,9),Tref,Pref./1e8)    ,Nz,Nx);
 
 rhom   = rhom0 .* (1 - aTm.*(T-Tref) + bPm.*(Pt-Pref));
 rhox   = rhox0 .* (1 - aTx.*(T-Tref) + bPx.*(Pt-Pref));

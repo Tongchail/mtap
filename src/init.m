@@ -70,9 +70,9 @@ Dsx = -cal.Dsx;
 Dsf =  cal.Dsf;
 
 % normalise major components to anhydrous unit sum, rescale to hydrous
-c0(1:end-1) = c0(1:end-1)./sum(c0(1:end-1)).*(1-c0(end));
-c1(1:end-1) = c1(1:end-1)./sum(c1(1:end-1)).*(1-c1(end));
-cwall(:,1:end-1) = cwall(:,1:end-1)./sum(cwall(:,1:end-1),2).*(1-cwall(:,end));
+c0(1:end-2) = c0(1:end-2)./sum(c0(1:end-2)).*(1-sum(c0(end-1:end)));
+c1(1:end-2) = c1(1:end-2)./sum(c1(1:end-2)).*(1-sum(c1(end-1:end)));
+cwall(:,1:end-2) = cwall(:,1:end-2)./sum(cwall(:,1:end-2),2).*(1-sum(cwall(:,end:end-1),2));
 dcg   = dcg-round(mean(dcg),16);
 dcr   = dcr-round(mean(dcr),16);
 
@@ -380,14 +380,17 @@ while res > tol
     var.m      = reshape(mq,Nx*Nz,1);         % melt fraction [wt]
     var.f      = reshape(fq,Nx*Nz,1);         % bubble fraction [wt]
     var.H2O    = var.c(:,end);                % water concentration [wt]
+    var.MFE    = var.c(:,end-1);              %** mfe concentration [wt]
     var.X      = reshape(cm_oxd_all,Nz*Nx,9); % melt oxide fractions [wt %]
-    cal.H2Osat = fluidsat(var); % water saturation [wt]
+    cal.H2Osat = fluidsat(var);               % water saturation [wt]
+    cal.MFEsat = mfesat(T-273.15,cal);        %** mfe saturation [wt]
 
-    [var,cal] = leappart(var,cal,'E');
+    [var,cal] = leappartmfe(var,cal,'E');
 
     Tsol   = reshape(cal.Tsol,Nz,Nx);
     Tliq   = reshape(cal.Tliq,Nz,Nx);
     H2Osat = reshape(cal.H2Osat,Nz,Nx);
+    MFEsat = reshape(cal.MFEsat,Nz,Nx);
 
     mq = reshape(var.m.*(var.m>eps^0.5),Nz,Nx);
     fq = reshape(var.f.*(var.f>eps^0.5),Nz,Nx);

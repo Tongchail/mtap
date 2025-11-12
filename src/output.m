@@ -63,12 +63,21 @@ if Nx <= 1 && Nz <= 1  % create 0D plots
     plot(hist.time/tau_T,hist.T(:,2)-273.15,CL{[1,2]},LW{:}); axis xy tight; box on; hold on;
     plot(hist.time/tau_T,hist.Tliq(:,2),CL{[1,3]},LW{:});
     plot(hist.time/tau_T,hist.Tsol(:,2),CL{[1,4]},LW{:});
+    legend({'System temperature', 'Liquidus', 'Solidus'}, ...
+     'Interpreter', 'latex',  'Location', 'best', 'FontSize', 12, 'Box', 'on');
     title('$T [^\circ$C]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
     subplot(3,1,2)
     plot(hist.time/tau_T,hist.mu (:,2)*100.*(hist.mu (:,2)>eps^0.5),CL{[1,3]},LW{:}); axis xy tight; box on; hold on;
     plot(hist.time/tau_T,hist.chi(:,2)*100.*(hist.chi(:,2)>eps^0.5),CL{[1,4]},LW{:});
     plot(hist.time/tau_T,hist.phi(:,2)*100.*(hist.phi(:,2)>eps^0.5),CL{[1,5]},LW{:});
+    legend({'$\mu$ (melt)', ...
+        '$\chi$ (crystal)', ...
+        '$\phi$ (mfe)'}, ...
+        'Interpreter', 'latex', ...
+        'Location', 'best', ...
+        'FontSize', 12, ...
+        'Box', 'on');
     title('$\mu$, $\chi$, $\phi$ [vol\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
     subplot(3,1,3)
@@ -676,6 +685,31 @@ scatter(A(:),B(:),120,T(:)-273.15,'filled','s','MarkerEdgeColor',CL{2},LW{1},1.5
 set(cb,TL{:},'FontSize',12); set(gca,TL{:},'FontSize',15);
 
 
+if ~exist('fh20','var'); fh20 = figure(VIS{:});
+else; set(0, 'CurrentFigure', fh20);
+end
+if Nz>1 || step==0 || frst; clf;
+SFA; axis tight; box on; hold on;
+end
+[A,B] = terncoords(cx_oxd_all(:,:, 1            )./sum(cx_oxd_all(:,:,[1:9]),3), ...
+               sum(cx_oxd_all(:,:,[2,4,5,6,9]),3)./sum(cx_oxd_all(:,:,[1:9]),3), ...
+               sum(cx_oxd_all(:,:,[3,7,8]    ),3)./sum(cx_oxd_all(:,:,[1:9]),3));
+scatter(A(:),B(:),120,T(:)-273.15,'filled','^','MarkerEdgeColor',CL{4},LW{1},1.5); colormap(colmap); cb = colorbar;
+[A,B] = terncoords(cm_oxd_all(:,:, 1            )./sum(cm_oxd_all(:,:,[1:9]),3), ...
+               sum(cm_oxd_all(:,:,[2,4,5,6,9]),3)./sum(cm_oxd_all(:,:,[1:9]),3), ...
+               sum(cm_oxd_all(:,:,[3,7,8]    ),3)./sum(cm_oxd_all(:,:,[1:9]),3));
+scatter(A(:),B(:),120,T(:)-273.15,'filled','o','MarkerEdgeColor',CL{3},LW{1},1.5); colormap(colmap);
+[A,B] = terncoords(cf_oxd_all(:,:, 1            )./sum(cf_oxd_all(:,:,[1:9]),3), ...
+               sum(cf_oxd_all(:,:,[2,4,5,6,9]),3)./sum(cf_oxd_all(:,:,[1:9]),3), ...
+               sum(cf_oxd_all(:,:,[3,7,8]    ),3)./sum(cf_oxd_all(:,:,[1:9]),3));
+scatter(A(:),B(:),120,T(:)-273.15,'filled','d','MarkerEdgeColor',CL{5},LW{1},1.5); colormap(colmap);
+[A,B] = terncoords(c_oxd_all(:,:, 1            )./sum(c_oxd_all(:,:,[1:9]),3), ...
+               sum(c_oxd_all(:,:,[2,4,5,6,9]),3)./sum(c_oxd_all(:,:,[1:9]),3), ...
+               sum(c_oxd_all(:,:,[3,7,8]    ),3)./sum(c_oxd_all(:,:,[1:9]),3));
+scatter(A(:),B(:),120,T(:)-273.15,'filled','s','MarkerEdgeColor',CL{2},LW{1},1.5); colormap(colmap);
+set(cb,TL{:},'FontSize',12); set(gca,TL{:},'FontSize',15);
+
+
 if ~exist('fh13','var'); fh13 = figure(VIS{:});
     colormap(colmap);
     fh = 18;
@@ -686,6 +720,7 @@ if ~exist('fh13','var'); fh13 = figure(VIS{:});
 else; set(0, 'CurrentFigure', fh13);
 end
 
+%***** no tetrahedron plotting 
 if Nz>1 || step==0 || frst; clf;
 LBL1 = cal.msyStr(cal.imsy(1)); 
 LBL2 = cal.msyStr(cal.imsy(2)); 

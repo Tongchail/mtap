@@ -5,16 +5,19 @@ var.c      = reshape(c,Nx*Nz,cal.ncmp);   % component fractions [wt]
 var.T      = reshape(T,Nx*Nz,1)-273.15;   % temperature [C]
 var.P      = reshape(Pt,Nx*Nz,1)/1e9;     % pressure [GPa]
 var.m      = reshape(mq,Nx*Nz,1);         % melt fraction [wt]
-var.f      = reshape(fq,Nx*Nz,1);         % bubble fraction [wt]
+var.f      = reshape(fq,Nx*Nz,1);         % immiscible mfe fraction [wt]
 var.H2O    = var.c(:,end);                % water concentration [wt]
+var.MFE    = var.c(:,end-1);              %** mfe concentration [wt]
 var.X      = reshape(cm_oxd_all,Nz*Nx,9); % melt oxide fractions [wt %]
 cal.H2Osat = fluidsat(var);               % water saturation [wt]
+cal.MFEsat = mfesat(T-273.15,cal);        %** mfe saturation [wt]
 
-[var,cal]  = leappart(var,cal,'E');
+[var,cal]  = leappartmfe(var,cal,'E');
 
 Tsol   = reshape(cal.Tsol,Nz,Nx);
 Tliq   = reshape(cal.Tliq,Nz,Nx);
 H2Osat = reshape(cal.H2Osat,Nz,Nx);
+MFEsat = reshape(cal.MFEsat,Nz,Nx);      %*** ADD
 
 mq = reshape(var.m.*(var.m>eps^0.5),Nz,Nx);
 fq = reshape(var.f.*(var.f>eps^0.5),Nz,Nx);
