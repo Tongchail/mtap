@@ -1,5 +1,3 @@
-state = struct('done',false,'log',[]);   % 循环前初始化
-
 %*****  initialise model run  *********************************************
 init;
 
@@ -34,9 +32,6 @@ while time <= tend && step <= Nt &&  any(mq(:)>sqrt(eps))        ...
 
         %***  update geochemical evolution
         geochem;
-
-        %*****check whether or not the model would have exsolve fluid at any given point
-       state = checkOversat(var, cal, step, iter, time, T, state);
  
         
         %***  report convergence

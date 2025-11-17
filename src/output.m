@@ -3,7 +3,7 @@
 TX = {'Interpreter','Latex'}; FS = {'FontSize',12};
 TL = {'TickLabelInterpreter','Latex'}; TS = {'FontSize',10};
 UN = {'Units','Centimeters'};
-CL = {'Color',[0.0 0.0 0.0],[0.80 0.15 0.10],[0.10 0.15 0.65],[0.45 0.60 0.95]};
+CL = {'Color',[0.0 0.0 0.0],[0.80 0.15 0.10],[0.10 0.15 0.65],[1.0 0.7 0.0]};
 LW = {'LineWidth',2};
 XR = {'XDir','reverse'};
 if plot_op
@@ -720,7 +720,6 @@ if ~exist('fh13','var'); fh13 = figure(VIS{:});
 else; set(0, 'CurrentFigure', fh13);
 end
 
-%***** no tetrahedron plotting 
 if Nz>1 || step==0 || frst; clf;
 LBL1 = cal.msyStr(cal.imsy(1)); 
 LBL2 = cal.msyStr(cal.imsy(2)); 
