@@ -1,4 +1,4 @@
-% Modified based on Keller cal.MORB.m     Update   07 Nov.2025
+% Modified based on Keller cal.MORB.m     Update   12 Nov.2025
 
 % specify petrological model composition parameters
 % compositions specified as oxides (oxd) -> mineral endmembers (mem) 
@@ -28,7 +28,7 @@ for i = 1:cal.noxd; cal.(elStr{i}) = i; end
 %           SiO2 TiO2 Al2O3 FeO MgO CaO Na2O K2O H2O
 cal.ioxd = [   1    2    3   4   5   6    7   8   10]; % oxide indices for viscosity, density functions
 
-cal.imsy = [1 2 4 7];   % no tetrahedron for this composition
+cal.imsy = [1 2 4 7];   % Basaltic tetrahedron for this composition
 
 % oxide composition of mineral end-members
 %                 SiO2       TiO2      Al2O3       FeO      MgO      CaO       Na2O         K2O      P2O5     H2O
@@ -113,7 +113,7 @@ cal.pH2O  = 0.75;                                  % solidus shift from water co
 
 cal.T_liquidus   = 1125;     % Liquidus temperature (°C)
 cal.T_solidus    = 697;      % Solidus temperature (°C)
-cal.MFE_liquidus = 0.07;    % MFE saturation at liquidus (wt fraction)
+cal.MFE_liquidus = 0.07;     % MFE saturation at liquidus (wt fraction)
 cal.k            = 0.75;      % Empirical coefficient
 
 % primary and evolved end-member compositions used in calibration
@@ -136,7 +136,7 @@ cal.rhof0   = 4000;    %1000          %*** fluid ref density [kg/m3]
 % specify three-phase coefficient model parameters
 %               ant   alb   san   mmt   tmt   mgt   mhy   fhy   hyp   mau  fau   aug   ilm   apt   qtz   wat
 cal.etax0   = [1e17, 1e17, 1e17, 1e17, 1e17,  1e17, 1e19,1e19,  1e19,1e19, 1e19, 1e19, 1e17, 1e17 ,1e19,1e0];% mem ref viscosities [Pas]
-cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
+%cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
 cal.Eax     = 300e3;                  % solid viscosity activation energy [J/mol]
 cal.AA      =[ 0.65, 0.25, 0.35; ...  % permission slopes
                0.20, 0.20, 0.20; ...  % generally numbers between 0 and 1
