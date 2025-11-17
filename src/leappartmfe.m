@@ -266,7 +266,7 @@ function  [var,cal]  =  K(var,cal)
 
 %***  compute P-dependence of component melting points     
 %     Parameterization as in Rudge etal (2011)
-cal.Tm  =  (cal.T0 - cal.dTH2O.*var.H2Om.^cal.pH2O) .* (1 + var.P./cal.A).^(1./cal.B);
+cal.Tm  =  (cal.T0 - cal.dTH2O.*min(cal.H2Osat,var.H2Om).^cal.pH2O) .* (1 + var.P./cal.A).^(1./cal.B);
 
 %***  compute T,P-dependence of major component equilibrium partition coefficients
 %     Parameterization after Rudge, Bercovici, & Spiegelman (2010)

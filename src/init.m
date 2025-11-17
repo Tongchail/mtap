@@ -383,7 +383,7 @@ while res > tol
     var.MFE    = var.c(:,end-1);              %** mfe concentration [wt]
     var.X      = reshape(cm_oxd_all,Nz*Nx,9); % melt oxide fractions [wt %]
     cal.H2Osat = fluidsat(var);               % water saturation [wt]
-    cal.MFEsat = mfesat(T-273.15,cal);        %** mfe saturation [wt]
+    cal.MFEsat = mfesat(var.T,cal);           %** mfe saturation [wt]
 
     [var,cal] = leappartmfe(var,cal,'E');
 

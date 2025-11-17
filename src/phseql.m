@@ -10,7 +10,7 @@ var.H2O    = var.c(:,end);                % water concentration [wt]
 var.MFE    = var.c(:,end-1);              % ** mfe concentration [wt]
 var.X      = reshape(cm_oxd_all,Nz*Nx,9); % melt oxide fractions [wt %]
 cal.H2Osat = fluidsat(var);               % water saturation [wt]
-cal.MFEsat = mfesat(T-273.15,cal);        % ** mfe saturation [wt] T[K] 
+cal.MFEsat = mfesat(var.T,cal);           % ** mfe saturation [wt] T[K] 
 
 [var,cal]  = leappartmfe(var,cal,'E');
 
