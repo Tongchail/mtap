@@ -1,4 +1,5 @@
-% Modified based on Keller cal.MORB.m     
+% Modified based on Keller cal.MORB.m 
+% Used for running the model calibration
 
 % specify petrological model composition parameters
 % compositions specified as oxides (oxd) -> mineral endmembers (mem) 
@@ -89,31 +90,29 @@ for i=1:cal.ncmp
 end
 
 % set pure component melting points T_m^i at P=0
-cal.T0  = [1890  1180  1161  1081  986  820];   % cal.T0  = [1890  1180  1161  1081  986  820];
+cal.T0  = [1650   1105   1057  1005   880];   
 
 % set first coeff. for P-dependence of T_m^i [GPa]
-cal.A   = [6.7  5.4  5.1  2.8  2.3  1.4];
+cal.A   = [ 1e16  1e16   1e16   1e16   1e16];
 
 % set second coeff. for P-dependence of T_m^i [1]
-cal.B   = [6.5  5.1  4.3  2.7  1.7  1.3];
+cal.B   = [ 1  1   1   1   1];
 
 % set coeff. for T-dependence of partition coefficients K^i [1/K]
-cal.r  = [31.0  3.0  3.0  6.8  9.3  6.0];
+cal.r  = [ 35  3.4  3.2  5.8  5.5];
 
 % set entropy gain of fusion DeltaS [J/K]
-cal.Dsx  = 350;
-cal.Dsf  = 450;
+cal.Dsx  = 300;
+cal.Dsf  = 400;
 
 % specify melting point dependence on H2O
-cal.dTH2O = [889  1418  1455  1556  1697  2049];  % solidus shift from water content prefactor [K/wt^pH2O]
-cal.pH2O  = 0.75;                                  % solidus shift from water content exponent
+cal.dTH2O = 1400 * 1200./cal.T0;  % solidus shift from water content prefactor [K/wt^pH2O]
+cal.pH2O  = 0.75;                                   % solidus shift from water content exponent
 
 % primary and evolved end-member compositions used in calibration
-cal.c0     = [0.044  0.248  0.269  0.317  0.100  0.022  0.005];
-cal.c1     = [0.001  0.001  0.001  0.001  0.299  0.697  0.024];
+cal.c0     =  [14.3785  9.3635  14.4457  18.0206  37.0625  4.9774  1.7519]/100;
 
-cal.c0_oxd = [50.12  1.01  15.09  9.05  10.57  11.38  2.68  0.10  0.50];
-cal.c1_oxd = [76.34  0.16  11.84  2.80   0.71   1.61  4.42  2.12  2.40];
+cal.c0_oxd = [57.50    0.86    16.31   6.73   4.43    6.78    3.45        1.95    0.22    1.87];
 
 % specify geochemical model parameters
 cal.ntrc     = 6;                    % number of trace elements
@@ -121,29 +120,25 @@ cal.trcStr   = {'K 0.01','K 0.10','K 1.0','K 3.00','K 10.0','K 1.0'};
 cal.Ktrc_mem = [0.01;0.10;1.0;3.0;10.0;1.0].*ones(cal.ntrc,cal.nmem);
 
 % specify density parameters
-%               ant  alb  san  mmt  tmt  mgt  mhy  fhy  hyp   mau  fau  aug   mil  ilm  fil  wat
-cal.rhox0   = [2680,2600,2550,4500,4500,4650,3410,3410, 3410, 3470,3470,3470,4720,1000]; % mem ref densities [kg/m3]
-%cal.rhox0   = [3200,4000,2680,2600,2550,3200,3470,3880,4650,4720,3410,3660,2540,1000]; % mem ref densities [kg/m3]
-cal.rhof0   = 1000;                 % fluid ref density [kg/m3]
+%               ant   alb   san   mmt   tmt   mgt   mhy   fhy   hyp   mau  fau   aug   ilm   apt   qtz   wat
+cal.rhox0   = [2680, 2600, 2550, 4500, 4500, 4650, 3410, 3410, 3410, 3470, 3470, 3470, 4700, 3190, 2540, 1000]; % mem ref densities [kg/m3]
+cal.rhof0   = 4000;    %1000          %*** fluid ref density [kg/m3]
 
 % specify three-phase coefficient model parameters
-%              for  fay  ant  alb  san  dps  aug  ulv  mgt  ilm  hyp  fsl    wat
-%              ant  alb  san  mmt  tmt  mgt  mhy  fhy  hyp   mau  fau  aug   mil  ilm  fil  wat
-cal.etax0   = [1e17,1e17,1e17, 1e17,1e17,1e17,1e19,1e19,1e19,1e19,1e19,1e19,1e17,1e0];% mem ref viscosities [Pas]
-%cal.etax0   = [1e19,1e19,1e17,1e17,1e17,1e19,1e19,1e17,1e17,1e17,1e19,1e19,1e19,1e19,1e19,1e0]; % mem ref viscosities [Pas]
-cal.etaf0   = 0.1;                    % fluid viscosity constant [Pas]
+%               ant   alb   san   mmt   tmt   mgt   mhy   fhy   hyp   mau  fau   aug   ilm   apt   qtz   wat
+cal.etax0   = [1e17, 1e17, 1e17, 1e17, 1e17,  1e17, 1e19,1e19,  1e19,1e19, 1e19, 1e19, 1e17, 1e17 ,1e19,1e0];% mem ref viscosities [Pas]
 cal.Eax     = 300e3;                  % solid viscosity activation energy [J/mol]
-cal.AA      =[ 0.65, 0.25, 0.35; ...  % permission slopes
-               0.20, 0.20, 0.20; ...  % generally numbers between 0 and 1
-               0.20, 0.20, 0.20; ];   % increases permission slopes away from step function 
+cal.AA      =[ 0.25, 0.25, 0.35; ...  % permission slopes
+               0.25, 0.25, 0.25; ...  % generally numbers between 0 and 1
+               0.25, 0.25, 0.25; ];   % increases permission slopes away from step function 
 
-cal.BB      =[ 0.55, 0.18, 0.27; ...  % permission step locations
-               0.64,0.012,0.348; ...  % each row sums to 1
-               0.80, 0.12, 0.08; ];   % sets midpoint of step functions
+cal.BB      =[ 0.44, 0.18, 0.38; ...  % permission step locations
+               0.60, 0.02, 0.38; ...  % 
+               0.72, 0.25, 0.03; ];   % 
 
-cal.CC      =[[0.30, 0.30, 0.40]*0.7; ... % permission step widths
-              [0.52, 0.40, 0.08]*1.1; ... % square brackets sum to 1, sets angle of step functions
-              [0.15, 0.25, 0.60]*0.7; ];  % factor increases width of step functions
+cal.CC      =[ 0.30, 0.30, 0.30; ... % permission step widths
+               0.60, 0.60, 0.12; ... % 
+               0.60, 0.12, 0.60; ];  % 
 
 % convergence tolerance
 cal.tol     = 1e-9;

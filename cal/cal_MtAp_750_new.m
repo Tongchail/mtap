@@ -1,4 +1,5 @@
-% Modified based on Keller cal.MORB.m     Update   12 Nov.2025
+% Modified based on Keller cal.MORB.m     Update   17 Nov.2025
+% Used for calculating the start components and running the 0D1D model
 
 % specify petrological model composition parameters
 % compositions specified as oxides (oxd) -> mineral endmembers (mem) 
@@ -138,17 +139,17 @@ cal.rhof0   = 4000;    %1000          %*** fluid ref density [kg/m3]
 cal.etax0   = [1e17, 1e17, 1e17, 1e17, 1e17,  1e17, 1e19,1e19,  1e19,1e19, 1e19, 1e19, 1e17, 1e17 ,1e19,1e0];% mem ref viscosities [Pas]
 %cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
 cal.Eax     = 300e3;                  % solid viscosity activation energy [J/mol]
-cal.AA      =[ 0.65, 0.25, 0.35; ...  % permission slopes
-               0.20, 0.20, 0.20; ...  % generally numbers between 0 and 1
-               0.20, 0.20, 0.20; ];   % increases permission slopes away from step function 
+cal.AA      =[ 0.25, 0.25, 0.35; ...  % permission slopes
+               0.25, 0.25, 0.25; ...  % generally numbers between 0 and 1
+               0.25, 0.25, 0.25; ];   % increases permission slopes away from step function 
 
-cal.BB      =[ 0.55, 0.18, 0.27; ...  % permission step locations
-               0.64,0.012,0.348; ...  % each row sums to 1
-               0.80, 0.12, 0.08; ];   % sets midpoint of step functions
+cal.BB      =[ 0.44, 0.18, 0.38; ...  % permission step locations
+               0.60, 0.02, 0.38; ...  % 
+               0.72, 0.25, 0.03; ];   % 
 
-cal.CC      =[[0.30, 0.30, 0.40]*0.7; ... % permission step widths
-              [0.52, 0.40, 0.08]*1.1; ... % square brackets sum to 1, sets angle of step functions
-              [0.15, 0.25, 0.60]*0.7; ];  % factor increases width of step functions
+cal.CC      =[ 0.30, 0.30, 0.30; ... % permission step widths
+               0.60, 0.60, 0.12; ... % 
+               0.60, 0.12, 0.60; ];  % 
 
 % convergence tolerance
 cal.tol     = 1e-9;
