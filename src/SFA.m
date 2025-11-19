@@ -29,10 +29,10 @@ text(x3(2:end)+0.02,y3(2:end)-0.02,labels,'FontSize',16,'Interpreter','latex','H
 text(x2(2:end)-0.00,y2(2:end)-0.02,labels,'FontSize',16,'Interpreter','latex','HorizontalAlignment','center','VerticalAlignment','top');
 text(x1(2:end)-0.02,y1(2:end)-0.02,labels,'FontSize',16,'Interpreter','latex','HorizontalAlignment','right','VerticalAlignment','bottom');
 text( 0.99,-0.04,'SiO$_2$','FontSize',18,'Interpreter','latex','HorizontalAlignment','left','VerticalAlignment','middle');
-text(0.450,0.87,'FeO$_\mathrm{tot}$+TiO$_2$+MgO+CaO+P$_2$O$_5$','FontSize',18,'Interpreter','latex','HorizontalAlignment','left','VerticalAlignment','bottom');
+text(0.3,0.87,'FeO$_\mathrm{tot}$+TiO$_2$+MgO+CaO+P$_2$O$_5$','FontSize',18,'Interpreter','latex','HorizontalAlignment','left','VerticalAlignment','bottom');
 text(0.11,-0.04,'Al$_2$O$_3$+Na$_2$O+K$_2$O','FontSize',18,'Interpreter','latex','HorizontalAlignment','right','VerticalAlignment','middle');
 text(1.0,0.87,'T [$^\circ$C]','FontSize',16,'Interpreter','latex','HorizontalAlignment','left','VerticalAlignment','bottom');
 % text(0.50,0.60,'tholeiitic','Color',[60 5 15]/100,'FontSize',16,'Interpreter','latex','HorizontalAlignment','center','VerticalAlignment','middle');
 % text(0.45,0.20,'calc-alcaline','Color',[60 5 15]/100,'FontSize',16,'Interpreter','latex','HorizontalAlignment','center','VerticalAlignment','middle');
 % [A,B] = terncoords([0.5,0.34,0.24,0.19,0.11,0.05],[0.36,0.49,0.56,0.56,0.46,0.35]);
-plot(A,B,'--','Color',[60 5 15]/100,'LineWidth',3)
+% plot(A,B,'--','Color',[60 5 15]/100,'LineWidth',3)

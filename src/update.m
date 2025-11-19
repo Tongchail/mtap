@@ -215,7 +215,7 @@ else
     fRe1   = (1-exp(-Re./1  )+eps);
     fRe100 = (1-exp(-Re./100)+eps);
 end
-ke = 1./(1./kmax + 1./ke) + kmin;
+ke  = 1./(1./kmax + 1./ke) + kmin;
 kwm = abs(rhom-rho).*g0.*Ksgr_m.*Delta_sgr.*hasm;                          % segregation diffusivity
 kwx = abs(rhox-rho).*g0.*Ksgr_x.*Delta_sgr.*hasx;                          % segregation diffusivity
 kwf = abs(rhof-rho).*g0.*Ksgr_f.*Delta_sgr.*hasf;                          % segregation diffusivity
