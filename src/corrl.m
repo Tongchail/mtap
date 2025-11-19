@@ -36,5 +36,5 @@ Delta_cnv = min(h * dist, Delta_cnv0);
 % smooth correlation length to avoid sharp contrasts in regularisation
 for i=1:10
     Delta_cnv = Delta_cnv + diffus(Delta_cnv,1/8*ones(size(Delta_cnv)),1,[1,2],BCD);
-    Delta_cnv([1 end],:) = h/2;
+    Delta_cnv([1 end],:) = min(Delta_cnv0,h/2);
 end
