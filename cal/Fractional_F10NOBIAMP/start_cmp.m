@@ -17,23 +17,29 @@ TX = {'Interpreter','latex'};
 TL = {'TickLabelInterpreter','latex'};
 LB = {'Location','best'};
 LO = {'Location','bestoutside'};
-%%
-cal_MtAp_750_new
 
-b = [57.50    0.86    16.31   6.73   4.43    6.78    3.45        1.95    0.22    1.87];
-f = b(end-1)./cal.cmp_oxd(6,end-1) * 0.5;  %  b(end-1)./cal.cmp_oxd(6,end-1) 初始全部磷酸盐 (P₂O₅)
+%% different calibration data
+  cal_MtAp_750_new      % Pietruszka.,2023
+ %cal_MtAp_750_honour   % Honour.,2019
+ %cal_MtAp_750_hou      % Hou.,2018
+ %cal_MtAp_750_avg      % Average ref.
+
+%%  main 
+b = [57.50    0.86    16.31   6.73   4.43    6.78    3.45    1.95    0.22    1.87]; % lowe SiO2 host andesite
+
+f = b(end-1)./cal.cmp_oxd(6,end-1) * 0.5;  %  b(end-1)./cal.cmp_oxd(6,end-1)  (P₂O₅)
 ba = (b - f.*cal.cmp_oxd(6,:))./(1-f);
 
 A = cal.cmp_oxd;
-
 A = A';
 
-C = lsqregcmp(A, ba,[12,0,0,0.0])*100
+C = lsqregcmp(A, ba,[12,0,0,0.0])*100;
 C(6) = f*100;
-C = C./sum(C)*100
+C = C./sum(C)*100;
 
-start_oxdfit = C*A.'/100
+start_oxdfit = C*A.'/100;
+res = start_oxdfit-b;
+resnorm = rms(res);
 
-res = start_oxdfit-b
-
-resnorm = rms(res)
+disp('The start components:')
+disp(C)

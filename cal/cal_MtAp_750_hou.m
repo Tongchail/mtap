@@ -75,7 +75,7 @@ cal.cmp_mem = [  94.0000    5.0000         0         1         0         0      
                  29.0000   14.4000    0.4000       0.5    6.6000    1.0000    1.0000   17.0000         0    4.5000   25.6000         0         0         0         0         0    % opx-gabbro (ogb)
                  10.2000   55.5000    6.4000         0         0    2.2000         0         0    6.4000         0         0   13.0000    6.3000         0         0         0    % basaltic trachy-andesite (ban)
                        0   22.5000   43.8000         0         0         0         0         0    1.4000         0         0         0    1.3000    1.0000   30.0000         0    % rhyolite (rhy)
-                       0         0         0         0   31.1000         0         0   15.1000         0         0         0   41.5000    5.4000    5.0000         0    1.9000
+                       0         0         0         0   24.3472    9.7840         0   23.2152         0         0         0   26.9948         0   13.9221         0    1.7368    % mfe
                        0         0         0         0         0         0         0         0         0         0         0         0         0         0         0   100.0000];
 cal.cmp_mem = cal.cmp_mem./sum(cal.cmp_mem,2)*100;
 
@@ -118,11 +118,12 @@ cal.MFE_liquidus = 0.07;     % MFE saturation at liquidus (wt fraction)
 cal.k            = 0.75;      % Empirical coefficient
 
 % primary and evolved end-member compositions used in calibration
-cal.c0     =  [14.3785  9.3635  14.4457  18.0206  37.0625  4.9774  1.7519]/100;
-%cal.c1     = [0.001  0.001  0.001  0.001  0.299  0.697  0.024];
+%                 ano     cnr      ogb      bta      rhy       mFe     vol
+cal.c0     =  [11.9582  13.3650  16.6415  18.8229  35.5483   1.8465   1.8176]/100;
+% cal.c1   =  [];
 
-cal.c0_oxd = [57.50    0.86    16.31   6.73   4.43    6.78    3.45        1.95    0.22    1.87]; %[50.12  1.01  15.09  9.05  10.57  11.38  2.68  0.10  0.50];
-%cal.c1_oxd = [76.34  0.16  11.84  2.80   0.71   1.61  4.42  2.12  2.40];
+cal.c0_oxd   =  [57.2690    0.9476   16.2106    6.9033    4.0772    6.9328    3.5473    1.9930    0.2573    1.8619];
+% cal.c1_oxd = [];
 
 % specify geochemical model parameters
 cal.ntrc     = 6;                    % number of trace elements
