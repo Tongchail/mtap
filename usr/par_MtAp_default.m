@@ -60,7 +60,7 @@ bndmode   =  3;                   % boundary assimilation mode (0 = none; 1 = to
 bnd_w     =  h;                   % boundary layer width [m]
 bnd_h     =  [0,0,0];             % internal wall rock layer thickness [m]
 fin       =  0;                   % ingassing factor (0 = no ingassing; 1 = free flow ingassing)
-fout      =  1;                   % outgassing factor (0 = no outgassing; 1 = free flow outgassing)
+fout      =  0;                   % outgassing factor (0 = no outgassing; 1 = free flow outgassing)
 tau_T     =  12*hr;               % wall cooling/assimilation time [s]
 tau_a     =  24*hr;               % wall cooling/assimilation tie [s]
 Twall     =  [300,300,nan];       % [top,bot,sds] wall rock temperature [degC] (nan = insulating)
@@ -83,7 +83,7 @@ tau_r     =  0;                   % reaction time scale (set to zero for quasi-e
 % set model buoyancy and pressure parameters
 bPx       =  1e-11;               % solid compressibility [1/Pa]
 bPm       =  3e-11;               % melt  compressibility [1/Pa]
-bPf       =  1e-11;                % fluid compressibility [1/Pa]
+bPf       =  3e-11;                % fluid compressibility [1/Pa]
 dm0       =  1e-3;                % melt film size [m]
 dx0       =  1e-3;                % crystal size [m]
 df0       =  1e-3;                % bubble size [m]

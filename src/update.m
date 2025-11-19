@@ -192,7 +192,7 @@ elseif Nx==1
     ip = min(ip, Nz);  % clamp indices to valid range [1, Nz]
     im = max(im, 1 );  % clamp indices to valid range [1, Nz]
     
-    drhoz   = max(0, -(rhop(ip,:)-rhop(im,:)) ) + 1e-6.*rhop; % central density contrast across mixing length
+    drhoz   = max(0, -(rhop(ip,:)-rhop(im,:)) ) + 1e-9.*rhop; % central density contrast across mixing length
     for i=1:10
         drhoz = drhoz + diffus(drhoz,1/8*ones(size(drhoz)),1,[1,2],BCD);
     end
@@ -216,9 +216,9 @@ else
     fRe100 = (1-exp(-Re./100)+eps);
 end
 ke  = 1./(1./kmax + 1./ke) + kmin;
-kwm = abs(rhom-rho).*g0.*Ksgr_m.*Delta_sgr.*hasm;                          % segregation diffusivity
-kwx = abs(rhox-rho).*g0.*Ksgr_x.*Delta_sgr.*hasx;                          % segregation diffusivity
-kwf = abs(rhof-rho).*g0.*Ksgr_f.*Delta_sgr.*hasf;                          % segregation diffusivity
+kwm = abs(wm(1:end-1,2:end-1)+wm(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
+kwx = abs(wx(1:end-1,2:end-1)+wx(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
+kwf = abs(wf(1:end-1,2:end-1)+wf(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
 km  = (kwm+ke.*fRe1).*mu ;                                                 % regularised melt  fraction diffusion 
 kx  = (kwx+ke.*fRe1).*chi;                                                 % regularised solid fraction diffusion 
 kf  = (kwf+ke.*fRe1).*phi;                                                 % regularised fluid fraction diffusion 

@@ -7,21 +7,21 @@ run('./par_MtAp_default.m')
 % set run parameters
 runID     =  '2D_MtAp';           % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop       =  10;                  % output frame plotted/saved every 'nop' time steps
+nop       =  50;                  % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
-save_op   =  0;                   % switch on to save output to file
+save_op   =  1;                   % switch on to save output to file
 colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
 
 % set model domain parameters
 D         =  100;                 % chamber depth [m]
-N         =  100;                 % number of grid points in z-direction
+N         =  120;                 % number of grid points in z-direction
 h         =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
 L         =  D;                   % chamber width (equal to h for 1-D mode) [m]
 
 % set model timing parameters
-Nt        =  5e5;                 % number of time steps to take
-tend      =  1*yr;                % end time for simulation [s]
-dt        =  0.1;                 % initial time step [s]
+Nt        =  1e6;                 % number of time steps to take
+tend      =  100*yr;              % end time for simulation [s]
+dt        =  100;                 % initial time step [s]
 
 % set initial thermo-chemical state
 % simple- make the boundaries of the 2D domain represent the boundaries of the magma chamber.
@@ -29,7 +29,7 @@ init_mode =  'liquidus';          % init_mode = 'constant', 'liquidus', 'layer',
 T0        =  -100;                % initial temperature [deg C] 
 c0        =  [15.4159   10.0390   15.4879   19.3207   39.7364  6  2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr       =  [1,1,1,-1,-1,-1,0]*1e-4;
-dr_trc    =  [1,1,1,-1,-1,-1  ]*1e-4; % trace elements random noise
+dr_trc    =  [1,1,0,-1,-1,0  ]*1e-4; % trace elements random noise
 
 % init_mode =  'chamber'; 
 % T0        =  600;                % ??? initial temperature [deg C] 
@@ -47,7 +47,7 @@ dr_trc    =  [1,1,1,-1,-1,-1  ]*1e-4; % trace elements random noise
 periodic  =  1;                   % periodic side boundaries
 bndmode   =  3;                   % boundary assimilation mode (0 = none; 1 = top only; 2 = bot only; 3 = top/bot only; 4 = all walls; 5 = only sides)
 bnd_w     =  h;                   % boundary layer width [m]
-tau_T     =  (h)^2/1e-6;          % wall cooling/assimilation time [s]
+tau_T     =  (h/2)^2/1e-6;          % wall cooling/assimilation time [s]
 Twall     =  [500,500,nan];       % [top,bot,sds] wall rock temperature [degC] (nan = insulating)
 Ptop      =  1.25e8;              % top pressure [Pa]
 

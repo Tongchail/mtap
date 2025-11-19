@@ -27,7 +27,7 @@ dt        =  1;                   % initial time step [s]
 
 % set initial thermo-chemical state
 init_mode =  'liquidus';          % auto calculate liquidus
-T0        =  -200;                  % ? initial temperature [deg C]
+T0        =  -5;                  % ? initial temperature [deg C]
 c0        =  [15.4159   10.0390   15.4879   19.3207   39.7364  6  2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr       =  [1,1,1,-1,-1,-1,0]*0e-4;
 dr_trc    =  [1,1,1,-1,-1,-1  ]*0e-4; % trace elements random noise
@@ -51,11 +51,8 @@ alpha     =  0.75;                % iterative step size parameter
 rtol      =  1e-4;                % outer its relative tolerance
 atol      =  1e-9;                % outer its absolute tolerance
 maxit     =  20;                  % maximum outer its
-Delta_cnv =  D/10;                % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
+Delta_cnv =  2*h;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
 Delta_sgr =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
-kmax      =  1e-2;                % maximum diffusivity
-Prt       =  1;                   % turbulent Prandtl number (ratio of momentum to heat diffusivity)
-Sct       =  1;                   % turbulent Schmidt number (ratio of momentum to mass diffusivity)
 
 
 %*****  RUN NAKHLA MODEL  *************************************************

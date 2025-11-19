@@ -248,9 +248,9 @@ elseif Nx <= 1  % create 1D plots
     subplot(1,4,3)
     semilogx(ke,Zsc.',CL{[1,2]},LW{:}); axis ij tight; box on; hold on
     semilogx(kc,Zsc.','--',CL{[1,2]},LW{:}); axis ij tight; box on;
-    semilogx(kx,Zsc.',CL{[1,4]},LW{:}); axis ij tight; box on;
-    semilogx(kf,Zsc.',CL{[1,5]},LW{:}); axis ij tight; box on;
-    semilogx(km,Zsc.',CL{[1,3]},LW{:}); axis ij tight; box on;
+    semilogx(kwx,Zsc.',CL{[1,4]},LW{:}); axis ij tight; box on;
+    semilogx(kwf,Zsc.',CL{[1,5]},LW{:}); axis ij tight; box on;
+    semilogx(kwm,Zsc.',CL{[1,3]},LW{:}); axis ij tight; box on;
     title(['$\kappa$ [m$^2$/s]'],TX{:},FS{:}); set(gca,TL{:},TS{:});
     subplot(1,4,4)
     plot(dV*hr,Zsc.','--',CL{[1,2]},LW{:}); axis ij tight; box on; hold on
