@@ -400,6 +400,7 @@ else % create 2D plots
     ax(74) = axes(UN{:},'position',[axl+0*axw+0*ahs axb+0*axh+0*avs axw axh]);
     ax(75) = axes(UN{:},'position',[axl+1*axw+1*ahs axb+0*axh+0*avs axw axh]);
     ax(76) = axes(UN{:},'position',[axl+2*axw+2*ahs axb+0*axh+0*avs axw axh]);
+    ax(77) = axes(UN{:},'position',[axl+0*axw+0*ahs axb-1*axh-1*avs axw axh]);
 
     if ~exist('fh8','var'); fh8 = figure(VIS{:});
     else; set(0, 'CurrentFigure', fh8); clf;
@@ -560,11 +561,14 @@ else % create 2D plots
     set(fh7,'CurrentAxes',ax(73));
     set(gca,'XTickLabel',[],'YTickLabel',[]);
     set(fh7,'CurrentAxes',ax(74));
+    set(gca,'XTickLabel',[]);
     ylabel(['Depth [',SpaceUnits,']'],TX{:},FS{:});
     set(fh7,'CurrentAxes',ax(75));
     set(gca,'YTickLabel',[]); xlabel(['Width [',SpaceUnits,']'],TX{:},FS{:});
     set(fh7,'CurrentAxes',ax(76));
     set(gca,'YTickLabel',[]);
+    set(fh7,'CurrentAxes',ax(77));
+    ylabel(['Depth [',SpaceUnits,']'],TX{:},FS{:});
 
     % plot geochemical variables in Fig. 8
     set(0,'CurrentFigure',fh8)
