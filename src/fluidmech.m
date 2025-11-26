@@ -6,22 +6,21 @@ if ~bnchm && step>0 && ~restart
 drhodt  = advn_rho;
 
 % residual of mixture mass evolution
-res_rho = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
+res_dV  = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
 
 % volume source and background velocity passed to fluid-mechanics solver
-upd_rho = - alpha*res_rho./b1./rho;
-dV      = dV + upd_rho;  % correct volume source term by scaled residual
+[dV,XHST.dV,RHST.dV,rho_est.dV,rho_mean.dV] = iterate(dV,res_dV./b1./rho,rho_est.dV,rho_mean.dV,XHST.dV,RHST.dV,itpar,frst*step*iter);
 
 dVmean  = mean(dV,'all');
 
 UBG     = - 0*dVmean./2 .* (L/2-XXu);
-WBG     = - 2*dVmean./2 .* (D/2-ZZw);
+WBG     = - 2*dVmean./2 .* (0/2-ZZw);
 
-dPchmbdt  = mod_wall*dVmean - mod_wall/eta_wall*Pchmb;
-res_Pchmb = (a1*Pchmb-a2*Pchmbo-a3*Pchmboo)/dt - (b1*dPchmbdt + b2*dPchmbdto + b3*dPchmbdtoo);
-
-upd_Pchmb = - alpha*res_Pchmb*dt/a1/3;
-Pchmb     = Pchmb + upd_Pchmb;
+% dPchmbdt  = mod_wall*dVmean - mod_wall/eta_wall*Pchmb;
+% res_Pchmb = (a1*Pchmb-a2*Pchmbo-a3*Pchmboo)/dt - (b1*dPchmbdt + b2*dPchmbdto + b3*dPchmbdtoo);
+% 
+% upd_Pchmb = - alpha*res_Pchmb*dt/a1/3;
+% Pchmb     = Pchmb + upd_Pchmb;
 
 end
 

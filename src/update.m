@@ -109,10 +109,7 @@ if Nz==1; Pt    = max(Ptop/100,Ptop.*ones(size(Pt)) + Pcouple*(Pchmb + P(2:end-1
     Pl(2:end,:) = Pl(1,:) + repmat(cumsum(rhoref(2:end-1).*g0.*h),1,Nx);
     Pt          = max(Ptop/100,Pl + Pcouple*(Pchmb + P(2:end-1,2:end-1)));
 end
-Pt = alpha.*Pt + (1-alpha).*Pti;
-upd_Pt = Pt-Pti;
-% dPtdt  = (Pt - Pto)/dt;
-% dPtdt = ((a1*Pt-a2*Pto-a3*Ptoo)/dt - (b2*dPtdto + b3*dPtdtoo))/b1;
+Pt = (Pt + Pti)/2;
 
 % update effective constituent sizes
 dm = dm0.*(1-mu ).^0.5;
@@ -124,13 +121,10 @@ etam   = reshape(Giordano08(reshape(cm_oxd_all,Nz*Nx,9),T(:)-273.15),Nz,Nx);
 etax0  = reshape(prod(cal.etax0(1:end-1).^reshape(chi_mem(:,:,1:end-1)+eps,Nz*Nx,cal.nmem-1),2),Nz,Nx);
 etax   = etax0 .* ones(size(chi)) .* exp(cal.Eax./(8.3145.*T)-cal.Eax./(8.3145.*(Tref+273.15)));
 etaf   = reshape(etamfe(reshape(cf_oxd_all,Nz*Nx,9),T(:)-273.15),Nz,Nx);
-%etaf   = cal.etaf0 .* ones(size(phi));
 
 % get coefficient contrasts
 kv = permute(cat(3,etax,etam,etaf),[3,1,2]);
-% kf = permute(cat(3,dx.^2./etax,dm.^2./etam,df.^2./etaf),[3,1,2]);
 Mv = permute(repmat(kv,1,1,1,3),[4,1,2,3])./permute(repmat(kv,1,1,1,3),[1,4,2,3]);
-% Mf = permute(repmat(kf,1,1,1,3),[4,1,2,3])./permute(repmat(kf,1,1,1,3),[1,4,2,3]);
 
 % get permission weights
 dd = max(eps^0.5,min(1-eps^0.5,permute(cat(3,dx ,dm ,df ),[3,1,2])));
@@ -143,11 +137,6 @@ Xf = sum(cal.AA.*Sf,2).*FF + (1-sum(cal.AA.*Sf,2)).*Sf;
 thtv = squeeze(prod(Mv.^Xf,2));
 Kv   = ff.*kv.*thtv;
 Cv   = Kv.*(1-ff)./dd.^2;
-
-% get volume flux and transfer coefficients
-% thtf = squeeze(prod(Mf.^Xf,2));
-% Kf   = ff.*kf.*thtf;
-% Cf   = Kf.*(1-ff)./dd.^2;
 
 % get effective viscosity
 eta0 = squeeze(sum(Kv,1)); if Nx==1; eta0 = eta0.'; end
