@@ -30,7 +30,7 @@ dSdt  = advn_S + diff_S + diss_h + bnd_S;
 res_S = (a1*S-a2*So-a3*Soo)/dt - (b1*dSdt + b2*dSdto + b3*dSdtoo);
 
 % semi-implicit update of bulk entropy density
-[S,XHST.S,RHST.S,rho_est.S,rho_mean.S] = iterate(S,res_S*dt/a1,rho_est.S,rho_mean.S,XHST.S,RHST.S,itpar,frst*step*iter);
+[S,FHST.S,cheb_rho.S] = iterate(S,res_S*dt/a1,cheb_rho.S,FHST.S,itpar,frst*step*iter);
 
 % convert entropy S to natural temperature T and potential temperature Tp
 [Tp,~ ] = StoT(Tp,S./rho,Pref+0*Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
@@ -63,7 +63,7 @@ dCdt = advn_C + diff_C + bnd_C;
 res_C = (a1*C-a2*Co-a3*Coo)/dt - (b1*dCdt + b2*dCdto + b3*dCdtoo);
 
 % semi-implicit update of major component density
-[C,XHST.C,RHST.C,rho_est.C,rho_mean.C] = iterate(C,res_C*dt/a1,rho_est.C,rho_mean.C,XHST.C,RHST.C,itpar,frst*step*iter);
+[C,FHST.C,cheb_rho.C] = iterate(C,res_C*dt/a1,cheb_rho.C,FHST.C,itpar,frst*step*iter);
 
 % impose min/max limits on component densities
 C = max(0,min(rho, C ));
@@ -95,7 +95,7 @@ res_M = (a1*M-a2*Mo-a3*Moo)/dt - (b1*dMdt + b2*dMdto + b3*dMdtoo);
 % semi-implicit update of phase fraction densities
 res_PHS = cat(3,res_X,res_F,res_M);
 PHS     = cat(3,X,F,M);
-[PHS,XHST.PHS,RHST.PHS,rho_est.PHS,rho_mean.PHS] = iterate(PHS,res_PHS*dt/a1,rho_est.PHS,rho_mean.PHS,XHST.PHS,RHST.PHS,itpar,frst*step*iter);
+[PHS,FHST.PHS,cheb_rho.PHS] = iterate(PHS,res_PHS*dt/a1,cheb_rho.PHS,FHST.PHS,itpar,frst*step*iter);
 
 % impose min/max limits on phase densities
 X     = max(0,min(rho, PHS(:,:,1) ));

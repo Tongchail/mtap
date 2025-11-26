@@ -6,10 +6,10 @@ clear; close all;
 run('./par_MtAp_default.m')
 
 % set run parameters
-runID     =  '1D_MtAp_fract';           % run identifier
+runID     =  '1D_MtAp';           % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nrh       =  1e2;                 % record diagnostic history every 'nrh' time steps
-nop       =  5e2;                 % output frame plotted/saved every 'nop' time steps
+nop       =  1e3;                 % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
 save_op   =  1;                   % switch on to save output to file
 colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
@@ -22,12 +22,12 @@ L         =  h;                   % chamber width (equal to h for 1-D mode) [m]
 
 % set model timing parameters
 Nt        =  5e5;                 % number of time steps to take
-tend      =  1*yr;                % end time for simulation [s]
+tend      =  100*yr;              % end time for simulation [s]
 dt        =  1;                   % initial time step [s]
 
 % set initial thermo-chemical state
 init_mode =  'liquidus';          % auto calculate liquidus
-T0        =  -5;                  % ? initial temperature [deg C]
+T0        =  -50;                  % ? initial temperature [deg C]
 c0        =  [15.4159   10.0390   15.4879   19.3207   39.7364  6  2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr       =  [1,1,1,-1,-1,-1,0]*0e-4;
 dr_trc    =  [1,1,1,-1,-1,-1  ]*0e-4; % trace elements random noise
@@ -43,17 +43,23 @@ Ptop      =  1.25e8;              % *** top pressure [Pa]
 % set thermo-chemical material parameters
 calID     =  'MtAp_750_new';      % *** phase diagram calibration
 
+% set effective diffusivity parameters
+Delta_cnv =  4*h;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
+Delta_sgr =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
+
 % set numerical model parameters
 TINT      =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
 ADVN      =  'weno5';             % advection scheme ('centr','upw1','quick','fromm','weno3','weno5','tvdim')
 CFL       =  1.00;                % (physical) time stepping courant number (multiplies stable step) [0,1]
-alpha     =  0.75;                % iterative step size parameter
 rtol      =  1e-4;                % outer its relative tolerance
 atol      =  1e-9;                % outer its absolute tolerance
 maxit     =  20;                  % maximum outer its
-Delta_cnv =  2*h;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
-Delta_sgr =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
-
+itpar.cheb.alpha = 1.0;           % Chebychev first coefficient damping (0-1)
+itpar.cheb.beta  = 0.0;           % Chebychev second coefficient damping (0-1)
+itpar.cheb.gamma = 0.0;           % Chebychev third coefficient damping (0-1)
+itpar.anda.m     = 4;             % Anderson acceleration depth (2-5)
+itpar.anda.mix   = 0.25;          % Anderson acceleration mixing coefficient (0-1)
+itpar.anda.reg   = 0.01;          % Anderson acceleration regularisation coefficient (0-1)
 
 %*****  RUN NAKHLA MODEL  *************************************************
 run('../src/main')

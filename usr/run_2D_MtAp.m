@@ -7,7 +7,7 @@ run('./par_MtAp_default.m')
 % set run parameters
 runID     =  '2D_MtAp';           % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop       =  50;                  % output frame plotted/saved every 'nop' time steps
+nop       =  100;                 % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
 save_op   =  1;                   % switch on to save output to file
 colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
@@ -51,6 +51,10 @@ tau_T     =  (h/2)^2/1e-6;          % wall cooling/assimilation time [s]
 Twall     =  [500,500,nan];       % [top,bot,sds] wall rock temperature [degC] (nan = insulating)
 Ptop      =  1.25e8;              % top pressure [Pa]
 
+% set effective diffusivity parameters
+Delta_cnv =  h/2;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
+Delta_sgr =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
+
 % set thermo-chemical material parameters
 calID     =  'MtAp_750_new';      % phase diagram calibration
 
@@ -58,12 +62,15 @@ calID     =  'MtAp_750_new';      % phase diagram calibration
 TINT      =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
 ADVN      =  'weno5';             % advection scheme ('centr','upw1','quick','fromm','weno3','weno5','tvdim')
 CFL       =  1.00;                % (physical) time stepping courant number (multiplies stable step) [0,1]
-alpha     =  0.65;                % iterative step size parameter
 rtol      =  1e-4;                % outer its relative tolerance
 atol      =  1e-9;                % outer its absolute tolerance
 maxit     =  20;                  % maximum outer its
-Delta_cnv =  h/2;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
-Delta_sgr =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
+itpar.cheb.alpha = 1.0;           % Chebychev first coefficient damping (0-1)
+itpar.cheb.beta  = 0.0;           % Chebychev second coefficient damping (0-1)
+itpar.cheb.gamma = 0.0;           % Chebychev third coefficient damping (0-1)
+itpar.anda.m     = 4;             % Anderson acceleration depth (2-5)
+itpar.anda.mix   = 0.25;          % Anderson acceleration mixing coefficient (0-1)
+itpar.anda.reg   = 0.01;          % Anderson acceleration regularisation coefficient (0-1)
 
 %*****  RUN NAKHLA MODEL  *************************************************
 run('../src/main')
