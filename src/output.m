@@ -675,6 +675,19 @@ cmNK = sum(cm_oxd_all(:,:,[7,8]),3)./sum(cm_oxd_all(:,:,1:end-1),3).*100;
 scatter(cxSi(:),cxNK(:),120,T(:)-273.15,'filled','^','MarkerEdgeColor',CL{4},LW{1},1.5); colormap(colmap); cb = colorbar;
 scatter(cmSi(:),cmNK(:),120,T(:)-273.15,'filled','o','MarkerEdgeColor',CL{3},LW{1},1.5);
 scatter( cSi(:), cNK(:),120,T(:)-273.15,'filled','s','MarkerEdgeColor',CL{2},LW{1},1.5);
+
+% Add components data points
+cal.cmp_oxd_pro = cal.cmp_oxd(:, cal.ioxd);
+cal.cmp_oxd_pro = cal.cmp_oxd_pro(1:end-2, :);
+cmp_cSi = cal.cmp_oxd_pro(:,1)./sum( cal.cmp_oxd_pro(:,1:end-1),2).*100;
+cmp_cNK = sum( cal.cmp_oxd_pro(:,[7,8]),2)./sum( cal.cmp_oxd_pro(:,1:end-1),2).*100;
+idx = [4, 5]; 
+scatter(cmp_cSi(idx), cmp_cNK(idx), 120, 'b', '.');
+labels = {'cmp1','cmp2','cmp3','cmp4','cmp5'};
+for i = idx
+    text(cmp_cSi(i)+0.4, cmp_cNK(i)-0.2, labels{i}, 'FontSize', 10, 'Color', 'blue', 'HorizontalAlignment','left', 'VerticalAlignment','bottom');
+end
+
 set(cb,TL{:},'FontSize',12); set(gca,TL{:},'FontSize',15); xlabel('SiO$_2$ [wt \%]',TX{:},'FontSize',15); ylabel('Na$_2$O + K$_2$O [wt \%]',TX{:},'FontSize',15);
 
 

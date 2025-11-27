@@ -1,9 +1,8 @@
 %% Plot the cmp points to Opx-Cpx-An rock diagram to define the cmp name.
 
-addpath('../cal')
 addpath('../src')
 
-cal_MtAp_750_new;
+run(['../cal/cal_',calID]);  % load melt model calibration
 
 cal.cmp_mem_pro = cal.cmp_mem(1:end-2,:);
 
@@ -23,16 +22,18 @@ An  = (ant + alb + san) ./ sum(ant + alb + san + mau + fau + aug + chy + fhy + h
 Cpx = (mau + fau + aug) ./ sum(ant + alb + san + mau + fau + aug + chy + fhy + hyp);
 Opx = (chy + fhy + hyp) ./ sum(ant + alb + san + mau + fau + aug + chy + fhy + hyp);
 
-figure(1); clf
+figure(30); clf
 OpxCpxAn; hold on
 
 [xp, yp] = tern(Cpx, An, Opx); 
 
-scatter(xp, yp, 80, 'filled', 'MarkerEdgeColor', 'k'); 
+idx = 1:3;   % set which points to plot
+
+scatter(xp(idx), yp(idx), 80, 'filled', 'MarkerEdgeColor', 'k'); 
 
 labels = {'cmp1','cmp2','cmp3','cmp4','cmp5'};  
 
-for i = 1:length(xp)
+for i = idx
     text(xp(i)+0.02, yp(i)-0.01, labels{i}, ...
          'FontSize', 10, 'Color', 'b', ...
          'HorizontalAlignment','left', ...
