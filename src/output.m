@@ -151,9 +151,23 @@ if Nx <= 1 && Nz <= 1  % create 0D plots
     title('Xtal MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
     xlabel(['T [$^\circ$C]; P [kbar]'],TX{:},FS{:});
 
+    if ~exist('fh6','var'); fh6 = figure(VIS{:});
+    else; set(0, 'CurrentFigure', fh6); clf;
+    end
+    subplot(3,1,1)
+    imagesc(hist.T(:,2)-273.15,1:100,comp_plt(hist.c_msy(:,2,:)/100).'); axis xy tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
+    title('Bulk MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
+    subplot(3,1,2)
+    imagesc(hist.T(:,2)-273.15,1:100,comp_plt(hist.cm_msy(:,2,:)/100).'); axis xy tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
+    title('Melt MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
+    subplot(3,1,3)
+    imagesc(hist.T(:,2)-273.15,1:100,comp_plt(hist.cx_msy(:,2,:)/100).'); axis xy tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
+    title('Xtal MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
+    xlabel(['T [$^\circ$C]; P [kbar]'],TX{:},FS{:});
+
     if (fractxtl || fractmlt) && step>1
-        if ~exist('fh6','var'); fh6 = figure(VIS{:});
-        else; set(0, 'CurrentFigure', fh6); clf;
+        if ~exist('fh7','var'); fh7 = figure(VIS{:});
+        else; set(0, 'CurrentFigure', fh7); clf;
         end
         subplot(3,1,1)
         imagesc(cumsum(CML.d),1:100,comp_plt(CML.c        ).'); axis xy tight; colormap(gca,colmapcmp); clim([1,cal.ncmp]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.ncmp,'Ticklabels',cal.cmpStr);
@@ -166,8 +180,8 @@ if Nx <= 1 && Nz <= 1  % create 0D plots
         title('Cumulate OXDs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
         xlabel(['Thickness [1]'],TX{:},FS{:});
 
-        if ~exist('fh7','var'); fh7 = figure(VIS{:});
-        else; set(0, 'CurrentFigure', fh7); clf;
+        if ~exist('fh8','var'); fh8 = figure(VIS{:});
+        else; set(0, 'CurrentFigure', fh8); clf;
         end
         subplot(3,1,1)
         colororder({'k','k'})
@@ -185,8 +199,8 @@ if Nx <= 1 && Nz <= 1  % create 0D plots
         xlabel(['Thickness [1]'],TX{:},FS{:});
 
         if dPdT
-            if ~exist('fh8','var'); fh8 = figure(VIS{:});
-            else; set(0, 'CurrentFigure', fh8); clf;
+            if ~exist('fh9','var'); fh9 = figure(VIS{:});
+            else; set(0, 'CurrentFigure', fh9); clf;
             end
             for i=1:cal.ncmp-1
                 plot(hist.Tm(:,i),hist.Pt(:,2)/1e8,'k','Color',[1 1 1].*i./cal.ncmp,LW{1},1.5); axis ij tight; box on; hold on
@@ -298,6 +312,20 @@ elseif Nx <= 1  % create 1D plots
     subplot(1,3,3)
     imagesc(1:100,Zsc.',comp_plt(cx_mem/100)); axis ij tight; colormap(colmapmem); clim([1,cal.nmem]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmem,'Ticklabels',cal.memStr);
     title('Xtal MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+
+    if ~exist('fh6','var'); fh6 = figure(VIS{:});
+    else; set(0, 'CurrentFigure', fh6); clf;
+    end
+    sgtitle(['time = ',num2str(time/TimeScale,3),' [',TimeUnits,']'],TX{:},FS{:},'Color','k');
+    subplot(1,3,1)
+    imagesc(1:100,Zsc.',comp_plt(c_msy/100)); axis ij tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
+    title('Bulk MPHs [wt\%]',TX{:},FS{:}); ylabel(['Depth [',SpaceUnits,']'],TX{:},FS{:}); set(gca,TL{:},TS{:});
+    subplot(1,3,2)
+    imagesc(1:100,Zsc.',comp_plt(cm_msy/100)); axis ij tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
+    title('Melt MPHs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+    subplot(1,3,3)
+    imagesc(1:100,Zsc.',comp_plt(cx_msy/100)); axis ij tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
+    title('Xtal MPHs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
 else % create 2D plots
 
@@ -888,14 +916,16 @@ if save_op && ~restart
         print(fh4,name,'-dpng','-r300','-image');
         name = [outdir,'/',runID,'/',runID,'_mem_',num2str(floor(step/nop))];
         print(fh5,name,'-dpng','-r300','-image');
+        name = [outdir,'/',runID,'/',runID,'_msy_',num2str(floor(step/nop))];
+        print(fh6,name,'-dpng','-r300','-image');
         if (fractxtl || fractmlt) && step>1 && Nz==1
             name = [outdir,'/',runID,'/',runID,'_cml_',num2str(floor(step/nop))];
-            print(fh6,name,'-dpng','-r300','-image');
-            name = [outdir,'/',runID,'/',runID,'_clp_',num2str(floor(step/nop))];
             print(fh7,name,'-dpng','-r300','-image');
+            name = [outdir,'/',runID,'/',runID,'_clp_',num2str(floor(step/nop))];
+            print(fh8,name,'-dpng','-r300','-image');
             if dPdT
                 name = [outdir,'/',runID,'/',runID,'_PT_',num2str(floor(step/nop))];
-                print(fh8,name,'-dpng','-r300','-image');
+                print(fh9,name,'-dpng','-r300','-image');
             end
         end
     else      % print 2D figures
