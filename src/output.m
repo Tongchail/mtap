@@ -156,13 +156,13 @@ if Nx <= 1 && Nz <= 1  % create 0D plots
     end
     subplot(3,1,1)
     imagesc(hist.T(:,2)-273.15,1:100,comp_plt(hist.c_msy(:,2,:)/100).'); axis xy tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
-    title('Bulk MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
+    title('Bulk MPHs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
     subplot(3,1,2)
     imagesc(hist.T(:,2)-273.15,1:100,comp_plt(hist.cm_msy(:,2,:)/100).'); axis xy tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
-    title('Melt MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
+    title('Melt MPHs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
     subplot(3,1,3)
     imagesc(hist.T(:,2)-273.15,1:100,comp_plt(hist.cx_msy(:,2,:)/100).'); axis xy tight; colormap(colmapmsy); clim([1,cal.nmsy]); cb = colorbar; set(cb,TL{:},TS{:},'Ticks',1:cal.nmsy,'Ticklabels',cal.msyStr);
-    title('Xtal MEMs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
+    title('Xtal MPHs [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:},XR{:},'XTickLabel',TPtick);
     xlabel(['T [$^\circ$C]; P [kbar]'],TX{:},FS{:});
 
     if (fractxtl || fractmlt) && step>1
