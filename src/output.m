@@ -677,15 +677,15 @@ scatter(cmSi(:),cmNK(:),120,T(:)-273.15,'filled','o','MarkerEdgeColor',CL{3},LW{
 scatter( cSi(:), cNK(:),120,T(:)-273.15,'filled','s','MarkerEdgeColor',CL{2},LW{1},1.5);
 
 % Add components data points
-cal.cmp_oxd_pro = cal.cmp_oxd(:, cal.ioxd);
-cal.cmp_oxd_pro = cal.cmp_oxd_pro(1:end-2, :);
-cmp_cSi = cal.cmp_oxd_pro(:,1)./sum( cal.cmp_oxd_pro(:,1:end-1),2).*100;
-cmp_cNK = sum( cal.cmp_oxd_pro(:,[7,8]),2)./sum( cal.cmp_oxd_pro(:,1:end-1),2).*100;
-idx = [4, 5]; 
-scatter(cmp_cSi(idx), cmp_cNK(idx), 120, 'b', '.');
-labels = {'cmp1','cmp2','cmp3','cmp4','cmp5'};
+idx = 1:cal.ncmp-2; 
+cmp_oxd_pro = cal.cmp_oxd(:, cal.ioxd);
+cmp_oxd_pro = cmp_oxd_pro(idx, :);
+cmp_cSi = cmp_oxd_pro(:,1)./sum( cmp_oxd_pro(:,1:end-1),2).*100;
+cmp_cNK = sum( cmp_oxd_pro(:,[7,8]),2)./sum( cmp_oxd_pro(:,1:end-1),2).*100;
+scatter(cmp_cSi(idx), cmp_cNK(idx), 80, 'k', '*', 'LineWidth', 1.5);
+labels = cal.cmpStr;
 for i = idx
-    text(cmp_cSi(i)+0.4, cmp_cNK(i)-0.2, labels{i}, 'FontSize', 10, 'Color', 'blue', 'HorizontalAlignment','left', 'VerticalAlignment','bottom');
+    text(cmp_cSi(i)+0.4, cmp_cNK(i), labels{i}, 'FontSize', 12, 'Color', 'k', 'HorizontalAlignment','left', 'VerticalAlignment','middle', 'Interpreter', 'latex');
 end
 
 set(cb,TL{:},'FontSize',12); set(gca,TL{:},'FontSize',15); xlabel('SiO$_2$ [wt \%]',TX{:},'FontSize',15); ylabel('Na$_2$O + K$_2$O [wt \%]',TX{:},'FontSize',15);
@@ -711,6 +711,18 @@ scatter(A(:),B(:),120,T(:)-273.15,'filled','o','MarkerEdgeColor',CL{3},LW{1},1.5
 scatter(A(:),B(:),120,T(:)-273.15,'filled','s','MarkerEdgeColor',CL{2},LW{1},1.5); colormap(colmap);
 set(cb,TL{:},'FontSize',12); set(gca,TL{:},'FontSize',15);
 
+idx = 1:cal.ncmp-1; 
+cmp_oxd_pro = cal.cmp_oxd(:, cal.ioxd);
+cmp_oxd_pro = cmp_oxd_pro(idx, :);
+cmp_cMg = cmp_oxd_pro(:,5)./sum( cmp_oxd_pro(:,[5,4,7,8]),2).*100;
+cmp_cFe = cmp_oxd_pro(:,4)./sum( cmp_oxd_pro(:,[5,4,7,8]),2).*100;
+cmp_cNK = sum( cmp_oxd_pro(:,[7,8]),2)./sum( cmp_oxd_pro(:,[5,4,7,8]),2).*100;
+[A,B] = terncoords(cmp_cMg, cmp_cFe, cmp_cNK);
+scatter(A(:), B(:), 80, 'k', '*', 'LineWidth', 1.5);
+labels = cal.cmpStr;
+for i = idx
+    text(A(i)+0.015, B(i), labels{i}, 'FontSize', 12, 'Color', 'k', 'HorizontalAlignment','left', 'VerticalAlignment','middle', 'Interpreter', 'latex');
+end
 
 if ~exist('fh20','var'); fh20 = figure(VIS{:});
 else; set(0, 'CurrentFigure', fh20);
@@ -735,6 +747,19 @@ scatter(A(:),B(:),120,T(:)-273.15,'filled','d','MarkerEdgeColor',CL{5},LW{1},1.5
                sum(c_oxd_all(:,:,[3,7,8]    ),3)./sum(c_oxd_all(:,:,[1:9]),3));
 scatter(A(:),B(:),120,T(:)-273.15,'filled','s','MarkerEdgeColor',CL{2},LW{1},1.5); colormap(colmap);
 set(cb,TL{:},'FontSize',12); set(gca,TL{:},'FontSize',15);
+
+idx = 1:cal.ncmp-1; 
+cmp_oxd_pro = cal.cmp_oxd(:, cal.ioxd);
+cmp_oxd_pro = cmp_oxd_pro(idx, :);
+cmp_cSi = cmp_oxd_pro(:,1)./sum( cmp_oxd_pro(:,[1:9]),2).*100;
+cmp_cFe = sum( cmp_oxd_pro(:,[2,4,5,6,9]),2)./sum( cmp_oxd_pro(:,[1:9]),2).*100;
+cmp_cAK = sum( cmp_oxd_pro(:,[3,7,8]),2)./sum( cmp_oxd_pro(:,[1:9]),2).*100;
+[A,B] = terncoords(cmp_cSi, cmp_cFe, cmp_cAK);
+scatter(A(:), B(:), 80, 'k', '*', 'LineWidth', 1.5);
+labels = cal.cmpStr;
+for i = idx
+    text(A(i)+0.015, B(i), labels{i}, 'FontSize', 12, 'Color', 'k', 'HorizontalAlignment','left', 'VerticalAlignment','middle', 'Interpreter', 'latex');
+end
 
 
 if ~exist('fh13','var'); fh13 = figure(VIS{:});
@@ -900,9 +925,9 @@ if save_op && ~restart
     print(fh13,name,'-dpng','-r300','-image');
 
     name = [outdir,'/',runID,'/',runID,'_',num2str(floor(step/nop))];
-    save(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal','FHST','cheb_rho');
+    save(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal');
     name = [outdir,'/',runID,'/',runID,'_cont'];
-    save(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal','FHST','cheb_rho');
+    save(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal');
     name = [outdir,'/',runID,'/',runID,'_hist'];
     save(name,'hist');
 

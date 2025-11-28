@@ -21,7 +21,7 @@ h         =  D/N;                 % grid spacing (equal in both dimensions, do n
 L         =  h;                   % chamber width (equal to h for 1-D mode) [m]
 
 % set model timing parameters
-Nt        =  5e5;                 % number of time steps to take
+Nt        =  1e6;                 % number of time steps to take
 tend      =  100*yr;              % end time for simulation [s]
 dt        =  1;                   % initial time step [s]
 
@@ -54,12 +54,10 @@ CFL       =  1.00;                % (physical) time stepping courant number (mul
 rtol      =  1e-4;                % outer its relative tolerance
 atol      =  1e-9;                % outer its absolute tolerance
 maxit     =  20;                  % maximum outer its
-itpar.cheb.alpha = 1.0;           % Chebychev first coefficient damping (0-1)
-itpar.cheb.beta  = 0.0;           % Chebychev second coefficient damping (0-1)
-itpar.cheb.gamma = 0.0;           % Chebychev third coefficient damping (0-1)
-itpar.anda.m     = 4;             % Anderson acceleration depth (2-5)
-itpar.anda.mix   = 0.25;          % Anderson acceleration mixing coefficient (0-1)
-itpar.anda.reg   = 0.01;          % Anderson acceleration regularisation coefficient (0-1)
+itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
+itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
+itpar.aa.damp = 0.5;              % Anderson acceleration damping (0-1)
+itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
 
 %*****  RUN NAKHLA MODEL  *************************************************
 run('../src/main')

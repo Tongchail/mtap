@@ -10,8 +10,6 @@
 [Pchmboo, Pchmbo] = deal(Pchmbo, Pchmb);
 [rhoWoo , rhoWo ] = deal(rhoWo , rhoW );
 [rhoUoo , rhoUo ] = deal(rhoUo , rhoU );
-% [smoo   , smo   ] = deal(smo   , sm   );
-% [Ptoo   , Pto   ] = deal(Pto   , Pt   );
 
 [dSdtoo    , dSdto    ] = deal(dSdto    , dSdt    );
 [dCdtoo    , dCdto    ] = deal(dCdto    , dCdt    );
@@ -23,10 +21,20 @@
 [dTpdtoo   , dTpdto   ] = deal(dTpdto   , dTpdt   );
 [dTdtoo    , dTdto    ] = deal(dTdto    , dTdt    );
 [dPchmbdtoo, dPchmbdto] = deal(dPchmbdto, dPchmbdt);
-% [dsmdtoo   , dsmdto   ] = deal(dsmdto   , dsmdt   );
-% [dPtdtoo   , dPtdto   ] = deal(dPtdto   , dPtdt   );
 
 [Gmo,Gxo,Gfo] = deal(Gm,Gx,Gf);
 
 dto = dt;
 Pto = Pt;
+
+% reset update history
+specrad.S.est   = specrad.S.mean + 0.*specrad.S.est;
+specrad.C.est   = specrad.S.mean + 0.*specrad.C.est;
+specrad.PHS.est = specrad.S.mean + 0.*specrad.PHS.est;
+specrad.TRC.est = specrad.S.mean + 0.*specrad.TRC.est;
+specrad.dV.est  = specrad.S.mean + 0.*specrad.dV.est;
+FHST.S          = 0.*FHST.S;
+FHST.C          = 0.*FHST.C;
+FHST.PHS        = 0.*FHST.PHS;
+FHST.TRC        = 0.*FHST.TRC;
+FHST.dV         = 0.*FHST.dV;

@@ -9,7 +9,7 @@ drhodt  = advn_rho;
 res_dV  = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
 
 % volume source and background velocity passed to fluid-mechanics solver
-[dV,FHST.dV,cheb_rho.dV] = iterate(dV,res_dV./b1./rho,cheb_rho.dV,FHST.dV,itpar,frst*step*iter);
+[dV,GHST.dV,FHST.dV,specrad.dV] = iterate(dV,res_dV./b1./rho,specrad.dV,GHST.dV,FHST.dV,itpar,iter*~frst);
 
 dVmean  = mean(dV,'all');
 

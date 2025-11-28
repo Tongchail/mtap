@@ -19,7 +19,7 @@ cal.oxdStr = {'SiO$_2$','TiO$_2$','Al$_2$O$_3$','FeO','MgO','CaO','Na$_2$O','K$_
      elStr = {'Si','Ti','Al','Fe','Mg','Ca','Na','K','P','H'};
 cal.memStr = {'ant','alb','san','mmt','tmt','mgt','chy','fhy','hyp','mau','fau','aug','ilm','apt','qtz','wat'};
 cal.msyStr = {'plg','mgt','opx','cpx','ilm','apt','qtz'};
-cal.cmpStr = {'ano','cnr','ogb','bta','rhy','mFe','vol'};
+cal.cmpStr = {'ano','cnr','ogb','tan','rhy','mFe','vol'};
 
 for i = 1:cal.ncmp; cal.(cal.cmpStr{i}) = i; end
 for i = 1:cal.nmsy; cal.(cal.msyStr{i}) = i; end
@@ -73,7 +73,7 @@ cal.msy_mem = [1  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0       % plagioclas
 cal.cmp_mem = [  94.0000    5.0000         0         1         0         0         0         0         0         0         0         0         0         0         0         0    % anorthosite (ano)
                  32.6000   16.6000         0    8.7000       0.5       5.8   25.5000         0         0    10.400         0         0         0         0         0         0    % cpx-norite (cnr)
                  29.0000   14.4000    0.4000       0.5    6.6000    1.0000    1.0000   17.0000         0    4.5000   25.6000         0         0         0         0         0    % opx-gabbro (ogb)
-                 10.2000   55.5000    6.4000         0         0    2.2000         0         0    6.4000         0         0   13.0000    6.3000         0         0         0    % basaltic trachy-andesite (ban)
+                 10.2000   55.5000    6.4000         0         0    2.2000         0         0    6.4000         0         0   13.0000    6.3000         0         0         0    % trachy-andesite (tan)
                        0   22.5000   43.8000         0         0         0         0         0    1.4000         0         0         0    1.3000    1.0000   30.0000         0    % rhyolite (rhy)
                        0         0         0         0   27.6855         0         0   18.2675         0         0         0   37.8628    3.8310   10.5684         0    1.7847    % mfe
                        0         0         0         0         0         0         0         0         0         0         0         0         0         0         0   100.0000];

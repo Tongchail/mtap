@@ -545,18 +545,21 @@ adv_TRC = zeros(Nz,Nx,cal.ntrc);
 dff_TRC = zeros(Nz,Nx,cal.ntrc);
 K_trc     = zeros(Nz,Nx,cal.ntrc);
 dTRCdt  = 0.*trc; dTRCdto = dTRCdt;
-cheb_rho.S.est   = 0.9.*ones(Nz*Nx,1);          cheb_rho.S.mean   = 0.9;
-cheb_rho.dV.est  = 0.9.*ones(Nz*Nx,1);          cheb_rho.dV.mean  = 0.9;
-cheb_rho.C.est   = 0.9.*ones(Nz*Nx*cal.ncmp,1); cheb_rho.C.mean   = 0.9;
-cheb_rho.TRC.est = 0.9.*ones(Nz*Nx*cal.ntrc,1); cheb_rho.TRC.mean = 0.9;
-cheb_rho.PHS.est = 0.9.*ones(Nz*Nx*3       ,1); cheb_rho.PHS.mean = 0.9;
-FHST.S   = zeros(Nz*Nx, itpar.anda.m+1);
-FHST.X   = zeros(Nz*Nx, itpar.anda.m+1);
-FHST.M   = zeros(Nz*Nx, itpar.anda.m+1);
-FHST.dV  = zeros(Nz*Nx, itpar.anda.m+1);
-FHST.C   = zeros(Nz*Nx*cal.ncmp, itpar.anda.m+1);
-FHST.TRC = zeros(Nz*Nx*cal.ntrc, itpar.anda.m+1);
-FHST.PHS = zeros(Nz*Nx*3       , itpar.anda.m+1);
+specrad.S.est   = 0.5.*ones(Nz*Nx,1);          specrad.S.mean   = 0.5;
+specrad.dV.est  = 0.5.*ones(Nz*Nx,1);          specrad.dV.mean  = 0.5;
+specrad.C.est   = 0.5.*ones(Nz*Nx*cal.ncmp,1); specrad.C.mean   = 0.5;
+specrad.TRC.est = 0.5.*ones(Nz*Nx*cal.ntrc,1); specrad.TRC.mean = 0.5;
+specrad.PHS.est = 0.5.*ones(Nz*Nx*3       ,1); specrad.PHS.mean = 0.5;
+GHST.S   = zeros(Nz*Nx, itpar.aa.m+1);
+GHST.dV  = zeros(Nz*Nx, itpar.aa.m+1);
+GHST.C   = zeros(Nz*Nx*cal.ncmp, itpar.aa.m+1);
+GHST.TRC = zeros(Nz*Nx*cal.ntrc, itpar.aa.m+1);
+GHST.PHS = zeros(Nz*Nx*3       , itpar.aa.m+1);
+FHST.S   = zeros(Nz*Nx, itpar.aa.m+1);
+FHST.dV  = zeros(Nz*Nx, itpar.aa.m+1);
+FHST.C   = zeros(Nz*Nx*cal.ncmp, itpar.aa.m+1);
+FHST.TRC = zeros(Nz*Nx*cal.ntrc, itpar.aa.m+1);
+FHST.PHS = zeros(Nz*Nx*3       , itpar.aa.m+1);
 
 % initialise timing and iterative parameters
 frst    = 1;
@@ -581,7 +584,7 @@ if restart
     end
     if exist(name,'file')
         fprintf('\n   restart from %s \n\n',name);
-        load(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal','FHST','cheb_rho');
+        load(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal');
         name = [outdir,'/',runID,'/',runID,'_hist'];
         load(name,'hist');
 
