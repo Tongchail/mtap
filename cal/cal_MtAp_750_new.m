@@ -133,11 +133,13 @@ cal.Ktrc_mem = [0.01;0.10;1.0;3.0;10.0;1.0].*ones(cal.ntrc,cal.nmem);
 %               ant   alb   san   mmt   tmt   mgt   mhy   fhy   hyp   mau  fau   aug   ilm   apt   qtz   wat
 cal.rhox0   = [2680, 2600, 2550, 4500, 4500, 4650, 3410, 3410, 3410, 3470, 3470, 3470, 4700, 3190, 2540, 1000]; % mem ref densities [kg/m3]
 cal.rhof0   = 4000;    %1000          %*** fluid ref density [kg/m3]
-
+cal.rhom0   = 2400;
 % specify three-phase coefficient model parameters
 %               ant   alb   san   mmt   tmt   mgt   mhy   fhy   hyp   mau  fau   aug   ilm   apt   qtz   wat
 cal.etax0   = [1e17, 1e17, 1e17, 1e17, 1e17,  1e17, 1e19,1e19,  1e19,1e19, 1e19, 1e19, 1e17, 1e17 ,1e19,1e0];% mem ref viscosities [Pas]
-%cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
+cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
+cal.etam0   = 1e5;
+
 cal.Eax     = 300e3;                  % solid viscosity activation energy [J/mol]
 cal.AA      =[ 0.25, 0.25, 0.35; ...  % permission slopes
                0.25, 0.25, 0.25; ...  % generally numbers between 0 and 1

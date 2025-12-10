@@ -5,6 +5,7 @@ outdir    =  '../out';            % output directory
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nrh       =  10;                  % record diagnostic history every 'nrh' time steps
 nop       =  100;                 % output frame plotted/saved every 'nop' time steps
+ndm_op    =  0;                   % plot nondimensionalised output
 plot_op   =  1;                   % switch on to live plot results
 save_op   =  1;                   % switch on to save output to file
 plot_cv   =  0;                   % switch on to live plot iterative convergence
@@ -20,9 +21,13 @@ h         =  D/N;                 % grid spacing (equal in both dimensions, do n
 hr        =  3600;                % conversion seconds to hours
 yr        =  24*365.25*hr;        % conversion seconds to years
 Nt        =  1e6;                 % number of time steps to take
+t0end     =  2;                   % stop when dimensionless time is reached
+xend      =  1.00;                % stop run when mean crystallinity reaches threshold
 tend      =  1e6*yr;              % end time for simulation [s]
 dt        =  1;                   % initial time step [s]
 dtmax     =  1e32;                % maximum time step [s]
+cm        =  0.01;                % conversion metre to centimetres
+km        =  1000;                % conversion metre to kilometres
 
 % set initial thermo-chemical state
 init_mode = 'layer';              % T initial condition mode ('layer' or 'linear') layer上下两层不同温度，代表不同相体系，linear温度从定到底线性变化，无突变均一
@@ -83,7 +88,7 @@ tau_r     =  0;                   % reaction time scale (set to zero for quasi-e
 % set model buoyancy and pressure parameters
 bPx       =  1e-11;               % solid compressibility [1/Pa]
 bPm       =  3e-11;               % melt  compressibility [1/Pa]
-bPf       =  3e-11;                % fluid compressibility [1/Pa]
+bPf       =  3e-11;               % fluid compressibility [1/Pa]
 dm0       =  1e-3;                % melt film size [m]
 dx0       =  1e-3;                % crystal size [m]
 df0       =  1e-3;                % bubble size [m]
@@ -93,6 +98,15 @@ g0        =  10.;                 % gravity [m/s2]
 Pchmb0    =  0;                   % initial chamber pressure [Pa]
 eta_wall  =  1e15;                % wall rock viscosity [Pas]
 mod_wall  =  0e10;                % wall rock elastic modulus [Pa]
+
+% set physical control parameters
+L0        =  h/2;                 % correlation length for eddy diffusivity (multiple of h, 0.5-1)
+l0        =  dx0*10;               % correlation length for phase fluctuation diffusivity (multiple of d0, 10-20)
+R         =  1.0;                 % relative amplitude of crystallisation rate [s]
+Xi        =  1.0;                 % relative amplitude of random noise flux
+Ptop      =  1.25e8;              % top boundary pressure [Pa]
+open_cnv  =  0;                   % switch for open bottom boundary for crystal-driven convection
+open_sgr  =  1;                   % switch for open bottom boundary for crystal segregation
 
 % set numerical model parameters
 TINT      =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
@@ -119,8 +133,19 @@ kmin      =  1e-9;                % minimum diffusivity
 kmax      =  1e+9;                % maximum diffusivity
 Pcouple   =  0;                   % coupling phase equilibria and material properties to dynamic pressure
 Rcouple   =  0;                   % coupling phase equilibria into nonlinear iterations, else update once per time step
+dtmax     =  1e32;                % maximum time step [s]
 
 % set various options
 calibrt   =  0;                   % not in calibrate mode
 bnchm     =  0;                   % not a benchmark run
 postprc   =  0;                   % not postprocessing mode
+
+% set initial phase fraction parameters
+xeq       =  0.01;                % equilibrium crystallinity of boundary layer [wt]
+x0        =  xeq/10;              % initial background crystallinity [wt]
+dxr       =  x0/10;               % initial random perturbation [wt]
+dxg       =  0;                   % initial gaussian perturbation [wt] (for benchmarking)
+feq       =  0.01;                 % equilibrium fluid fraction in boundary layer
+f0        =  feq/10;               % initial background fluid fraction
+dfr       =  f0/10;                % initial random perturbation (same structure as dxr)
+dfg       =  0;                    % initial gaussian perturbation (same as dxg)

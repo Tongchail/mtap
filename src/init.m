@@ -52,6 +52,7 @@ switch colourmap
         colmap = lajolla;  
 end
 nclmp = length(colmap);
+lncls = colmap([5,135],:);
 
 colmapcmp = colmap(max(1,min(nclmp,1+round((1:nclmp)/(nclmp/(cal.ncmp-1)))*round(nclmp/(cal.ncmp-1)))),:);
 colmapoxd = colmap(max(1,min(nclmp,1+round((1:nclmp)/(nclmp/(cal.noxd-1)))*round(nclmp/(cal.noxd-1)))),:);
@@ -90,19 +91,80 @@ Zc        = Zc(2:end-1);
 Nx = length(Xc);
 Nz = length(Zc);
 
-% get smoothed initialisation field
-rng(seed);
-smth = smth*Nx*Nz*1e-4;
-rp   = randn(Nz,Nx);
-for i = 1:round(smth)
-    rp = rp + diffus(rp,1/8*ones(size(rp)),1,[1,2],BCD);
-    rp = rp - mean(mean(rp));
-end
-rp = rp./max(abs(rp(:)));
+% get characteristic scales
+scales;
+if ~exist('dt','var'); dt = dt0/10; end
 
-gp = exp(-(XX-L/2  ).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2) ...
-   + exp(-(XX-L/2+L).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2) ...
-   + exp(-(XX-L/2-L).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2);
+% Wavenumber grid
+[kpx, kpz] = ndgrid( ...
+    2*pi*ifftshift((0:Nz-1) - floor(Nz/2)) / (Nz*h), ...
+    2*pi*ifftshift((0:Nx-1) - floor(Nx/2)) / (Nx*h)  );
+
+padL0 = 4*ceil(L0/h);
+padl0 = 4*ceil(l0/h);
+
+[kpx_padL0, kpz_padL0] = ndgrid( ...
+    2*pi*ifftshift((0:Nz-1+padL0) - floor((Nz+padL0)/2)) / ((Nz+padL0)*h), ...
+    2*pi*ifftshift((0:Nx-1      ) - floor( Nx       /2)) / ( Nx       *h)  );
+
+[kpx_padl0, kpz_padl0] = ndgrid( ...
+    2*pi*ifftshift((0:Nz-1+padl0) - floor((Nz+padl0)/2)) / ((Nz+padl0)*h), ...
+    2*pi*ifftshift((0:Nx-1      ) - floor( Nx       /2)) / ( Nx       *h)  );
+
+kp2 = kpx.^2 + kpz.^2;
+kp2_padL0 = kpx_padL0.^2 + kpz_padL0.^2;
+kp2_padl0 = kpx_padl0.^2 + kpz_padl0.^2;
+
+% Gaussian spatial filter kernels in Fourier space
+Gkps = exp(-0.5 * ((l0h*sqrt(2))^2) * kp2);
+Gkpe = exp(-0.5 * ((L0h*sqrt(2))^2) * kp2);
+Gkps_padl0 = exp(-0.5 * ((l0h*sqrt(2))^2) * kp2_padl0);
+Gkpe_padL0 = exp(-0.5 * ((L0h*sqrt(2))^2) * kp2_padL0);
+Gkrp = exp(-0.5 * ((L0h+l0h    )^2) * kp2);
+
+% initialise smooth random noise generation
+rng(seed);
+
+% Generate new white noise
+rp  = randn(Nz, Nx);
+
+% Filter white noise spatially
+rp  = real(ifft2(Gkrp .* fft2(rp)));
+
+% Rescale to unit standard deviation
+rp  = (rp - mean(rp(:))) ./ std(rp(:));
+
+% rng(seed);
+% smth = smth*Nx*Nz*1e-4;
+% rp   = randn(Nz,Nx);
+% for i = 1:round(smth)
+%     rp = rp + diffus(rp,1/8*ones(size(rp)),1,[1,2],BCD);
+%     rp = rp - mean(mean(rp));
+% end
+% rp = rp./max(abs(rp(:)));
+
+% gp = exp(-(XX-L/2  ).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2) ...
+%    + exp(-(XX-L/2+L).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2) ...
+%    + exp(-(XX-L/2-L).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2);
+
+% initialise noise flux potentials
+psie = zeros(Nz+0, Nx+0);
+psix = zeros(Nz+0, Nx+0);
+psif = zeros(Nz+0, Nx+0);
+psisx = zeros(Nz+0, Nx+0);
+psisf = zeros(Nz+0, Nx+0);
+
+% initialise noise flux components
+xisxw = zeros(Nz+1, Nx+2);
+xisxu = zeros(Nz+2, Nx+1);
+xisfw = zeros(Nz+1, Nx+2);
+xisfu = zeros(Nz+2, Nx+1);
+xiew = zeros(Nz+1, Nx+2);
+xieu = zeros(Nz+2, Nx+1);
+xixw = zeros(Nz+1, Nx+2);
+xixu = zeros(Nz+2, Nx+1);
+xifw = zeros(Nz+1, Nx+2);
+xifu = zeros(Nz+2, Nx+1);
 
 % get mapping arrays
 NP = (Nz+2) * (Nx+2);
@@ -111,6 +173,10 @@ NU = (Nz+2) * (Nx+1);
 MapP = reshape(1:NP,Nz+2,Nx+2);
 MapW = reshape(1:NW,Nz+1,Nx+2);
 MapU = reshape(1:NU,Nz+2,Nx+1) + NW;
+
+% set up shape functions for initial and transient boundary layers
+initshape = exp((-ZZ+h/2)/(L0h+l0h)/2); % width of initial boundary layer [m]
+bndshape  = exp((-ZZ+h/2)/(L0h+l0h)/1); % width of crystal replenishing layer [m]
 
 % set up shape functions for initial boundary layers
 topinit = zeros(size(ZZ));
@@ -177,6 +243,11 @@ if bndmode>=2;               bot = +1;      % no slip bot for 'bot only(2)', 'to
 else;                        bot = -1; end  % free slip for other types
 if bndmode==5;               top = -1; bot = -1; end % free slip top/bot for 'only walls(5)'
 
+% set specified boundaries to no slip, else to free slip
+top_cnv    =  1;
+bot_cnv    =  1;
+if open_cnv; bot_cnv = -1; end
+
 % set ghosted index arrays
 if periodic  % periodic side boundaries
     icx = [Nx,1:Nx,1];
@@ -189,6 +260,25 @@ else         % closed side boundaries
     ifx = [2,1:Nx+1,Nx];
     ifz = [2,1:Nz+1,Nz];
 end
+
+% initialise crystallinity field
+gp  =  exp(-((XX-L/2)./(L/6)).^2) .* exp(-((ZZ-D/2)./(D/6)).^2);
+if open_sgr
+    xin =  initshape.*xeq + (1-initshape).*x0;
+    fin =  initshape.*feq + (1-initshape).*f0;
+else
+    xin = x0.*ones(Nz,Nx);
+    fin = f0.*ones(Nz,Nx);
+end
+
+x   =  xin .* (1+dxr/x0.*rp+dxg/x0.*gp);
+f   =  fin .* (1+dfr/f0.*rp+dfg/f0.*gp);
+m   =  1-x-f;
+
+U   =  zeros(Nz+2,Nx+1);  UBG = U; upd_U = 0*U; 
+W   =  zeros(Nz+1,Nx+2);  WBG = W; wx = 0.*W; wf = 0.*W; wm = 0.*W; wx0 = 0.*W; wf0 = 0.*W; wxo = wx; wfo = wf; upd_W = 0*W; Mx = 0*wx(:,2:end-1); Mf = 0*wf(:,2:end-1); 
+P   =  zeros(Nz+2,Nx+2);  V   = 0.*x; vx = V; vxo = vx; vf = V; vfo = vf; upd_P = 0*P;
+SOL = [W(:);U(:);P(:)];
 
 % initialise solution fields
 switch init_mode
@@ -300,26 +390,50 @@ for i = 1:cal.ntrc
 end
 tein = trc;
 
-U   =  zeros(Nz+2,Nx+1);  UBG = U; Ui = U; upd_U = 0*U;
-W   =  zeros(Nz+1,Nx+2);  WBG = W; Wi = W; wf = 0.*W; wx = 0.*W; wm = 0.*W; upd_W = 0*W;
-P   =  zeros(Nz+2,Nx+2);  Vel = 0.*Tp; upd_P = 0*P; %Div_rhoV = 0.*P;  DD = sparse(length(P(:)),length([W(:);U(:)]));
-SOL = [W(:);U(:);P(:)];
+% U   =  zeros(Nz+2,Nx+1);  UBG = U; Ui = U; upd_U = 0*U;
+% W   =  zeros(Nz+1,Nx+2);  WBG = W; Wi = W; wf = 0.*W; wx = 0.*W; wm = 0.*W; upd_W = 0*W;
+% P   =  zeros(Nz+2,Nx+2);  Vel = 0.*Tp; upd_P = 0*P; Div_rhoV = 0.*P;  DD = sparse(length(P(:)),length([W(:);U(:)]));
+% SOL = [W(:);U(:);P(:)];
 
 % initialise auxiliary fields
-Wf  = W;  Uf  = U; 
-Wx  = W;  Ux  = U;
-Wm  = W;  Um  = U;
+Wf  = W;        Uf  = U; 
+Wx  = W;        Ux  = U;
+Wm  = W;        Um  = U;
+wx  = W;        ux  = U;
+wf  = W;        uf  = U;
+xiwx = W;       xiux = U; 
+xiwf = W;       xiuf = U; 
+qz_advn_X = W;  qx_advn_X = W;
+qz_advn_M = W;  qx_advn_M = W;
+qz_advn_F = W;  qx_advn_F = W;
+qz_dffn_X = W;  qx_dffn_X = W;
+qz_dffn_M = W;  qx_dffn_M = W;
+qz_dffn_F = W;  qx_dffn_F = W;
 
-Re     = eps;  
-Div_V  = 0.*Tp;  advn_rho = 0.*Tp;  advn_X = 0.*Tp; advn_M = 0.*Tp; advn_F = 0.*Tp; drhodt = 0.*Tp;  drhodto = drhodt;
-exx    = 0.*Tp;  ezz = 0.*Tp;  exz = zeros(Nz-1,Nx-1);  eII = 0.*Tp;  
-txx    = 0.*Tp;  tzz = 0.*Tp;  txz = zeros(Nz-1,Nx-1);  tII = 0.*Tp; 
-eta    = ones(Nz,Nx);
-etamax = min(eta(:)) .* etacntr;
-dV = 0.*Tp; 
-ke     = 0.*Tp;
+Re     = eps + 0.*x;  
+Div_V  = 0.*x;  advn_rho = 0.*x;  advn_X = 0.*x; advn_M = 0.*x; drhodt = 0.*x;  drhodto = drhodt; 
+xis = 0.*x;  xie = 0.*x;
+exx    = 0.*x;  ezz = 0.*x;  exz = zeros(Nz-1,Nx-1);  eII = 0.*x;  
+txx    = 0.*x;  tzz = 0.*x;  txz = zeros(Nz-1,Nx-1);  tII = 0.*x; 
+eta    = cal.etam0 + zeros(Nz,Nx);
+etas_x = cal.etam0 + zeros(Nz,Nx);
+etas_f = cal.etam0 + zeros(Nz,Nx);
+MFS    = 0.*x; 
+ke     = 0.*x;
 Tref   = min(cal.T0)+273.15;
 Pref   = 1e5;
+MFBG = 0.*W;
+
+% Re     = eps;  
+% Div_V  = 0.*Tp;  advn_rho = 0.*Tp;  advn_X = 0.*Tp; advn_M = 0.*Tp; advn_F = 0.*Tp; drhodt = 0.*Tp;  drhodto = drhodt;
+% exx    = 0.*Tp;  ezz = 0.*Tp;  exz = zeros(Nz-1,Nx-1);  eII = 0.*Tp;  
+% txx    = 0.*Tp;  tzz = 0.*Tp;  txz = zeros(Nz-1,Nx-1);  tII = 0.*Tp; 
+% eta    = ones(Nz,Nx);
+% etamax = min(eta(:)) .* etacntr;
+% dV = 0.*Tp; 
+% ke     = 0.*Tp;
+% Tref   = min(cal.T0)+273.15;
+% Pref   = 1e5;
 sref   = 0e3;
 c0_oxd = c0*cal.cmp_oxd;
 c0_oxd_all = zeros(size(c0,1),9);
@@ -331,12 +445,14 @@ end
 rhom0  = mean(cal.rhox0-500).*ones(size(Tp)); 
 rhox0  = mean(cal.rhox0).*ones(size(Tp));
 rhof0  = cal.rhof0.*ones(size(Tp));
-Pchmb  = Pchmb0;  Pchmbo = Pchmb;  Pchmboo = Pchmbo;  dPchmbdt = Pchmb;  dPchmbdto = dPchmbdt; dPchmbdtoo = dPchmbdto;  upd_Pchmb = dPchmbdt;
-Pt     = Ptop + Pchmb + mean(rhom0,'all').*g0.*ZZ;  Pl = Pt;  Pto = Pt; Ptoo = Pt; dPtdt = 0*Pt; dPtdto = dPtdt; dPtdtoo = dPtdto;
+% Pchmb  = Pchmb0;  Pchmbo = Pchmb;  Pchmboo = Pchmbo;  dPchmbdt = Pchmb;  dPchmbdto = dPchmbdt; dPchmbdtoo = dPchmbdto;  upd_Pchmb = dPchmbdt;
+% Pt     = Ptop + Pchmb + mean(rhom0,'all').*g0.*ZZ;  Pl = Pt;  Pto = Pt; Ptoo = Pt; dPtdt = 0*Pt; dPtdto = dPtdt; dPtdtoo = dPtdto;
+rho    = (x./rhox0 + m./rhom0).^-1;
+Pt     = Ptop + rho.*g0.*ZZ;  Pl = Pt;  Pto = Pt; Ptoo = Pt;
 rhof   = rhof0.*(1+bPf.*(Pt-Pref));
 rhox   = rhox0.*(1+bPx.*(Pt-Pref));
 rhom   = rhom0.*(1+bPm.*(Pt-Pref));
-rho    = rhom;
+% rho    = rhom;
 rhow   = (rho(icz(1:end-1),:)+rho(icz(2:end),:))/2;
 rhou   = (rho(:,icx(1:end-1))+rho(:,icx(2:end)))/2;
 rhoWo  = rhow.*W(:,2:end-1); rhoWoo = rhoWo; advn_mz = 0.*rhoWo(2:end-1,:);
@@ -365,6 +481,7 @@ EQtime  = 0;
 FMtime  = 0;
 TCtime  = 0;
 UDtime  = 0;
+dto     = dt;
 a1      = 1; a2 = 0; a3 = 0; b1 = 1; b2 = 0; b3 = 0;
 
 if ~postprc
@@ -408,8 +525,6 @@ while res > tol
     eqtime = toc(eqtime);
     EQtime = EQtime + eqtime;
 
-    update;
-
     % T  = Tp.*exp(Adbt.*(Pt-Pref));
     % sm = cPm.*log(Tp./T0);  sx = sm+Dsx;  sf = sx+Dsf;
 
@@ -418,6 +533,8 @@ while res > tol
     M    = rho.*m; Mo = M;  res_M = 0.*M;
     RHO  = X+M+F;
     C    = M.*cm + X.*cx + F.*cf;
+
+    update;
 
     switch init_mode
         case 'liquidus'
@@ -434,6 +551,7 @@ while res > tol
             S  = M.*sm + X.*sx + F.*sf;
             [Tp,~ ] = StoT(Tp,S./rho,Pref+0*Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
             [T ,si] = StoT(T ,S./rho,       Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
+            
             sm = si(:,:,1); sx = si(:,:,2); sf = si(:,:,3);
         otherwise
             sm = cPm.*log(Tp./Tref);  sx = cPx.*log(Tp./Tref) + Dsx;  sf = cPf.*log(Tp./Tref) + Dsf;
@@ -453,10 +571,14 @@ end
 To   = T;  
 Tpo  = Tp;
 So   = S;  
+xo   = x;
+mo   = m;
+fo   = f;
 Mo   = M;
 Co   = C;
 Xo   = X;
 Fo   = F;
+Mxo  = Mx;
 rhoo = rho;
 dto  = dt; 
 
@@ -540,23 +662,25 @@ dCdt   = 0.*c;  dCdto  = dCdt;
 dFdt   = 0.*f;  dFdto  = dFdt;
 dXdt   = 0.*x;  dXdto  = dXdt;
 dMdt   = 0.*m;  dMdto  = dMdt;
+upd_X   = 0.*X;
+upd_MFS = 0.*MFS;
 bnd_TRC = zeros(Nz,Nx,cal.ntrc);
 adv_TRC = zeros(Nz,Nx,cal.ntrc);
 dff_TRC = zeros(Nz,Nx,cal.ntrc);
 K_trc     = zeros(Nz,Nx,cal.ntrc);
 dTRCdt  = 0.*trc; dTRCdto = dTRCdt;
 specrad.S.est   = 0.5.*ones(Nz*Nx,1);          specrad.S.mean   = 0.5;
-specrad.dV.est  = 0.5.*ones(Nz*Nx,1);          specrad.dV.mean  = 0.5;
+specrad.MFS.est = 0.5.*ones(Nz*Nx,1);          specrad.MFS.mean = 0.5;
 specrad.C.est   = 0.5.*ones(Nz*Nx*cal.ncmp,1); specrad.C.mean   = 0.5;
 specrad.TRC.est = 0.5.*ones(Nz*Nx*cal.ntrc,1); specrad.TRC.mean = 0.5;
 specrad.PHS.est = 0.5.*ones(Nz*Nx*3       ,1); specrad.PHS.mean = 0.5;
 GHST.S   = zeros(Nz*Nx, itpar.aa.m+1);
-GHST.dV  = zeros(Nz*Nx, itpar.aa.m+1);
+GHST.MFS = zeros(Nz*Nx, itpar.aa.m+1);
 GHST.C   = zeros(Nz*Nx*cal.ncmp, itpar.aa.m+1);
 GHST.TRC = zeros(Nz*Nx*cal.ntrc, itpar.aa.m+1);
 GHST.PHS = zeros(Nz*Nx*3       , itpar.aa.m+1);
 FHST.S   = zeros(Nz*Nx, itpar.aa.m+1);
-FHST.dV  = zeros(Nz*Nx, itpar.aa.m+1);
+FHST.MFS = zeros(Nz*Nx, itpar.aa.m+1);
 FHST.C   = zeros(Nz*Nx*cal.ncmp, itpar.aa.m+1);
 FHST.TRC = zeros(Nz*Nx*cal.ntrc, itpar.aa.m+1);
 FHST.PHS = zeros(Nz*Nx*3       , itpar.aa.m+1);
@@ -584,7 +708,7 @@ if restart
     end
     if exist(name,'file')
         fprintf('\n   restart from %s \n\n',name);
-        load(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal');
+        load(name,'U','W','P','Pt','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal');
         name = [outdir,'/',runID,'/',runID,'_hist'];
         load(name,'hist');
 

@@ -107,9 +107,12 @@ rhoWo  = zeros(size(rhow));
 rhoWoo = zeros(size(rhow));
 rhoUo  = zeros(size(rhou));
 rhoUoo = zeros(size(rhou));
-WBG    = 0.*W_mms;  W = WBG;
-UBG    = 0.*U_mms;  U = UBG;
-SOL    = [W_mms(:);U_mms(:);P_mms(:)];
+MFBG   = 0.*W_mms;
+WBG    = 0.*W_mms; 
+UBG    = 0.*U_mms;
+%SOL    = [W_mms(:);U_mms(:);P_mms(:)];
+SOL    = 0.*[W_mms(:);U_mms(:);P_mms(:)];
+U      = 0*U_mms;  W = 0*W_mms;  P = 0*P_mms;
 dt     = 1e32;
 
 % get mapping arrays

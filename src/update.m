@@ -87,9 +87,28 @@ rhoW   = rhow.*W(:,2:end-1);
 rhoU   = rhou.*U(2:end-1,:);
 
 % convert weight to volume fraction, update bulk density
-chi    = max(0,min(1, x.*rho./rhox ));
-phi    = max(0,min(1, f.*rho./rhof ));
-mu     = max(0,min(1, m.*rho./rhom ));
+chi    = max(eps,min(1-eps, x.*rho./rhox));
+mu     = max(eps,min(1-eps, m.*rho./rhom));
+phi    = max(eps,min(1-eps, f.*rho./rhom));
+% chi    = max(0,min(1, x.*rho./rhox ));
+% phi    = max(0,min(1, f.*rho./rhof ));
+% mu     = max(0,min(1, m.*rho./rhom ));
+
+chiw   = (chi(icz(1:end-1),:)+chi(icz(2:end),:))./2;
+muw    = ( mu(icz(1:end-1),:)+ mu(icz(2:end),:))./2;
+phiw   = (phi(icz(1:end-1),:)+phi(icz(2:end),:))./2;
+
+xw     = (x(icz(1:end-1),:)+x(icz(2:end),:))./2;
+mw     = (m(icz(1:end-1),:)+m(icz(2:end),:))./2;
+ffw    = (f(icz(1:end-1),:)+f(icz(2:end),:))./2; % because the name 'fw' is already used, we use 'ffw' instead.
+
+xu     = (x(:,icx(1:end-1))+x(:,icx(2:end)))./2;
+muu    = (m(:,icx(1:end-1))+m(:,icx(2:end)))./2;
+fu     = (f(:,icx(1:end-1))+f(:,icx(2:end)))./2;
+
+Xw     = (X(icz(1:end-1),:)+X(icz(2:end),:))/2;
+Mw     = (M(icz(1:end-1),:)+M(icz(2:end),:))/2;
+Fw     = (F(icz(1:end-1),:)+F(icz(2:end),:))/2;
 
 chi_mem = reshape(reshape(cx_mem/100.*rhox,Nz*Nx,cal.nmem)./cal.rhox0,Nz,Nx,cal.nmem);
 chi_mem = chi_mem./sum(chi_mem,3);
@@ -102,14 +121,18 @@ cP = mu.*cPm + chi.*cPx + phi.*cPf;
 RhoCp = mu.*rhom.*cPm + chi.*rhox.*cPx + phi.*rhof.*cPf;
 Adbt  = mu.*aTm./rhom./cPm + chi.*aTx./rhox./cPx + phi.*aTf./rhof./cPf;
 
+% % update lithostatic pressure
+% Pti = Pt;
+% if Nz==1; Pt    = max(Ptop/100,Ptop.*ones(size(Pt)) + Pcouple*(Pchmb + P(2:end-1,2:end-1))); else
+%     Pl(1,:)     = repmat(rhoref(1).*g0.*h/2,1,Nx) + Ptop;
+%     Pl(2:end,:) = Pl(1,:) + repmat(cumsum(rhoref(2:end-1).*g0.*h),1,Nx);
+%     Pt          = max(Ptop/100,Pl + Pcouple*(Pchmb + P(2:end-1,2:end-1)));
+% end
+% Pt = (Pt + Pti)/2;
 % update lithostatic pressure
-Pti = Pt;
-if Nz==1; Pt    = max(Ptop/100,Ptop.*ones(size(Pt)) + Pcouple*(Pchmb + P(2:end-1,2:end-1))); else
-    Pl(1,:)     = repmat(rhoref(1).*g0.*h/2,1,Nx) + Ptop;
-    Pl(2:end,:) = Pl(1,:) + repmat(cumsum(rhoref(2:end-1).*g0.*h),1,Nx);
-    Pt          = max(Ptop/100,Pl + Pcouple*(Pchmb + P(2:end-1,2:end-1)));
-end
-Pt = (Pt + Pti)/2;
+Pl(1,:)     = repmat(rhoref(1).*g0.*h/2,1,Nx) + Ptop;
+Pl(2:end,:) = Pl(1,:) + repmat(cumsum(rhoref(2:end-1).*g0.*h),1,Nx);
+Pt          = max(Ptop/100,Pl + P(2:end-1,2:end-1));
 
 % update effective constituent sizes
 dm = dm0.*(1-mu ).^0.5;
@@ -135,20 +158,23 @@ Xf = sum(cal.AA.*Sf,2).*FF + (1-sum(cal.AA.*Sf,2)).*Sf;
 
 % get momentum flux and transfer coefficients
 thtv = squeeze(prod(Mv.^Xf,2));
-Kv   = ff.*kv.*thtv;
-Cv   = Kv.*(1-ff)./dd.^2;
+etai = kv.*thtv;                % the phase viscosities
+% Kv   = ff.*kv.*thtv; 
+% Cv   = Kv.*(1-ff)./dd.^2;
 
 % get effective viscosity
-eta0 = squeeze(sum(Kv,1)); if Nx==1; eta0 = eta0.'; end
+etax   = squeeze(etai(1,:,:));
+etaf   = squeeze(etai(3,:,:));
+etamix = squeeze(sum(ff.*etai,1)); if Nx==1; etamix = etamix.'; end
+%eta0 = squeeze(sum(Kv,1)); if Nx==1; eta0 = eta0.'; end
 
 % get segregation cofficients
-Ksgr   = ff./Cv;
-
+Ksgr   = ff.*(dd.^2)./((ff.*etai).*(1-ff));
 Ksgr_x = squeeze(Ksgr(1,:,:)) + eps^2; if Nx==1; Ksgr_x = Ksgr_x.'; end
 Ksgr_m = squeeze(Ksgr(2,:,:)) + eps^2; if Nx==1; Ksgr_m = Ksgr_m.'; end
 Ksgr_f = squeeze(Ksgr(3,:,:)) + eps^2; if Nx==1; Ksgr_f = Ksgr_f.'; end
 
-if ~calibrt % skip the following if called from calibration script
+% if ~calibrt % skip the following if called from calibration script
 
 % update velocity divergence
 Div_V = ddz(W(:,2:end-1),h) + ddx(U(2:end-1,:),h);                         % get velocity divergence
@@ -170,67 +196,142 @@ rhofp = rhof0 .* (1 - aTf.*(Tp-Tref));
 rhop  = 1./(m./rhomp + x./rhoxp + f./rhofp);
 
 % update velocity magnitude
-if Nx==1 && Nz==1; Vel = 0;
-elseif Nx==1
-    idz = (1:Nz)';  % grid indices
-    half_steps = max(1,floor(Delta_cnv ./ (2 * h)));  % half mixing length in grid steps
-    
-    ip = idz + half_steps;  % upper indices
-    im = idz - half_steps;  % lower indices
-    
-    ip = min(ip, Nz);  % clamp indices to valid range [1, Nz]
-    im = max(im, 1 );  % clamp indices to valid range [1, Nz]
-    
-    drhoz   = max(0, -(rhop(ip,:)-rhop(im,:)) ) + 1e-9.*rhop; % central density contrast across mixing length
-    for i=1:10
-        drhoz = drhoz + diffus(drhoz,1/8*ones(size(drhoz)),1,[1,2],BCD);
-    end
-    Vel     = 2/9*drhoz.*g0.*(Delta_cnv/2).^2./eta;
-else
-    Vel = sqrt(((W(1:end-1,2:end-1)+W(2:end,2:end-1))/2).^2 ...
-             + ((U(2:end-1,1:end-1)+U(2:end-1,2:end))/2).^2);
-end
+% if Nx==1 && Nz==1; Vel = 0;
+% elseif Nx==1
+%     idz = (1:Nz)';  % grid indices
+%     half_steps = max(1,floor(Delta_cnv ./ (2 * h)));  % half mixing length in grid steps
+% 
+%     ip = idz + half_steps;  % upper indices
+%     im = idz - half_steps;  % lower indices
+% 
+%     ip = min(ip, Nz);  % clamp indices to valid range [1, Nz]
+%     im = max(im, 1 );  % clamp indices to valid range [1, Nz]
+% 
+%     drhoz   = max(0, -(rhop(ip,:)-rhop(im,:)) ) + 1e-9.*rhop; % central density contrast across mixing length
+%     for i=1:10
+%         drhoz = drhoz + diffus(drhoz,1/8*ones(size(drhoz)),1,[1,2],BCD);
+%     end
+%     Vel     = 2/9*drhoz.*g0.*(Delta_cnv/2).^2./eta;
+% else
+%     Vel = sqrt(((W(1:end-1,2:end-1)+W(2:end,2:end-1))/2).^2 ...
+%              + ((U(2:end-1,1:end-1)+U(2:end-1,2:end))/2).^2);
+% end
+
+V    = sqrt(((W (1:end-1,2:end-1)+W (2:end,2:end-1))/2).^2 ...
+          + ((U (2:end-1,1:end-1)+U (2:end-1,2:end))/2).^2);                % bulk convection speed magnitude
+Vx   = sqrt(((Wx(1:end-1,2:end-1)+Wx(2:end,2:end-1))/2).^2 ...
+          + ((Ux(2:end-1,1:end-1)+Ux(2:end-1,2:end))/2).^2);                % crystal convection speed magnitude
+Vf   = sqrt(((Wf(1:end-1,2:end-1)+Wf(2:end,2:end-1))/2).^2 ...
+          + ((Uf(2:end-1,1:end-1)+Uf(2:end-1,2:end))/2).^2);                % fluid convection speed magnitude
+
+bndtapers = (1 - (exp((-ZZ)/l0) + exp(-(D-ZZ)/l0)).*(1-open_sgr));
+
+vx   = dx0^2./etas_x.*(rhox0-rhom0).*g0.*bndtapers;                            % xtal segregation speed magnitude vx downward direction
+vf   = df0^2./etas_f.*(rhof0-rhom0).*g0.*bndtapers;  
+vm   = ( x .* vx + f .* vf ) ./ max((1-x-f), eps);
+%vm   = vx.*x./(1-x);                                                       % melt segregation speed magnitude
+
+xisx  = sqrt(((xisxw(1:end-1,2:end-1)+xisxw(2:end,2:end-1))/2).^2 ...
+          + ((xisxu(2:end-1,1:end-1)+xisxu(2:end-1,2:end))/2).^2);            % settling noise flux magnitude 
+xiex = sqrt(((xixw(1:end-1,2:end-1)+xixw(2:end,2:end-1))/2).^2 ...
+          + ((xixu(2:end-1,1:end-1)+xixu(2:end-1,2:end))/2).^2);            % xtal eddy noise flux magnitude 模长速度噪声大小
+xie  = sqrt(((xiew(1:end-1,2:end-1)+xiew(2:end,2:end-1))/2).^2 ...
+          + ((xieu(2:end-1,1:end-1)+xieu(2:end-1,2:end))/2).^2);            % global eddy noise？melt? eddy noise flux magnitude
+xix  = xisx + xiex;                                                          % total xtl noise
+
+% add noise for fluid (like crystal) 
+xisf = sqrt(((xisfw(1:end-1,2:end-1)+xisfw(2:end,2:end-1))/2).^2 ...
+          + ((xisfu(2:end-1,1:end-1)+xisfu(2:end-1,2:end))/2).^2);          % settling noise flux magnitude 
+xief = sqrt(((xifw(1:end-1,2:end-1)+xixw(2:end,2:end-1))/2).^2 ...
+          + ((xifu(2:end-1,1:end-1)+xixu(2:end-1,2:end))/2).^2);            % fluid eddy noise flux magnitude
+xif  = xisf + xief;                                                         % total fluid noise
 
 % update diffusion parameters
-if Nx==1 && Nz==1; ke = 0; fRe1 = 1; fRe100 = 1;
+if Nx==1 && Nz==1; ke = 0; kh = 0; fRe1 = 1; fRe100 = 1;
 elseif Nx==1
     ke     = (ke + Vel.*Delta_cnv)/2;                                      % convective mixing diffusivity
     fRe1   = 1;
     fRe100 = 1;
 else
-    eII0   = eta0./rho./(3*h)^2;
-    eIIe   = eII .* (1-exp(-eII./eII0)+eps);
-    ke     = (ke + eIIe.*Delta_cnv.^2)/2;                                               % turbulent eddy diffusivity
-    fRe1   = (1-exp(-Re./1  )+eps);
-    fRe100 = (1-exp(-Re./100)+eps);
+    bndtapere = (1 - (exp((-ZZ)/L0) + exp(-(D-ZZ)/L0).*(1-open_cnv)));
+    ke        = eII.*L0.^2 .* bndtapere;                                      % turbulent eddy diffusivity
+    ks_x      = vx .*l0;                                                      % xtl segregation diffusivity
+    ks_f      = vf .*l0;                                                      % flu segregation diffusivity
+    kx        = (ks_x + fReL.*ke);                                                % regularised particle diffusivity 
+    kf        = (ks_f + fReL.*ke);                                                % regularised particle diffusivity 
+    fRe1      = (1-exp(-Re./1  )+eps);
+    fRe100    = (1-exp(-Re./100)+eps);
+    % eII0   = eta0./rho./(3*h)^2;
+    % eIIe   = eII .* (1-exp(-eII./eII0)+eps);
+    % ke     = (ke + eIIe.*Delta_cnv.^2)/2;                                               % turbulent eddy diffusivity 
 end
-ke  = 1./(1./kmax + 1./ke) + kmin;
-kwm = abs(wm(1:end-1,2:end-1)+wm(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
-kwx = abs(wx(1:end-1,2:end-1)+wx(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
-kwf = abs(wf(1:end-1,2:end-1)+wf(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
-km  = (kwm+ke.*fRe1).*mu ;                                                 % regularised melt  fraction diffusion 
-kx  = (kwx+ke.*fRe1).*chi;                                                 % regularised solid fraction diffusion 
-kf  = (kwf+ke.*fRe1).*phi;                                                 % regularised fluid fraction diffusion 
-ks  = (ke./Prt.*fRe100 + kmin).*rho.*cP./T;                                % regularised heat diffusion
-kc  =  ke./Sct.*fRe100 + kmin;                                             % regularised component diffusion
-eta =  ke.*rho.*fRe1 + eta0;                                               % regularised momentum diffusion
 
-etamax = etacntr.*max(min(eta(:)),etamin);
-eta    = 1./(1./etamax + 1./eta) + etamin;
+% update viscosities
+etae = fReL*ke.*rho;                                                       % eddy viscosity
+eta  = (eta + etamix + etae)/2;                                            % effective viscosity
 
+etat_x = fRel_x.*ks_x.*rho;                                                  % turbulent drag viscosity
+etat_f = fRel_f.*ks_f.*rho;                                                  % turbulent drag viscosity
+etas_x = (etas_x + etax + etat_x)/2;                                       % crystal effective drag viscosity   
+etas_f = (etas_f + etaf + etat_f)/2;                                       % fluid effective drag viscosity   
+
+% limit total viscosity contrast
+etamax = geomean(eta(:)).*(etacntr/2);
+etamin = geomean(eta(:))./(etacntr/2);
+eta    = 1./(1./etamax + 1./eta) + etamin;                                 % total magma viscosity
+
+etamax = geomean(etas_x(:)).*(etacntr/2);
+etamin = geomean(etas_x(:))./(etacntr/2);
+etas_x   = 1./(1./etamax + 1./etas_x) + etamin;                            % effective crystal settling viscosity
+
+etamax = geomean(etas_f(:)).*(etacntr/2);
+etamin = geomean(etas_f(:))./(etacntr/2);
+etas_f   = 1./(1./etamax + 1./etas_f) + etamin;                            % effective fluid droplet settling viscosity
+
+% interpolate to staggered nodes
 etaco  = (eta(icz(1:end-1),icx(1:end-1)).*eta(icz(2:end),icx(1:end-1)) ...
        .* eta(icz(1:end-1),icx(2:end  )).*eta(icz(2:end),icx(2:end  ))).^0.25;
 
+etas_xw = (etas_x(icz(1:end-1),:).*etas_x(icz(2:end),:)).^0.5;
+etas_fw = (etas_f(icz(1:end-1),:).*etas_f(icz(2:end),:)).^0.5;
+
+% ke  = 1./(1./kmax + 1./ke) + kmin;
+% kwm = abs(wm(1:end-1,2:end-1)+wm(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
+% kwx = abs(wx(1:end-1,2:end-1)+wx(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
+% kwf = abs(wf(1:end-1,2:end-1)+wf(2:end,2:end-1))/2.*Delta_sgr + kmin;                     % segregation diffusivity
+% km  = (kwm+ke.*fRe1).*mu ;                                                 % regularised melt  fraction diffusion 
+% kx  = (kwx+ke.*fRe1).*chi;                                                 % regularised solid fraction diffusion 
+% kf  = (kwf+ke.*fRe1).*phi;                                                 % regularised fluid fraction diffusion 
+kh  = (ke./Prt.*fRe100 + kmin).*rho.*cP./T;                                % regularised heat diffusion
+kc  =  ke./Sct.*fRe100 + kmin;                                             % regularised component diffusion
+% eta =  ke.*rho.*fRe1 + etamix;                                             % regularised momentum diffusion
+% etamax = etacntr.*max(min(eta(:)),etamin);
+% eta    = 1./(1./etamax + 1./eta) + etamin;
+% 
+% etaco  = (eta(icz(1:end-1),icx(1:end-1)).*eta(icz(2:end),icx(1:end-1)) ...
+%        .* eta(icz(1:end-1),icx(2:end  )).*eta(icz(2:end),icx(2:end  ))).^0.25;
+
 % update dimensionless numbers
-Ra     = Vel.*Delta_cnv./((kT+ks.*T)./rho./cP);
-Re     = Vel.*Delta_cnv./( eta      ./rho    );
-Rum    = abs(wm(1:end-1,2:end-1)+wm(2:end,2:end-1))/2./Vel;
-Rux    = abs(wx(1:end-1,2:end-1)+wx(2:end,2:end-1))/2./Vel;
-Ruf    = abs(wf(1:end-1,2:end-1)+wf(2:end,2:end-1))/2./Vel;
-Pr     = (eta./rho)./((kT+ks.*T)./rho./cP);
+ReD = V .*D0./(eta ./rho);                                                 % Reynolds number on scaled domain length
+Red_x = vx.*dx0./(etas_x./rho);                                            % particle Reynolds number-crystal
+Red_f = vf.*df0./(etas_f./rho);                                            % particle Reynolds number-fluid
+Ra_x  = V .*D0./kx;                                                        % Rayleigh number on scale domain length
+Ra_f  = V .*D0./kf;                                                        % Rayleigh number on scale domain length 
+Rc_x  = V./vx;                                                             % particle settling number (the ratios between the velocities)
+Rc_f  = V./vf;                                                             % particle settling number
+Ne  = xie./V;                                                              % eddy noise flux number
+Ns_x  = xix./vx;                                                           % settling noise flux number
+Ns_f  = xif./vf;                                                           % settling noise flux number
+
+% Ra     = Vel.*Delta_cnv./((kT+kh.*T)./rho./cP);
+% Re     = Vel.*Delta_cnv./( eta      ./rho    );
+% Rum    = abs(wm(1:end-1,2:end-1)+wm(2:end,2:end-1))/2./Vel;
+% Rux    = abs(wx(1:end-1,2:end-1)+wx(2:end,2:end-1))/2./Vel;
+% Ruf    = abs(wf(1:end-1,2:end-1)+wf(2:end,2:end-1))/2./Vel;
+Pr     = (eta./rho)./((kT+kh.*T)./rho./cP);
 Sc     = (eta./rho)./( kc                );
-deltam = sqrt(mu .*Ksgr_m.*eta./(1-chi));
-deltaf = sqrt(phi.*Ksgr_f.*eta./(1-chi));
+% deltam = sqrt(mu .*Ksgr_m.*eta./(1-chi));
+% deltaf = sqrt(phi.*Ksgr_f.*eta./(1-chi));
 
 % update stresses
 txx = eta   .* exx;                                                        % x-normal stress
@@ -255,5 +356,11 @@ else
          + phi./Ksgr_f .* ((wf(1:end-1,2:end-1)+wf(2:end,2:end-1))./2).^2;
 end
 
+% if step>0
+% % update time step
+% dtk = (h/2)^2/max(kx(:),kf(:)); % diffusive time step size  (the maximum of the diffusivities)
+% dta =  h/2   /max(abs([Um(:);Wm(:);Ux(:);Wx(:)]+eps));  % advective time step size
+% dt  =  min([1.5*dto,min([dtk,CFL*dta]),dtmax]); % time step size
+% end
+
 UDtime = UDtime + toc;
-end

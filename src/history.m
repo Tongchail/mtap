@@ -109,7 +109,7 @@ hist.Pt(stp,1) = min(min(Pt));
 hist.Pt(stp,2) = mean(mean(abs(Pt)));
 hist.Pt(stp,3) = max(max(Pt));
 
-hist.Pchmb(stp,1) = Pchmb;
+%hist.Pchmb(stp,1) = Pchmb;
 
 hist.x(stp,1) = min(min(x));
 hist.x(stp,2) = mean(mean(x));

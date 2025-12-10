@@ -30,13 +30,13 @@ elseif D >= 1e3
     SpaceScale = 1e3;
     SpaceUnits = 'km';
 end
-if max(Vel(:)) < 1000/yr
+if max(V(:)) < 1000/yr
     SpeedScale = 1/yr;
     SpeedUnits = 'm/yr';
-elseif max(Vel(:)) >= 1000/yr && max(Vel(:)) < 1000/hr
+elseif max(V(:)) >= 1000/yr && max(V(:)) < 1000/hr
     SpeedScale = 1/hr;
     SpeedUnits = 'm/hr';
-elseif max(Vel(:)) >= 1000/hr
+elseif max(V(:)) >= 1000/hr
     SpeedScale = 1;
     SpeedUnits = 'm/s';
 end
@@ -691,6 +691,7 @@ ylabel('Temperature [$^\circ$C]','Interpreter','latex','FontSize',15)
 if ~exist('fh11','var'); fh11 = figure(VIS{:});
 else; set(0, 'CurrentFigure', fh11);
 end
+set(fh11,'Position',[200 200 800 600]);
 if Nz>1 || step==0 || frst; clf;
 TAS; axis tight; box on; hold on;
 end
@@ -722,6 +723,7 @@ set(cb,TL{:},'FontSize',12); set(gca,TL{:},'FontSize',15); xlabel('SiO$_2$ [wt \
 if ~exist('fh12','var'); fh12 = figure(VIS{:});
 else; set(0, 'CurrentFigure', fh12);
 end
+set(fh12,'Position',[200 200 800 600]);
 if Nz>1 || step==0 || frst; clf;
 AFM; axis tight; box on; hold on;
 end
@@ -955,9 +957,9 @@ if save_op && ~restart
     print(fh13,name,'-dpng','-r300','-image');
 
     name = [outdir,'/',runID,'/',runID,'_',num2str(floor(step/nop))];
-    save(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal');
+    save(name,'U','W','P','Pt','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','MFS','wf','wx','wm','cal');
     name = [outdir,'/',runID,'/',runID,'_cont'];
-    save(name,'U','W','P','Pt','Pchmb','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','dV','wf','wx','wm','cal');
+    save(name,'U','W','P','Pt','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','MFS','wf','wx','wm','cal');
     name = [outdir,'/',runID,'/',runID,'_hist'];
     save(name,'hist');
 

@@ -11,7 +11,7 @@ advn_S = - advect(M.*sm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  
          - advect(X.*sx,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  % solid advection
          - advect(F.*sf,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);     % fluid advection
 
-diff_S = diffus(T,kT./T,h,[1,2],BCD) + diffus(Tp,ks,h,[1,2],BCD);
+diff_S = diffus(T,kT./T,h,[1,2],BCD) + diffus(Tp,kh,h,[1,2],BCD);
 
 % heat dissipation
 diss_h = diss ./ T;
