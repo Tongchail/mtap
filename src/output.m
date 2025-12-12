@@ -467,8 +467,8 @@ else % create 2D plots
     imagesc(Xsc,Zsc, P(2:end-1,2:end-1)); axis ij equal tight; box on; cb = colorbar;
     set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['$P$ [Pa]'],TX{:},FS{:}); ylabel(['Depth [',SpaceUnits,']'],TX{:},FS{:}); xlabel(['Width [',SpaceUnits,']'],TX{:},FS{:});
     set(fh1,'CurrentAxes',ax(14));
-    imagesc(Xsc,Zsc,Div_V*TimeScale); axis ij equal tight; box on; cb = colorbar;
-    set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['$\nabla \cdot \mathbf{v}$ [1/',TimeUnits,']'],TX{:},FS{:}); xlabel(['Width [',SpaceUnits,']'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+    imagesc(Xsc,Zsc,Div_rhoV*TimeScale); axis ij equal tight; box on; cb = colorbar;
+    set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['$\nabla \cdot \rho \mathbf{v}$ [kg/m$^3$/',TimeUnits,']'],TX{:},FS{:}); xlabel(['Width [',SpaceUnits,']'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
 
     % plot temperature and composition in Fig. 2
     set(0,'CurrentFigure',fh2)
@@ -481,8 +481,8 @@ else % create 2D plots
     text(0.5,1.15,['time = ',num2str(time/TimeScale,3),' [',TimeUnits,']'],TX{:},FS{:},'Color','k','HorizontalAlignment','center','Units','normalized');
     set(fh2,'CurrentAxes',ax(23));
     if any(c(:,:,end),'all')
-        imagesc(Xsc,Zsc,squeeze(c_oxd(:,:,cal.H))); axis ij equal tight; box on; cb = colorbar;
-        set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['H$_2$O [wt\%]'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
+        imagesc(Xsc,Zsc,squeeze(c_oxd(:,:,cal.Fe))); axis ij equal tight; box on; cb = colorbar;
+        set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['FeO [wt\%]'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
     else
         imagesc(Xsc,Zsc,squeeze(c_oxd(:,:,cal.Mg)./sum(c_oxd(:,:,1:end-1),3).*100)); axis ij equal tight; box on; cb = colorbar;
         set(cb,TL{:},TS{:}); set(gca,TL{:},TS{:}); title(['MgO [wt\%]'],TX{:},FS{:}); set(gca,'YTickLabel',[]);
@@ -650,6 +650,8 @@ end
 xlabel([cal.cmpStr{i},' [wt \%]'],'Interpreter','latex','FontSize',12)
 set(gca,'TickLabelInterpreter','latex','FontSize',10)
 end
+subplot(3,2,6)
+plot(MFEsat*100,T-273.15,'.',CL{[1,5]},'LineWidth',2,'MarkerSize',15);
 
 if Nz>1
 subplot(3,2,2)

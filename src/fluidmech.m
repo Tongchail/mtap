@@ -3,13 +3,13 @@ tic;
 if ~bnchm && step>0 && ~restart
 
 %***  update mixture mass density
-drhodt  = - advn_rho;             % advection term
+drhodt  = advn_rho;             % advection term
 
 % residual of mixture mass evolution
 res_rho = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
 
 % volume source and background velocity passed to fluid-mechanics solver
-[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho./b1./rho,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
+[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho./b1,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
 
 MFSmean  = mean(MFS,'all');
 
@@ -86,7 +86,7 @@ rho1 = rhow(end  ,:    );
 rho2 = rhow(end-1,:    );
 rho3 = rhou(end,2:end  );
 rho4 = rhou(end,1:end-1);
-IIL = [IIL; ii(:)]; JJL = [JJL; jj1(:)];   AAL = [AAL;+     rho1(:)/h];
+IIL = [IIL; ii(:)]; JJL = [JJL; jj1(:)];   AAL = [AAL;+         rho1(:)/h];
 IIL = [IIL; ii(:)]; JJL = [JJL; jj2(:)];   AAL = [AAL;-open_cnv*rho2(:)/h];
 IIL = [IIL; ii(:)]; JJL = [JJL; jj3(:)];   AAL = [AAL;+open_cnv*rho3(:)/h];
 IIL = [IIL; ii(:)]; JJL = [JJL; jj4(:)];   AAL = [AAL;-open_cnv*rho4(:)/h];
@@ -498,125 +498,39 @@ U = U + upd_U;
 P = P + upd_P;
 SOL = [W(:);U(:);P(:)];
 
-% SOL = SCL*(LL\RR);  % update solution
-% 
-% % map solution vector to 2D arrays
-% W = full(reshape(SOL(MapW(:))        ,Nz+1,Nx+2));  % matrix z-velocity
-% U = full(reshape(SOL(MapU(:))        ,Nz+2,Nx+1));  % matrix x-velocity
-% P = full(reshape(SOL(MapP(:)+(NW+NU)),Nz+2,Nx+2));  % matrix dynamic pressure
-% P = P - mean(mean(P(2:end-1,2:end-1)));             % reduce pressure by mean
-
-% % get VP-solution updates
-% upd_W = - full(reshape(SOL(MapW(:))        ,Nz+1,Nx+2));  % matrix z-velocity
-% upd_U = - full(reshape(SOL(MapU(:))        ,Nz+2,Nx+1));  % matrix x-velocity
-% upd_P = - full(reshape(SOL(MapP(:)+(NW+NU)),Nz+2,Nx+2));  % matrix dynamic pressure
-% upd_P = upd_P - mean(upd_P(:));                                 % reduce pressure update by mean
-% 
-% % apply VP-solution updates
-% W = W + upd_W;
-% U = U + upd_U;
-% P = P + upd_P;
 
 end
 
 %% Update phase segregation speeds
 if ~bnchm && step>=1
 
+    % taper towards boundaries if closed segregation top/bot boundaries
+    bndtaperwx = (1 - (exp((-ZZw)/l0xh) + exp(-(D-ZZw)/l0xh)).*(1-open_sgr));
+    bndtaperwf = (1 - (exp((-ZZw)/l0fh) + exp(-(D-ZZw)/l0fh)).*(1-open_sgr));
+
     % terminal xtal segregation speed  
     wx(:,2:end-1) = dx0^2./etas_xw.*Drhox.*g0;  %*take the segregation coefficient apart to address the viscosity
-
-    % taper towards boundaries if closed segregation top/bot boundaries
-    bndtaperw = (1 - (exp((-ZZw)/l0) + exp(-(D-ZZw)/l0)).*(1-open_sgr));
-    wx = wx .* bndtaperw;
-
-    % periodic side boundaries
+    wx = wx .* bndtaperwx;
     wx(:,[1 end]) = wx(:,[end-1 2]);
 
     % fluid segregation speed 
     wf(:,2:end-1) = df0^2./etas_fw.*Drhof.*g0;
-    wf = wf .* bndtaperw;
+    wf = wf .* bndtaperwf;
     wf(:,[1 end]) = wf(:,[end-1 2]);
    
     % melt segregation speed   (mass fraction, xw​*wx ​+ fw*​wf​ + mw*​wm​ = 0  mass flux)
     wm  = -xw(:,icx)./mw(:,icx).*wx - ffw(:,icx)./mw(:,icx).*wf;
 
-    % *** previous version：
-    % wx(2:end-1,2:end-1) = Drhox(2:end-1,:).*g0.*(Ksgr_x(1:end-1,:).*Ksgr_x(2:end,:)).^0.5; % solid segregation speed
-    % wx([1,end],:) = min(1,1-[top;bot]).*wx([2,end-1],:);
-    % if periodic
-    %     wx(:,[1 end]) = wx(:,[end-1 2]);
-    % else
-    %     wx(:,[1 end]) = wx(:,[2 end-1]);
-    % end
-
-    % wf(2:end-1,2:end-1) = Drhof(2:end-1,:).*g0.*(Ksgr_f(1:end-1,:).*Ksgr_f(2:end,:)).^0.5; % fluid segregation speed
-    % wf([1,end],:) = min(1,1-[top-fout;bot-fin]).*wf([2,end-1],:);
-    % if periodic
-    %     wf(:,[1 end]) = wf(:,[end-1 2]);
-    % else
-    %     wf(:,[1 end]) = wf(:,[2 end-1]);
-    % end 
-
-    % wm(2:end-1,2:end-1) = Drhom(2:end-1,:).*g0.*(Ksgr_m(1:end-1,:).*Ksgr_m(2:end,:)).^0.5; % melt segregation speed
-    % wm([1,end],:) = min(1,1-[top;bot]).*wm([2,end-1],:);
-    % if periodic
-    %     wm(:,[1 end]) = wm(:,[end-1 2]);
-    % else
-    %     wm(:,[1 end]) = wm(:,[2 end-1]);
-    % end
-
     % phase diffusion fluxes and speeds
-    % [~,qmz,qmx] = diffus(mu ,km,h,[1,2],BCD);
-    % [~,qxz,qxx] = diffus(chi,kx,h,[1,2],BCD);
-    % [~,qfz,qfx] = diffus(phi,kf,h,[1,2],BCD);
-    % qmz  = -qxz-qfz;  qmx = -qxx-qfx;
+    [~,wqx,uqx] = diffus(chi,k_x,h,[1,2],BCD);
+    [~,wqf,uqf] = diffus(phi,k_f,h,[1,2],BCD);
+    wqx  = wqx .* bndtaperwx;
+    wqf  = wqf .* bndtaperwf;
+    wqm  = -xw(:,icx)./mw (:,icx).*wqx - ffw(:,icx)./mw (:,icx).*wqf;
+    uqm  = -xu(icz,:)./muu(icz,:).*uqx - fu (icz,:)./muu(icz,:).*uqf;
 
-    % dmudz = ddz( mu(icz,icx),h); dmudx = ddx( mu(icz,icx),h);
-    % dchdz = ddz(chi(icz,icx),h); dchdx = ddx(chi(icz,icx),h);
-    % dphdz = ddz(phi(icz,icx),h); dphdx = ddx(phi(icz,icx),h);
-    % 
-    % kmz = (km(icz(1:end-1),icx)+km(icz(2:end),icx))./2;
-    % kmx = (km(icz,icx(1:end-1))+km(icz,icx(2:end)))./2;
-    % 
-    % kxz = (kx(icz(1:end-1),icx)+kx(icz(2:end),icx))./2;
-    % kxx = (kx(icz,icx(1:end-1))+kx(icz,icx(2:end)))./2;
-    % 
-    % kfz = (kf(icz(1:end-1),icx)+kf(icz(2:end),icx))./2;
-    % kfx = (kf(icz,icx(1:end-1))+kf(icz,icx(2:end)))./2;
-    % 
-    % sumkz = kmz + kxz + kfz;
-    % sumkx = kmx + kxx + kfx;
-    % 
-    % dstdz = kmz./sumkz .* dmudz + kxz./sumkz .* dchdz + kfz./sumkz .* dphdz;
-    % dstdx = kmx./sumkx .* dmudx + kxx./sumkx .* dchdx + kfx./sumkx .* dphdx;
-    % 
-    % qmz = - kmz .* (dmudz-dstdz);  qmx = - kmx .* (dmudx-dstdx);
-    % qxz = - kxz .* (dchdz-dstdz);  qxx = - kxx .* (dchdx-dstdx);
-    % qfz = - kfz .* (dphdz-dstdz);  qfx = - kfx .* (dphdx-dstdx);
-    % 
-    % phiz = (phi(icz(1:end-1),icx)+phi(icz(2:end),icx))./2;
-    % phix = (phi(icz,icx(1:end-1))+phi(icz,icx(2:end)))./2;
-    % 
-    % chiz = (chi(icz(1:end-1),icx)+chi(icz(2:end),icx))./2;
-    % chix = (chi(icz,icx(1:end-1))+chi(icz,icx(2:end)))./2;
-    % 
-    % muz  = (mu (icz(1:end-1),icx)+mu (icz(2:end),icx))./2;
-    % mux  = (mu (icz,icx(1:end-1))+mu (icz,icx(2:end)))./2;
-    % 
-    % wqf = qfz./max(eps^0.5,phiz);  wqf([1,end],:) = min(1,1-[top-fout;bot-fin]).*wqf([2,end-1],:);
-    % uqf = qfx./max(eps^0.5,phix);
-    % 
-    % wqx = qxz./max(eps^0.5,chiz);
-    % uqx = qxx./max(eps^0.5,chix);
-    % ˜
-    % wqm = qmz./max(eps^0.5,muz);
-    % uqm = qmx./max(eps^0.5,mux);
-
-    % phase diffusion fluxes and speeds
-    [~,wqx,uqx] = diffus(chi,kx,h,[1,2],BCD);
-    [~,wqf,uqf] = diffus(phi,kf,h,[1,2],BCD);
-    wqm = -wqx-wqf;
-    uqm = -uqx-uqf;
+    % wqm = -wqx-wqf;
+    % uqm = -uqx-uqf;
 
     % update stochastic noise speeds
     noise;  
@@ -631,20 +545,6 @@ if ~bnchm && step>=1
     Wm = W + wm + wqm + xiwm + xiew; % mlt z-velocity
     Um = U + 0. + uqm + xium + xieu; % mlt x-velocity
 
-    % *** previous version：
-    % Wf  = W + wf + wqf;  % mvp z-velocity
-    % Uf  = U + 0. + uqf;  % mvp x-velocity
-    % Wx  = W + wx + wqx;  % xtl z-velocity
-    % Ux  = U + 0. + uqx;  % xtl x-velocity
-    % Wm  = W + wm + wqm;  % mlt z-velocity
-    % Um  = U + 0. + uqm;  % mlt x-velocity
-
-    
-    %% update time step
-    dtk = (h/2)^2/max([kc(:);km(:);kx(:);kf(:);(kT(:)+kh(:).*T(:))./rho(:)./cP(:)]); % diffusive time step size  
-    dta =  h/2   /max(abs([Um(:);Wm(:);Ux(:);Wx(:);Uf(:);Wf(:)]+eps)); % advective time step size
-    dtc = maxcmp./max(abs([advn_X(:)./rho(:);advn_M(:)./rho(:);advn_F(:)./rho(:)]));
-    dt  = (dt + min([1.1*dto,min(CFL*[dtk,dta,dtc]),dtmax,tau_T/10]))/2;                         % time step size
 end
 
 end

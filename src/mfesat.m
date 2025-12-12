@@ -25,6 +25,6 @@ MFEsat = cal.MFE_liquidus .* ...
 
 % ---- Constrain within valid range ----
 MFEsat = max(MFEsat, 1e-4);                  % no negative values
-MFEsat = min(MFEsat, cal.MFE_liquidus);      % cannot exceed liquidus value
+% MFEsat = min(MFEsat, cal.MFE_liquidus);      % cannot exceed liquidus value
 end
 
