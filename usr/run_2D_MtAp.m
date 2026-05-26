@@ -7,14 +7,14 @@ run('./par_MtAp_default.m')
 % set run parameters
 runID     =  '2D_MtAp';           % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop       =  20;                 % output frame plotted/saved every 'nop' time steps
+nop       =  20;                  % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
 save_op   =  0;                   % switch on to save output to file
 colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
 
 % set model domain parameters
 D         =  100;                 % chamber depth [m]
-N         =  80;                 % number of grid points in z-direction
+N         =  80;                  % number of grid points in z-direction
 h         =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
 L         =  D;                   % chamber width (equal to h for 1-D mode) [m]
 
@@ -76,7 +76,7 @@ itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
 itpar.aa.damp = 0.5;              % Anderson acceleration damping (0-1)
 itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
 
-%*****  RUN NAKHLA MODEL  *************************************************
+%*****  RUN MTAP MODEL  *************************************************
 run('../src/main')
 %**************************************************************************
 

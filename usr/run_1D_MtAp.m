@@ -27,13 +27,13 @@ dt        =  1;                   % initial time step [s]
 
 % set initial thermo-chemical state
 init_mode =  'liquidus';          % auto calculate liquidus
-T0        =  -50;                  % ? initial temperature [deg C]
+T0        =  -30;                 % offset below liquidus |||| initial temperature [deg C]
 c0        =  [15.4159   10.0390   15.4879   19.3207   39.7364  6  2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr       =  [1,1,1,-1,-1,-1,0]*0e-4;
 dr_trc    =  [1,1,1,-1,-1,-1  ]*0e-4; % trace elements random noise
 
 % set thermo-chemical boundary parameters
-periodic  =  1;                   % periodic side boundaries
+periodic  =  1;                   % periodic side boundaries (1-无限宽)
 bndmode   =  3;                   % *** boundary assimilation mode (0 = none; 1 = top only; 2 = bot only; 3 = top/bot only; 4 = all walls; 5 = only sides)
 bnd_w     =  h;                   % boundary layer width [m]
 tau_T     =  (2*h)^2/1e-6;        % wall cooling/assimilation time [s]
@@ -53,7 +53,8 @@ ADVN      =  'weno5';             % advection scheme ('centr','upw1','quick','fr
 CFL       =  1.00;                % (physical) time stepping courant number (multiplies stable step) [0,1]
 rtol      =  1e-4;                % outer its relative tolerance
 atol      =  1e-9;                % outer its absolute tolerance
-maxit     =  20;                  % maximum outer its
+maxit     =  20;                  % maximum outer its (raised for slow convergence at small alpha)
+%alpha     =  0.90;               % iterative step size parameter (under-relaxation; small for 1-D stability)
 itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
 itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
 itpar.aa.damp = 0.5;              % Anderson acceleration damping (0-1)

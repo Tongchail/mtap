@@ -10,8 +10,10 @@ for i = 1:cal.ntrc
     for j=1:cal.nmem; Ktrc(:,:,i) = Ktrc(:,:,i) + cal.Ktrc_mem(i,j) .* cx_mem(:,:,j)./100; end
 
     % update trace element phase compositions
-    trcm(:,:,i) = trc(:,:,i)./(m + x.*Ktrc(:,:,i));
-    trcx(:,:,i) = trc(:,:,i)./(m./Ktrc(:,:,i) + x);
+    % guard denominators against division by zero: Ktrc can be 0 if the only mineral phases present have zero partitioning for element i, and m/x can vanish in pure-solid/pure-melt limits (esp. 0-D runs).
+    Ktrc_safe   = max(Ktrc(:,:,i),eps);
+    trcm(:,:,i) = trc(:,:,i)./max(m + x.*Ktrc_safe, eps);
+    trcx(:,:,i) = trc(:,:,i)./max(m./Ktrc_safe + x, eps);
 
     % get trace element advection
     adv_TRC(:,:,i) = - advect(M.*trcm(:,:,i),Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...

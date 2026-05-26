@@ -1,9 +1,12 @@
+%% Mtap last modified 26 May 2026
+
 tic;
 
 if ~bnchm && step>0 && ~restart
 
 %***  update mixture mass density
-drhodt  = advn_rho;             % advection term
+% advn_rho is defined in thermochem.m as advn_X+advn_F+advn_M, and each advn_* = -advect(...) = -div(v*phase). So advn_rho already equals -div(rho*v), which is the mass-conservation rate d(rho)/dt. The model's other conservation laws use the same convention with NO extra sign:dXdt=advn_X, dCdt=advn_C, dSdt=advn_S.
+drhodt  = advn_rho;               % advection term
 
 % residual of mixture mass evolution
 res_rho = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
@@ -18,26 +21,28 @@ MFBG     = MFSmean .* ZZw;
 end
 
 %% 0-D run does not require fluidmech solve
-if Nz==1 && Nx==1  
+if Nz==1 && Nx==1
     W  = WBG; Wm = W;  Wx = W;  Wf = W;
     U  = UBG; Um = U;  Ux = U;  Uf = U;
     P  = zeros(Nz+2,Nx+2);
     resnorm_VP = 0;
 else
 
-if Nx==1
-    % update 1D velocity
-    W(:,2) = -flipud(cumsum(flipud([MFS*h;-WBG(end)])));
+% 1-D and 2-D both use the full matrix solver below. The previous 1-D cumsum shortcut for W/P drove the velocity loop unstable.
 
-    % update 1D pressure
-    Div_tz = ddz(tzz(icz,:),h);           % z-stress divergence
-    PrsSrc = - Div_tz;
-    P(:,2) =  flipud(cumsum(flipud([PrsSrc*h;0])));
-    P(:,2) = P(:,2) - P(Nz/2,2);
-
-    W(:,1) = W(:,2); W(:,end) = W(:,2);
-    P(:,1) = P(:,2); P(:,end) = P(:,2);
-else
+% if Nx==1
+%     % update 1D velocity
+%     W(:,2) = -flipud(cumsum(flipud([MFS*h;-WBG(end)])));
+% 
+%     % update 1D pressure
+%     Div_tz = ddz(tzz(icz,:),h);           % z-stress divergence
+%     PrsSrc = - Div_tz;
+%     P(:,2) =  flipud(cumsum(flipud([PrsSrc*h;0])));
+%     P(:,2) = P(:,2) - P(Nz/2,2);
+% 
+%     W(:,1) = W(:,2); W(:,end) = W(:,2);
+%     P(:,1) = P(:,2); P(:,end) = P(:,2);
+% else
 
 
 %% assemble coefficients for matrix velocity diagonal and right-hand side
@@ -518,17 +523,28 @@ if ~bnchm && step>=1
     wf = wf .* bndtaperwf;
     wf(:,[1 end]) = wf(:,[end-1 2]);
    
-    % melt segregation speed   (mass fraction, xw​*wx ​+ fw*​wf​ + mw*​wm​ = 0  mass flux)
-    wm  = -xw(:,icx)./mw(:,icx).*wx - ffw(:,icx)./mw(:,icx).*wf;
+    % melt segregation speed   (mass fraction, x_w*wx + f_w*wf + m_w*wm = 0  mass flux)
+    wm  = -x_w(:,icx)./m_w(:,icx).*wx - f_w(:,icx)./m_w(:,icx).*wf;
 
-    % phase diffusion fluxes and speeds
-    [~,wqx,uqx] = diffus(chi,k_x,h,[1,2],BCD);
-    [~,wqf,uqf] = diffus(phi,k_f,h,[1,2],BCD);
-    wqx  = wqx .* bndtaperwx;
-    wqf  = wqf .* bndtaperwf;
-    wqm  = -xw(:,icx)./mw (:,icx).*wqx - ffw(:,icx)./mw (:,icx).*wqf;
-    uqm  = -xu(icz,:)./muu(icz,:).*uqx - fu (icz,:)./muu(icz,:).*uqf;
+    % % phase diffusion fluxes and speeds
+    % [~,wqx,uqx] = diffus(chi,k_x,h,[1,2],BCD);
+    % [~,wqf,uqf] = diffus(phi,k_f,h,[1,2],BCD);
+    % wqx  = wqx .* bndtaperwx;
+    % wqf  = wqf .* bndtaperwf;
+    % wqm  = -x_w(:,icx)./m_w(:,icx).*wqx - f_w(:,icx)./m_w(:,icx).*wqf;
+    % uqm  = -x_u(icz,:)./m_u(icz,:).*uqx - f_u(icz,:)./m_u(icz,:).*uqf;
 
+    % phase diffusion rates and fluxes
+    % (add the diffusive contribution to the phase velocities)
+    [dffn_X,qz_dffn_X,qx_dffn_X] = diffus(chi,k_x,h,[1,2],BCD);
+    [dffn_F,qz_dffn_F,qx_dffn_F] = diffus(phi,k_f,h,[1,2],BCD);
+    wdx =  qz_dffn_X;
+    udx =  qx_dffn_X;
+    wdf =  qz_dffn_F;
+    udf =  qx_dffn_F;
+    wdm = -qz_dffn_X.*x_w(:,icx)./m_w(:,icx) - qz_dffn_F.*f_w(:,icx)./m_w(:,icx);
+    udm = -qx_dffn_X.*x_u(icz,:)./m_u(icz,:) - qx_dffn_F.*f_u(icz,:)./m_u(icz,:);
+ 
     % wqm = -wqx-wqf;
     % uqm = -uqx-uqf;
 
@@ -536,17 +552,18 @@ if ~bnchm && step>=1
     noise;  
 
     % update phase velocities
-    Wx = W + wx + wqx + xiwx + xiew; % xtl z-velocity
-    Ux = U + 0. + uqx + xiux + xieu; % xtl x-velocity
-    
-    Wf = W + wf + wqf + xiwf + xiew; % mfe z-velocity 
-    Uf = U + 0. + uqf + xiuf + xieu; % mfe x-velocity
+    % phase diffusion speeds were refactored from wq*/uq* to wd*/ud*
+    % (see definitions above); update them here to match.
+    Wx = W + wx + wdx + xiwx + xiew; % xtl z-velocity
+    Ux = U + 0. + udx + xiux + xieu; % xtl x-velocity
 
-    Wm = W + wm + wqm + xiwm + xiew; % mlt z-velocity
-    Um = U + 0. + uqm + xium + xieu; % mlt x-velocity
+    Wf = W + wf + wdf + xiwf + xiew; % mfe z-velocity
+    Uf = U + 0. + udf + xiuf + xieu; % mfe x-velocity
+
+    Wm = W + wm + wdm + xiwm + xiew; % mlt z-velocity
+    Um = U + 0. + udm + xium + xieu; % mlt x-velocity
 
 end
-
-end
+%end
 
 FMtime = FMtime + toc;

@@ -1,4 +1,5 @@
-%% Reproduce this for mfe rather than water (11 Nov. 2025)
+%% Mtap --- Tong, last modified 21 May 2026
+%% Reproduce this for mfe rather than water 
 
 % var.H2O → var.MFE （the amount of MFE in the bulk）
 % var.H2Om → var.MFEm （MFE dissolved in the melt）
@@ -93,7 +94,7 @@ while rnorm > cal.tol  % iterate down to full accuracy
         disp(['!!! Newton solver for solidus T not converged after ',num2str(its_tol),' iterations !!!']);
         flag = 0; break;
     end
-    
+
 end
 
 cal.Tsol = Tsol;
@@ -158,7 +159,7 @@ while rnorm > cal.tol  % iterate down to full accuracy
         disp(['!!! Newton solver for liquidus T not converged after ',num2str(its_tol),' iterations !!!']);
         flag = 0; break;
     end
-    
+
 end
 
 cal.Tliq  =  Tliq;
@@ -244,20 +245,6 @@ while rnorm > cal.tol     % Newton iteration
 end
 var.cm = max(0,min(1, var.c        ./(var.m + var.x.*cal.Kx + var.f.*cal.Kf + 1e-16) ));
 var.cx = max(0,min(1, var.c.*cal.Kx./(var.m + var.x.*cal.Kx + var.f.*cal.Kf + 1e-16) ));
-
-end
-
-
-function [r,var,cal] = resm(m,var,cal)
-
-var.H2Om  = max(0,min(cal.H2Osat, var.H2O./(m+1e-16) )); % max(0,var.H2O./(m+1e-16) );
-var.MFEm  = max(0,min(cal.MFEsat, var.MFE./(m+1e-16) ));
-[var,cal] = leappartmfe(var,cal,'K');
-f         = max(0,min(var.MFE, var.MFE - m.*var.MFEm ));
-x         = 1-m-f;
-var.cm    = var.c        ./(m + x.*cal.Kx + f.*cal.Kf + 1e-16);
-var.cx    = var.c.*cal.Kx./(m + x.*cal.Kx + f.*cal.Kf + 1e-16);
-r         = sum(var.cm,2) - sum(var.cx,2);
 
 end
 

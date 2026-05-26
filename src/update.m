@@ -1,3 +1,5 @@
+%% Mtap --- Tong, last modified 21 May 2026
+
 %%*****  UPDATE PARAMETERS & AUXILIARY FIELDS  ****************************
 tic;
 
@@ -94,17 +96,23 @@ phi    = max(eps,min(1-eps, f.*rho./rhom));
 % phi    = max(0,min(1, f.*rho./rhof ));
 % mu     = max(0,min(1, m.*rho./rhom ));
 
+% volume fractions interpolated onto the staggered grids (chi/mu/phi -> *w, *u)
 chiw   = (chi(icz(1:end-1),:)+chi(icz(2:end),:))./2;
 muw    = ( mu(icz(1:end-1),:)+ mu(icz(2:end),:))./2;
 phiw   = (phi(icz(1:end-1),:)+phi(icz(2:end),:))./2;
 
-xw     = (x(icz(1:end-1),:)+x(icz(2:end),:))./2;
-mw     = (m(icz(1:end-1),:)+m(icz(2:end),:))./2;
-ffw    = (f(icz(1:end-1),:)+f(icz(2:end),:))./2; % because the name 'fw' is already used, we use 'ffw' instead.
+chiu   = (chi(icz,icx(1:end-1))+chi(icz,icx(2:end)))./2;
+muu    = ( mu(icz,icx(1:end-1))+ mu(icz,icx(2:end)))./2;
+phiu   = (phi(icz,icx(1:end-1))+phi(icz,icx(2:end)))./2;
 
-xu     = (x(:,icx(1:end-1))+x(:,icx(2:end)))./2;
-muu    = (m(:,icx(1:end-1))+m(:,icx(2:end)))./2;
-fu     = (f(:,icx(1:end-1))+f(:,icx(2:end)))./2;
+% mass fractions interpolated onto the staggered grids (x/m/f -> *_w, *_u)
+x_w    = (x(icz(1:end-1),:)+x(icz(2:end),:))./2;
+m_w    = (m(icz(1:end-1),:)+m(icz(2:end),:))./2;
+f_w    = (f(icz(1:end-1),:)+f(icz(2:end),:))./2;
+
+x_u    = (x(:,icx(1:end-1))+x(:,icx(2:end)))./2;
+m_u    = (m(:,icx(1:end-1))+m(:,icx(2:end)))./2;
+f_u    = (f(:,icx(1:end-1))+f(:,icx(2:end)))./2;
 
 Xw     = (X(icz(1:end-1),:)+X(icz(2:end),:))/2;
 Mw     = (M(icz(1:end-1),:)+M(icz(2:end),:))/2;
@@ -163,9 +171,12 @@ etai = kv.*thtv;                % the phase viscosities
 % Cv   = Kv.*(1-ff)./dd.^2;
 
 % get effective viscosity
-etax   = squeeze(etai(1,:,:));
-etam   = squeeze(etai(2,:,:));
-etaf   = squeeze(etai(3,:,:));
+% squeeze of a [1 x Nz x 1] slab returns a row vector when Nx==1; transpose
+% back to a column [Nz x 1] so later column-wise operations don't broadcast
+% into [Nz x Nz] (same fix already applied to etamix below).
+etax   = squeeze(etai(1,:,:)); if Nx==1; etax = etax.'; end
+etam   = squeeze(etai(2,:,:)); if Nx==1; etam = etam.'; end
+etaf   = squeeze(etai(3,:,:)); if Nx==1; etaf = etaf.'; end
 etamix = squeeze(sum(ff.*etai,1)); if Nx==1; etamix = etamix.'; end
 
 % update velocity divergence
@@ -218,17 +229,20 @@ Vf   = sqrt(((Wf(1:end-1,2:end-1)+Wf(2:end,2:end-1))/2).^2 ...
 bndtaperx = (1 - (exp((-ZZ)/l0x) + exp(-(D-ZZ)/l0x)).*(1-open_sgr));
 bndtaperf = (1 - (exp((-ZZ)/l0f) + exp(-(D-ZZ)/l0f)).*(1-open_sgr));
 
-vx   = dx0^2./etas_x.*(rhox0-rhom0).*g0.*bndtaperx;                            % xtal segregation speed magnitude vx downward direction
-vf   = df0^2./etas_f.*(rhof0-rhom0).*g0.*bndtaperf;  
-vm   = ( x .* vx + f .* vf ) ./ max(m, eps);
+% interpolate wx from w-nodes to centre nodes, then take magnitude (z-component only).
+% No taper needed: wx is zero on the boundary, so interpolation automatically
+% lowers the first interior magnitude point.
+vx = sqrt( ((wx(1:end-1,2:end-1) + wx(2:end,2:end-1))/2).^2 ) + eps;        % xtal segregation speed magnitude
+vf = sqrt( ((wf(1:end-1,2:end-1) + wf(2:end,2:end-1))/2).^2 ) + eps;        % fluid segregation speed magnitude (same operation)
+vm = ( x .* vx + f .* vf ) ./ max(m, eps);                                  % melt segregation speed magnitude
 
 xie   = sqrt(((xiew(1:end-1,2:end-1)+xiew(2:end,2:end-1))/2).^2 ...
            + ((xieu(2:end-1,1:end-1)+xieu(2:end-1,2:end))/2).^2); 
 xisx  = sqrt(((xisxw(1:end-1,2:end-1)+xisxw(2:end,2:end-1))/2).^2 ...
-           + ((xisxu(2:end-1,1:end-1)+xisxu(2:end-1,2:end))/2).^2);            % settling noise flux magnitude 
+           + ((xisxu(2:end-1,1:end-1)+xisxu(2:end-1,2:end))/2).^2);         % settling noise flux magnitude 
 xiex  = sqrt(((xixw(1:end-1,2:end-1)+xixw(2:end,2:end-1))/2).^2 ...
-           + ((xixu(2:end-1,1:end-1)+xixu(2:end-1,2:end))/2).^2);            % xtal eddy noise flux magnitude 模长速度噪声大小           % global eddy noise？melt? eddy noise flux magnitude
-xix   = xisx + xiex;                                                          % total xtl noise
+           + ((xixu(2:end-1,1:end-1)+xixu(2:end-1,2:end))/2).^2);           % xtal eddy noise flux magnitude 模长速度噪声大小           % global eddy noise？melt? eddy noise flux magnitude
+xix   = xisx + xiex;                                                        % total xtl noise
 xisf = sqrt(((xisfw(1:end-1,2:end-1)+xisfw(2:end,2:end-1))/2).^2 ...
           + ((xisfu(2:end-1,1:end-1)+xisfu(2:end-1,2:end))/2).^2);          % settling noise flux magnitude 
 xief = sqrt(((xifw(1:end-1,2:end-1)+xixw(2:end,2:end-1))/2).^2 ...
@@ -251,7 +265,8 @@ else
 end
 
 ks_x = vx .*l0x;                                                       % xtl segregation diffusivity
-ks_f = vf .*l0f;                                                       % flu segregation diffusivity
+ks_f = vf .*l0f;                                                       % mfe segregation diffusivity
+ks_m = vm .*l0m;                                                       % msi segregation diffusivity
 k_x  = (ks_x + fReL.*ke);                                             % regularised particle diffusivity
 k_f  = (ks_f + fReL.*ke);                                             % regularised particle diffusivity
 kh   = (ke./Prt.*fReL + kmin).*rho.*cP./T;                                  % regularised heat diffusion
@@ -314,6 +329,19 @@ tII = (0.5.*(txx.^2 + tzz.^2 ...
 % heat dissipation (entropy production) rate
 if Nz==1 && Nx==1
     diss = 0.*T;  % no dissipation in 0-D mode (no diffusion, no shear deformation, no segregation)
+elseif Nx==1
+    % 1-D mode (Nz>1, Nx=1): only z-direction terms exist. The 2-D branch
+    % below uses gradient() on the ghost-padded T(icz,icx) which is
+    % [Nz+2 x 3] in 1-D and produces a wrongly-sized diss. Here grdTz is a
+    % plain column-vector gradient; x-direction and xz-shear terms are
+    % dropped (they vanish when Nx=1), normal-strain and segregation
+    % dissipation are kept. icz(:) forces a column index so T(icz(:)) and
+    % hence grdTz stay column vectors (avoids column.*row broadcasting).
+    grdTz = gradient(T(icz(:)),h);
+    diss  = kT./T.*grdTz(2:end-1).^2 ...
+          + exx.*txx + ezz.*tzz ...
+          + chi.^2.*etas_x./dx0^2 .* ((wx(1:end-1,2:end-1)+wx(2:end,2:end-1))./2).^2 ...
+          + phi.^2.*etas_f./df0^2 .* ((wf(1:end-1,2:end-1)+wf(2:end,2:end-1))./2).^2;
 else
     [grdTx ,grdTz ] = gradient(T(icz,icx),h);
     diss = kT./T.*(grdTz (2:end-1,2:end-1).^2 + grdTx (2:end-1,2:end-1).^2) ...

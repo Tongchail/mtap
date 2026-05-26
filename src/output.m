@@ -262,12 +262,14 @@ elseif Nx <= 1  % create 1D plots
     subplot(1,4,3)
     semilogx(ke,Zsc.',CL{[1,2]},LW{:}); axis ij tight; box on; hold on
     semilogx(kc,Zsc.','--',CL{[1,2]},LW{:}); axis ij tight; box on;
-    semilogx(kwx,Zsc.',CL{[1,4]},LW{:}); axis ij tight; box on;
-    semilogx(kwf,Zsc.',CL{[1,5]},LW{:}); axis ij tight; box on;
-    semilogx(kwm,Zsc.',CL{[1,3]},LW{:}); axis ij tight; box on;
+    % phase segregation diffusivities (variables renamed kwx/kwf/kwm -> ks_x/ks_f/ks_m)
+    semilogx(ks_x,Zsc.',CL{[1,4]},LW{:}); axis ij tight; box on;
+    semilogx(ks_f,Zsc.',CL{[1,5]},LW{:}); axis ij tight; box on;
+    semilogx(ks_m,Zsc.',CL{[1,3]},LW{:}); axis ij tight; box on;
     title(['$\kappa$ [m$^2$/s]'],TX{:},FS{:}); set(gca,TL{:},TS{:});
     subplot(1,4,4)
-    plot(dV*hr,Zsc.','--',CL{[1,2]},LW{:}); axis ij tight; box on; hold on
+    % depth profile of the current velocity divergence (variable renamed dV -> Div_V)
+    plot(Div_V*hr,Zsc.','--',CL{[1,2]},LW{:}); axis ij tight; box on; hold on
     plot(P(2:end-1,2:end-1),Zsc.',CL{[1,2]},LW{:}); axis ij tight; box on;
     title('$P$ [Pa], $\dot{V}$ [1/hr]',TX{:},FS{:}); set(gca,TL{:},TS{:});
  
@@ -652,6 +654,12 @@ set(gca,'TickLabelInterpreter','latex','FontSize',10)
 end
 subplot(3,2,6)
 plot(MFEsat*100,T-273.15,'.',CL{[1,5]},'LineWidth',2,'MarkerSize',15);
+% add a legend to the last panel only; the marker draw order in the loop
+% above is bulk (black) -> crystal (blue) -> melt (red), then MFEsat here.
+% This legend therefore labels all four series for the whole T-X figure.
+legend({'bulk composition','crystal composition','melt composition', ...
+        'mfe saturation'}, ...
+       'Interpreter','latex','FontSize',9,'Location','best','Box','on');
 
 if Nz>1
 subplot(3,2,2)

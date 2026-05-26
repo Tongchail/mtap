@@ -30,7 +30,7 @@ cm        =  0.01;                % conversion metre to centimetres
 km        =  1000;                % conversion metre to kilometres
 
 % set initial thermo-chemical state
-init_mode = 'constant';           % T initial condition mode ('layer' or 'linear') layer上下两层不同温度，代表不同相体系，linear温度从定到底线性变化，无突变均一
+init_mode = 'linear';              % T initial condition mode ('layer' or 'linear')
 seed      =  24;                  % random perturbation seed
 smth      =  10;                  % regularisation of initial random perturbation
 chmbw     =  0.8*L;
@@ -98,6 +98,7 @@ g0        =  10.;                 % gravity [m/s2]
 L0        =  h/2;                 % correlation length for eddy diffusivity (multiple of h, 0.5-1)
 l0x       =  dx0*20;              % correlation length for xtal  phase fluctuation diffusivity (multiple of d0, 10-20)
 l0f       =  df0*20;              % correlation length for fluid phase fluctuation diffusivity (multiple of d0, 10-20)
+l0m       =  dm0*20;              % correlation length for melt  phase fluctuation diffusivity (multiple of d0, 10-20)
 Xi        =  1.0;                 % relative amplitude of random noise flux
 Ptop      =  1.25e8;              % top boundary pressure [Pa]
 open_cnv  =  0;                   % switch for open bottom boundary for crystal-driven convection

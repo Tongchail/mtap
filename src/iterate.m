@@ -66,14 +66,25 @@ if count>2 && itpar.aa.damp>eps  % only if enough history and damp>0
     DG  = GHST(:,2+n:end) - GHST(:,1+n:end-1);   % history of fixed-point iterates
 
     % Solve min_delta || f - DF * delta + reg*I ||_2  (global regularised least squares)
-    reg   = itpar.aa.reg.*rms(DF.'*DF,'all');      % get scaled regularisation level
-    delta = (DF.'*DF + reg*eye(itpar.aa.m-n)) \ (DF.'*f(:));  % solve least squares problem
+    % Regularisation is scaled by rms(DF'*DF); add an absolute floor so it
+    % cannot collapse to 0 when DF is rank-deficient or near-zero (which
+    % would turn the solve into 0\0 = NaN).
+    reg = max(itpar.aa.reg.*rms(DF.'*DF,'all'), eps);
 
-    % Anderson update for fixed-point:
-    x_acc(:) = g(:) - DG * delta;
+    if any(~isfinite(DF(:))) || rank(DF) < size(DF,2)
+        % Insufficient / degenerate history (typical at single-point 0-D
+        % runs): Anderson system is not well posed - fall back to the
+        % plain Chebyshev-damped fixed-point step.
+        x_new = g;
+    else
+        delta = (DF.'*DF + reg*eye(itpar.aa.m-n)) \ (DF.'*f(:));  % regularised least squares
 
-    % Damped Anderson step
-    x_new(:) = g(:) + itpar.aa.damp * (x_acc(:) - g(:));
+        % Anderson update for fixed-point:
+        x_acc(:) = g(:) - DG * delta;
+
+        % Damped Anderson step
+        x_new(:) = g(:) + itpar.aa.damp * (x_acc(:) - g(:));
+    end
 
 else
     % No acceleration applied

@@ -1,3 +1,4 @@
+%% Mtap --- Tong, last modified 21 May 2026
 %*****  calculate and print characteristic scales  ************************
 
 % length scales
@@ -96,31 +97,75 @@ W0l     =  Drho0  *g0*D0 ^2/eta0;  % laminar convection speed
 w0l_x   =  Drho_x0*g0*dx0^2/eta0;  % laminar settling speed
 w0l_f   =  Drho_f0*g0*df0^2/eta0;  % laminar settling speed
 
+%%===================== new ==============================================
+% initial guess: start from the laminar speeds
+W0 = W0l;  wx0 = w0l_x;  wf0 = w0l_f;
 
-ReL0    =  W0l  *L0/(eta0/rho0);        % laminar convective Reynolds No at L0
-Rel0_x  =  w0l_x*l0x/(eta0/rho0);        % laminar settling Reynolds No at L0
-Rel0_f  =  w0l_f*l0f/(eta0/rho0);        % laminar settling Reynolds No at L0
+% Ri0 does not depend on W0/wx0/wf0, so compute it once outside the loop
+% (it depends on W0t/W0i, which are closed-form)
+W0t = sqrt(2*Drho0*g0*D0^3/(L0^2*rho0)); % terminal turbulent convective speed
+W0i = sqrt(D*Drho0*g0/rho0);             % inertially limited convective speed
+ 
+if open_cnv; Ri0 = 1; else; Ri0 = W0i./W0t; end
 
-digits   =  16;
-fReL0    =  vpa(1-exp(-ReL0  ));         % Re-dependent ramp factor
-fRel0_x  =  vpa(1-exp(-Rel0_x));         % Re-dependent ramp factor
-fRel0_f  =  vpa(1-exp(-Rel0_f));         % Re-dependent ramp factor
+% iterate W0/wx0/wf0 to self-consistency: each speed sets a Reynolds
+% number, which sets the Re-dependent ramp factor, which feeds back into
+% the speed. Fixed-point iteration until all three speeds converge.
+% Ri0 不依赖 W0/wx0/wf0,可以在迭代外先算(它依赖 W0t/W0i,那俩是闭式)
+digits(24);
+tol = 1e-9;  res = 1;
+while res > tol
+    W0prv = W0;  wx0prv = wx0;  wf0prv = wf0;
+  
+    % Reynolds numbers from the current speeds
+    ReL0    =  W0l  *L0/(eta0/rho0);         % laminar convective Reynolds No at L0  
+    Rel0_x  =  w0l_x*l0x/(eta0/rho0);        % laminar settling Reynolds No at L0
+    Rel0_f  =  w0l_f*l0f/(eta0/rho0);        % laminar settling Reynolds No at L0
+   
+    % Re-dependent ramp factors
+    fReL0   = vpa(1-exp(-ReL0  ));
+    fRel0_x = vpa(1-exp(-Rel0_x));
+    fRel0_f = vpa(1-exp(-Rel0_f));
+   
+    % recompute the three speeds (same formulae as before; fReL0 etc.
+    % now come from the iterated values above)
+    %W0  = double(D0.*(sqrt(2.*Drho0.*g0.*rho0.*Ri0.^-2.*fReL0.*L0.^2.*D0 + eta0.^2) - eta0)./(Ri0.^-2.*fReL0.*L0.^2.*rho0));
+    W0  = double((sqrt(4./Ri0.^2.*Dchi0.*Drho0  .*g0.*rho0.*fReL0  .*L0.^2.*D0   + eta0.^2) - eta0).*D0./(2.*fReL0.*L0.^2.*rho0./Ri0.^2));
 
-W0t  =  sqrt(2*Drho0*g0*D0^3/(L0^2*rho0));  % terminal turbulent convective speed
-W0i  =  sqrt(D*Drho0*g0/rho0);              % inertially limited convective speed
-
-if open_cnv
-    Ri0 = 1;
-else
-    Ri0 = W0i./W0t;
+    wx0 = double((sqrt(4               .*Drho_x0.*g0.*rho0.*fRel0_x.*l0x.*dx0.^2 + eta0.^2) - eta0)    ./(2.*fRel0_x.*l0x .*rho0));
+    wf0 = double((sqrt(4               .*Drho_f0.*g0.*rho0.*fRel0_f.*l0f.*df0.^2 + eta0.^2) - eta0)    ./(2.*fRel0_f.*l0f .*rho0));
+   
+    % residual: all three speeds must converge
+    res = abs(W0-W0prv)./W0 + abs(wx0-wx0prv)./wx0 + abs(wf0-wf0prv)./wf0;
 end
+%%===================== end ==============================================
 
-% general convective speed
-W0  = double(D0.*(sqrt(2.*Drho0.*g0.*rho0.*Ri0.^-2.*fReL0.*L0.^2.*D0  + eta0.^2) - eta0)./(Ri0.^-2.*fReL0.*L0.^2.*rho0));
-
-% general settling speed
-wx0 = double((sqrt(4.*Drho_x0.*g0.*rho0.*fRel0_x.*l0x.*dx0.^2 + eta0.^2) - eta0)./(2.*fRel0_x.*l0x.*rho0));
-wf0 = double((sqrt(4.*Drho_f0.*g0.*rho0.*fRel0_f.*l0f.*df0.^2 + eta0.^2) - eta0)./(2.*fRel0_f.*l0f.*rho0));
+% %%===================== old ==============================================
+% ReL0    =  W0l  *L0/(eta0/rho0);        % laminar convective Reynolds No at L0
+% Rel0_x  =  w0l_x*l0x/(eta0/rho0);        % laminar settling Reynolds No at L0
+% Rel0_f  =  w0l_f*l0f/(eta0/rho0);        % laminar settling Reynolds No at L0
+% 
+% digits   =  16;
+% fReL0    =  vpa(1-exp(-ReL0  ));         % Re-dependent ramp factor
+% fRel0_x  =  vpa(1-exp(-Rel0_x));         % Re-dependent ramp factor
+% fRel0_f  =  vpa(1-exp(-Rel0_f));         % Re-dependent ramp factor
+% 
+% W0t  =  sqrt(2*Drho0*g0*D0^3/(L0^2*rho0));  % terminal turbulent convective speed
+% W0i  =  sqrt(D*Drho0*g0/rho0);              % inertially limited convective speed
+% 
+% if open_cnv
+%     Ri0 = 1;
+% else
+%     Ri0 = W0i./W0t;
+% end
+% 
+% % general convective speed
+% W0  = double(D0.*(sqrt(2.*Drho0.*g0.*rho0.*Ri0.^-2.*fReL0.*L0.^2.*D0  + eta0.^2) - eta0)./(Ri0.^-2.*fReL0.*L0.^2.*rho0));
+% 
+% % general settling speed
+% wx0 = double((sqrt(4.*Drho_x0.*g0.*rho0.*fRel0_x.*l0x.*dx0.^2 + eta0.^2) - eta0)./(2.*fRel0_x.*l0x.*rho0));
+% wf0 = double((sqrt(4.*Drho_f0.*g0.*rho0.*fRel0_f.*l0f.*df0.^2 + eta0.^2) - eta0)./(2.*fRel0_f.*l0f.*rho0));
+%%===================== end ==============================================
 
 % diffusivities
 eII0    =  W0/D0/2;
@@ -137,19 +182,24 @@ twx0    =  D./wx0;
 twf0    =  D./wf0;
 tkx0    =  D.^2./kx0;
 tkf0    =  D.^2./kf0;
+txi0x   =  rhox0*dx0^2/18/eta0;
+txi0f   =  rhof0*df0^2/18/eta0;
 ti0     =  rho0.*W0/(Drho0.*g0);
 t0      =  ti0/2 + min([tW0, twx0, twf0, tkx0, tkf0]);
 dt0     =  min([(h0/2)^2./kx0 , (h0/2)^2./kf0, (h0/2)./(W0+wx0), (h0/2)./(W0+wf0)]);
 
 % noise flux amplitudes
-xie0    =  double(Xi*sqrt(     fReL0*ke0  /(L0h /W0 )*(L0h /(L0h +h0))^3));
-xiex0   =  double(Xi*sqrt(chi0*fReL0*ke0  /(L0h /W0 )*(L0h /(L0h +h0))^3));
-xief0   =  double(Xi*sqrt(phi0*fReL0*ke0  /(L0h /W0 )*(L0h /(L0h +h0))^3));
-xisx0   =         Xi*sqrt(chi0*     ks_x0/(l0xh/wx0)*(l0xh/(l0xh+h0))^3);
-xisf0   =         Xi*sqrt(phi0*     ks_f0/(l0fh/wf0)*(l0fh/(l0fh+h0))^3);
-xix0    =  xisx0 + xiex0;
-xif0    =  xisf0 + xief0;
-
+taue0   =  L0/W0;
+tausx0  =  l0x/wx0;
+tausf0  =  l0f/wf0;
+Stx0    =  txi0x/taue0;
+Stf0    =  txi0f/taue0;
+xie0    =  Xi*sqrt(     fReL0*ke0/taue0);
+xix0  =  Xi*sqrt(chi0*fReL0*ke0/taue0 *Stx0/(1+Stx0^2));
+xif0  =  Xi*sqrt(phi0*fReL0*ke0/taue0 *Stf0/(1+Stf0^2));
+%xis0    =  Xi*sqrt(chi0*      ks0/taus0);
+xisx0 =  Xi*sqrt(chi0*ks_x0/tausx0);
+xisf0 =  Xi*sqrt(phi0*ks_f0/tausf0);
 
 % phase change rate
 tau0    =  h0/(W0 + max(wx0, wf0)) + dt0;
@@ -166,17 +216,36 @@ fRel0_x  =  double(fRel0_x);
 fRel0_f  =  double(fRel0_f);
 
 % general dimensionless numbers
-Da0     =  G0/(rho0/t0);                % Dahmköhler number
-Ne0     =  xie0/W0;                     % Eddy noise number
-Nsx0    =  xix0/wx0;                   % Particle noise number
-Nsf0    =  xif0/wf0;                   % Particle noise number
-Rc_x0   =  W0/wx0;                     % Convection number
-Rc_f0   =  W0/wf0;                     % Convection number
-Ra_x0   =  W0*D0/(kx0+kf0+kT0);             % Rayleigh number
-Ra_f0   =  W0*D0/kf0;                       % Rayleigh number
-ReD0    =  W0*D0/((eta0+etae0)/rho0);       % Convection Reynolds number
-Red_x0  =  wx0*dx0/((eta0+etas_x0)/rho0);   % Particle Reynolds number
-Red_f0  =  wf0*df0/((eta0+etas_f0)/rho0);   % Droplet Reynolds number
+Da0     =  G0/(rho0/t0);                     % Damkohler number
+% noise numbers (No = noise; e/s = eddy/settling; x/f = crystal/fluid)
+Noe0    =  xie0 /W0;                          % mixture eddy noise number
+Nox0    =  xix0 /wx0;                         % crystal eddy noise number
+Nof0    =  xif0 /wf0;                         % fluid eddy noise number
+Nosx0   =  xisx0/wx0;                         % crystal settling noise number
+Nosf0   =  xisf0/wf0;                         % fluid settling noise number
+% convection numbers (background convection speed vs phase segregation speed)
+Rc_x0   =  W0/wx0;                            % crystal convection number
+Rc_f0   =  W0/wf0;                            % fluid convection number
+% Rayleigh numbers (buoyancy driving vs diffusive damping)
+Ra_x0   =  W0*D0/(kx0+kf0+kT0);               % crystal Rayleigh number
+Ra_f0   =  W0*D0/kf0;                         % fluid Rayleigh number
+% Reynolds numbers (inertial vs viscous forces)
+ReD0    =  W0*D0/((eta0+etae0)/rho0);         % convection Reynolds number
+Red_x0  =  wx0*dx0/((eta0+etas_x0)/rho0);     % crystal (particle) Reynolds number
+Red_f0  =  wf0*df0/((eta0+etas_f0)/rho0);     % fluid (droplet) Reynolds number
+
+% % general dimensionless numbers
+% Da0     =  G0/(rho0/t0);                % Dahmköhler number
+% Ne0     =  xie0/W0;                     % Eddy noise number
+% Nsx0    =  xix0/wx0;                   % Particle noise number
+% Nsf0    =  xif0/wf0;                   % Particle noise number
+% Rc_x0   =  W0/wx0;                     % Convection number
+% Rc_f0   =  W0/wf0;                     % Convection number
+% Ra_x0   =  W0*D0/(kx0+kf0+kT0);             % Rayleigh number
+% Ra_f0   =  W0*D0/kf0;                       % Rayleigh number
+% ReD0    =  W0*D0/((eta0+etae0)/rho0);       % Convection Reynolds number
+% Red_x0  =  wx0*dx0/((eta0+etas_x0)/rho0);   % Particle Reynolds number
+% Red_f0  =  wf0*df0/((eta0+etas_f0)/rho0);   % Droplet Reynolds number
 
 % print scaling analysis to standard output
 fprintf(1,'\n  Scaled domain depth D0    = %1.0e [m]',D0);
@@ -218,9 +287,11 @@ fprintf(1,'\n  Diffusion   time    tkx0 = %1.2e [s]',tkx0);
 fprintf(1,'\n  Diffusion   time    tkf0 = %1.2e [s]\n',tkf0);
 
 fprintf(1,'\n  Dahmköhler No         Da0  = %1.2e [1]',Da0);
-fprintf(1,'\n  Eddy Noise No         Ne0  = %1.2e [1]',Ne0);
-fprintf(1,'\n  Part. Segr. Noise No  Nsx0 = %1.2e [1]',Nsx0);
-fprintf(1,'\n  Fluid Segr. Noise No  Nsf0 = %1.2e [1]\n',Nsf0);
+fprintf(1,'\n  Mix. eddy noise No      Noe0  = %1.2e [1]',Noe0);
+fprintf(1,'\n  Xtl eddy noise No       Nox0  = %1.2e [1]',Nox0);
+fprintf(1,'\n  Fluid eddy noise No     Nof0  = %1.2e [1]',Nof0);
+fprintf(1,'\n  Xtl settling noise No   Nosx0 = %1.2e [1]',Nosx0);
+fprintf(1,'\n  Fluid settling noise No Nosf0 = %1.2e [1]\n',Nosf0);
 
 
 fprintf(1,'\n  Convection No       Rc_x0 = %1.2e [1]',Rc_x0);
@@ -247,6 +318,8 @@ if ndm_op
     xiesc = xie0;  xieun = '1';
     xixsc = xix0;  xixun = '1';
     xifsc = xif0;  xifun = '1';
+    xisxsc = xisx0;  xisxun = '1';
+    xisfsc = xisf0;  xisfun = '1';
     esc   = eta0;  eun   = '1';
     eesc  = etae0; 
     essc_x = etas_x0;   % crystal drag 
@@ -342,6 +415,8 @@ end
 xiesc = Wsc;  xieun = Wun;
 xixsc = Wsc;  xixun = Wun;
 xifsc = Wsc;  xifun = Wun;
+xisxsc = Wsc;  xisxun = Wun;
+xisfsc = Wsc;  xisfun = Wun;
 whsc  = Wsc;  
 end
 Xsc = Xc./ssc;

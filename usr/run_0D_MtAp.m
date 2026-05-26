@@ -30,7 +30,7 @@ dt       =  hr/3;                % initial time step [s]
 dtmax    =  hr/3;                % maximum time step [s]
  
 % set initial thermo-chemical state
-T0       =  1125;                % temperature top  layer [deg C]1290
+T0       =  1125;                % temperature top  layer [deg C] %1125
 T1       =  T0;                  % temperature base layer [deg C]
 c0       =  [15.4159   10.0390   15.4879   19.3207   39.7364  6  2]/100;  %** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 c1       =  c0;                  % components (maj comp, H2O) bot layer [wt] (will be normalised to unit sum!)
@@ -38,7 +38,7 @@ dcr      =  [0,0,0,0,0,0,0,0];
 dcg      =  [0,0,0,0,0,0,0,0];
 
 % set thermo-chemical boundary parameters
-fractxtl =  1;                   % fractional crystallisation mode for 0-D (Nz=Nx=1)  1 - fraction crystallization 
+fractxtl =  1;                   % fractional crystallisation mode for 0-D (Nz=Nx=1)  1 - fraction crystallization   
 fractmlt =  0;                   % fractional melting mode for 0-D (Nz=Nx=1)          0 - do not melt
 fractres =  0.10;  %0.05         %** residual fraction for fractionation mode           solid res
 dPdT     =  0; %3.00e5;          %** decompression rate for 0D models  
@@ -61,6 +61,10 @@ alpha    =  0.75;                % iterative step size parameter
 rtol     =  1e-6;                % outer its relative tolerance
 atol     =  1e-9;                % outer its absolute tolerance
 maxit    =  50;                  % maximum outer its
+
+% 0-D iterative parameters: disable Anderson acceleration.
+% With Nz=Nx=1 each field has too few DOFs for the Anderson least-squaressystem to be well posed - the history-difference matrix DF becomesrank-deficient (often all-zero), the regularisation rms(DF'*DF) collapsesto 0, and the solve degenerates to 0\0 = NaN. The plain Chebyshev-dampedfixed-point branch is stable in 0-D, so acceleration is simply switched off.
+itpar.aa.damp = 0;               % 0-D: no Anderson acceleration (ill-posed at single point)
 
 
 %*****  RUN NAKHLA MODEL  *************************************************
