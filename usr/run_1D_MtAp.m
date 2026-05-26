@@ -8,8 +8,8 @@ run('./par_MtAp_default.m')
 % set run parameters
 runID     =  '1D_MtAp';           % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nrh       =  1e2;                 % record diagnostic history every 'nrh' time steps
-nop       =  1e3;                 % output frame plotted/saved every 'nop' time steps
+nrh       =  1e1;                 % record diagnostic history every 'nrh' time steps
+nop       =  1e2;                 % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
 save_op   =  1;                   % switch on to save output to file
 colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
@@ -44,8 +44,9 @@ Ptop      =  1.25e8;              % *** top pressure [Pa]
 calID     =  'MtAp_750_new';      % *** phase diagram calibration
 
 % set effective diffusivity parameters
-Delta_cnv =  4*h;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
-Delta_sgr =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
+L0  =  4*h;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
+l0x =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
+l0f =  df0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
 
 % set numerical model parameters
 TINT      =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
@@ -59,6 +60,7 @@ itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
 itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
 itpar.aa.damp = 0.5;              % Anderson acceleration damping (0-1)
 itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
+Xi        =  0;
 
 %*****  RUN NAKHLA MODEL  *************************************************
 run('../src/main')

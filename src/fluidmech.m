@@ -12,7 +12,7 @@ drhodt  = advn_rho;               % advection term
 res_rho = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
 
 % volume source and background velocity passed to fluid-mechanics solver
-[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho./b1,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
+[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho./2,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
 
 MFSmean  = mean(MFS,'all');
 
@@ -22,27 +22,27 @@ end
 
 %% 0-D run does not require fluidmech solve
 if Nz==1 && Nx==1
-    W  = WBG; Wm = W;  Wx = W;  Wf = W;
-    U  = UBG; Um = U;  Ux = U;  Uf = U;
+    W  = MFBG./rho; Wm = W;  Wx = W;  Wf = W;
+    U  = zeros(Nx+2,Nz+1);         Um = U;  Ux = U;  Uf = U;
     P  = zeros(Nz+2,Nx+2);
     resnorm_VP = 0;
 else
 
 % 1-D and 2-D both use the full matrix solver below. The previous 1-D cumsum shortcut for W/P drove the velocity loop unstable.
 
-% if Nx==1
-%     % update 1D velocity
-%     W(:,2) = -flipud(cumsum(flipud([MFS*h;-WBG(end)])));
-% 
-%     % update 1D pressure
-%     Div_tz = ddz(tzz(icz,:),h);           % z-stress divergence
-%     PrsSrc = - Div_tz;
-%     P(:,2) =  flipud(cumsum(flipud([PrsSrc*h;0])));
-%     P(:,2) = P(:,2) - P(Nz/2,2);
-% 
-%     W(:,1) = W(:,2); W(:,end) = W(:,2);
-%     P(:,1) = P(:,2); P(:,end) = P(:,2);
-% else
+if Nx==1
+    % update 1D velocity
+    W(:,2) = -flipud(cumsum(flipud([MFS./rho*h;-MFBG(end)./rhow(end)])));
+
+    % update 1D pressure
+    Div_tz = ddz(tzz(icz,:),h);           % z-stress divergence
+    PrsSrc = - Div_tz;
+    P(:,2) =  flipud(cumsum(flipud([PrsSrc*h;0])));
+    P(:,2) = P(:,2) - P(Nz/2,2);
+
+    W(:,1) = W(:,2); W(:,end) = W(:,2);
+    P(:,1) = P(:,2); P(:,end) = P(:,2);
+else
 
 
 %% assemble coefficients for matrix velocity diagonal and right-hand side
@@ -564,6 +564,6 @@ if ~bnchm && step>=1
     Um = U + 0. + udm + xium + xieu; % mlt x-velocity
 
 end
-%end
+end
 
 FMtime = FMtime + toc;

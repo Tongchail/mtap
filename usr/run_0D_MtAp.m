@@ -61,11 +61,15 @@ alpha    =  0.75;                % iterative step size parameter
 rtol     =  1e-6;                % outer its relative tolerance
 atol     =  1e-9;                % outer its absolute tolerance
 maxit    =  50;                  % maximum outer its
+Xi       =  0;
 
 % 0-D iterative parameters: disable Anderson acceleration.
 % With Nz=Nx=1 each field has too few DOFs for the Anderson least-squaressystem to be well posed - the history-difference matrix DF becomesrank-deficient (often all-zero), the regularisation rms(DF'*DF) collapsesto 0, and the solve degenerates to 0\0 = NaN. The plain Chebyshev-dampedfixed-point branch is stable in 0-D, so acceleration is simply switched off.
-itpar.aa.damp = 0;               % 0-D: no Anderson acceleration (ill-posed at single point)
-
+% itpar.aa.damp = 0;               % 0-D: no Anderson acceleration (ill-posed at single point)
+itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
+itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
+itpar.aa.damp = 0.5;              % Anderson acceleration damping (0-1)
+itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
 
 %*****  RUN NAKHLA MODEL  *************************************************
 run('../src/main')

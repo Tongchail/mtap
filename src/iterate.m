@@ -44,7 +44,7 @@ rho.est  = max(rho.est, 0.3);                    % hard lower bound
 
 % Chebyshev-like coefficients
 alpha(:) =  4  ./(2 + rho.est).^2;
-beta (:) =  1  ./(2 + rho.est).^2;
+beta (:) =  0  ./(2 + rho.est).^2;
 
 % New fixed-point update and iterate
 f(:) = itpar.fp.damp*(-alpha(:).*res(:) + beta(:).*FHST(:,end));
@@ -71,12 +71,12 @@ if count>2 && itpar.aa.damp>eps  % only if enough history and damp>0
     % would turn the solve into 0\0 = NaN).
     reg = max(itpar.aa.reg.*rms(DF.'*DF,'all'), eps);
 
-    if any(~isfinite(DF(:))) || rank(DF) < size(DF,2)
-        % Insufficient / degenerate history (typical at single-point 0-D
-        % runs): Anderson system is not well posed - fall back to the
-        % plain Chebyshev-damped fixed-point step.
-        x_new = g;
-    else
+    % if any(~isfinite(DF(:))) || rank(DF) < size(DF,2)
+    %     % Insufficient / degenerate history (typical at single-point 0-D
+    %     % runs): Anderson system is not well posed - fall back to the
+    %     % plain Chebyshev-damped fixed-point step.
+    %     x_new = g;
+    % else
         delta = (DF.'*DF + reg*eye(itpar.aa.m-n)) \ (DF.'*f(:));  % regularised least squares
 
         % Anderson update for fixed-point:
@@ -84,7 +84,7 @@ if count>2 && itpar.aa.damp>eps  % only if enough history and damp>0
 
         % Damped Anderson step
         x_new(:) = g(:) + itpar.aa.damp * (x_acc(:) - g(:));
-    end
+    % end
 
 else
     % No acceleration applied

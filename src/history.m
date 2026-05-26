@@ -238,26 +238,26 @@ hist.Gf(stp,1) = min(min(Gf));
 hist.Gf(stp,2) = mean(mean(Gf));
 hist.Gf(stp,3) = max(max(Gf));
 
-% hist.dV(stp,1) = min(min(Div_V));
-% hist.dV(stp,2) = mean(mean(Div_V));
-% hist.dV(stp,3) = max(max(Div_V));
+hist.dV(stp,1) = min(min(Div_V));
+hist.dV(stp,2) = mean(mean(Div_V));
+hist.dV(stp,3) = max(max(Div_V));
 
 hist.rho(stp,1) = min(min(rho));
 hist.rho(stp,2) = mean(mean(rho));
 hist.rho(stp,3) = max(max(rho));
 
-% system volume change rate Vdot = (1/V) DV/Dt = -(1/rho) Drho/Dt.
-% In 0-D the velocity field is identically zero (W=U=WBG=UBG=0), so the velocity-divergence Div_V is exactly 0 and does NOT capture the volume change driven by thermal contraction and crystallisation. Instead, derive Vdot directly from the recorded mixture-density history by backward finite difference.
-% the divisor is the elapsed time BETWEEN history samples, not the single-step dt. History is recorded every nrh steps (nrh=1 in 0-D but nrh=100 in 1-D), and dt itself varies during the run, so use the recorded hist.time difference directly -- this is correct for any nrh and any dt.
-if stp > 1
-    dt_hist        = hist.time(stp) - hist.time(stp-1);           % [s] elapsed between samples
-    drhodt_hist    = (hist.rho(stp,:) - hist.rho(stp-1,:)) / max(dt_hist,eps);  % [kg/m^3/s]
-    hist.dV(stp,:) = -drhodt_hist ./ max(hist.rho(stp,:),eps);    % [1/s]
-else
-    hist.dV(stp,1:3) = 0;   % first step: no prior sample. Index 1:3 (not :)
-                            % so hist.dV is created [stp x 3]; output.m reads
-                            % hist.dV(:,2) and a scalar 0 would index-error.
-end
+% % system volume change rate Vdot = (1/V) DV/Dt = -(1/rho) Drho/Dt.
+% % In 0-D the velocity field is identically zero (W=U=WBG=UBG=0), so the velocity-divergence Div_V is exactly 0 and does NOT capture the volume change driven by thermal contraction and crystallisation. Instead, derive Vdot directly from the recorded mixture-density history by backward finite difference.
+% % the divisor is the elapsed time BETWEEN history samples, not the single-step dt. History is recorded every nrh steps (nrh=1 in 0-D but nrh=100 in 1-D), and dt itself varies during the run, so use the recorded hist.time difference directly -- this is correct for any nrh and any dt.
+% if stp > 1
+%     dt_hist        = hist.time(stp) - hist.time(stp-1);           % [s] elapsed between samples
+%     drhodt_hist    = (hist.rho(stp,:) - hist.rho(stp-1,:)) / max(dt_hist,eps);  % [kg/m^3/s]
+%     hist.dV(stp,:) = -drhodt_hist ./ max(hist.rho(stp,:),eps);    % [1/s]
+% else
+%     hist.dV(stp,1:3) = 0;   % first step: no prior sample. Index 1:3 (not :)
+%                             % so hist.dV is created [stp x 3]; output.m reads
+%                             % hist.dV(:,2) and a scalar 0 would index-error.
+% end
 
 hist.eta(stp,1) = min(min(eta));
 hist.eta(stp,2) = geomean(geomean(eta));

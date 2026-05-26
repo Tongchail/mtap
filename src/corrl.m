@@ -30,11 +30,11 @@ d_upper = upper(2:(Nz+1), :) - ccpos;
 % The nearest distance (in index units) is the minimum of the two.
 dist = min(d_lower, d_upper);
 
-% Convert to physical distance and cap at Delta_cnv0.
-Delta_cnv = min(h * dist, Delta_cnv0);
+% Convert to physical distance and cap at 2*L0h.
+L0 = min(h * dist, 2*L0h);
 
 % smooth correlation length to avoid sharp contrasts in regularisation
 for i=1:10
-    Delta_cnv = Delta_cnv + diffus(Delta_cnv,1/8*ones(size(Delta_cnv)),1,[1,2],BCD);
-    Delta_cnv([1 end],:) = min(Delta_cnv0,h/2);
+    L0 = L0 + diffus(L0,1/8*ones(size(L0)),1,[1,2],BCD);
+    L0([1 end],:) = min(L0h,h/2);
 end
