@@ -257,8 +257,7 @@ elseif Nx==1
     fRel_x = 1;
     fRel_f = 1;
 else
-    bndtapere = (1 - (exp((-ZZ)/L0) + exp(-(D-ZZ)/L0).*(1-open_cnv)));
-    ke        = eII.*L0.^2 .* bndtapere;                                   % turbulent eddy diffusivity
+    ke      =  eII.*L0.^2;            % turbulent eddy diffusivity
     fReL    =  1-exp(-ReL  );         % Re-dependent ramp factor
     fRel_x  =  1-exp(-Rel_x);         % Re-dependent ramp factor
     fRel_f  =  1-exp(-Rel_f);         % Re-dependent ramp factor

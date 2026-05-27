@@ -16,7 +16,7 @@ res_rho = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
 
 MFSmean  = mean(MFS,'all');
 
-MFBG     = MFSmean .* ZZw;
+MFBG     = MFSmean .* ZZw; % mass flux background
 
 end
 
@@ -27,8 +27,6 @@ if Nz==1 && Nx==1
     P  = zeros(Nz+2,Nx+2);
     resnorm_VP = 0;
 else
-
-% 1-D and 2-D both use the full matrix solver below. The previous 1-D cumsum shortcut for W/P drove the velocity loop unstable.
 
 if Nx==1
     % update 1D velocity
@@ -82,7 +80,7 @@ IIR = [IIR; ii(:)]; AAR = [AAR; aa(:)];
 ii  = MapW(1,2:end-1); jj = ii;
 aa  = zeros(size(ii));
 IIL = [IIL; ii(:)]; JJL = [JJL; jj(:)];   AAL = [AAL; aa(:)+1];
-aa  = zeros(size(ii)) + WBG(1,2:end-1);
+aa  = zeros(size(ii));
 IIR = [IIR; ii(:)]; AAR = [AAR; aa(:)];
 
 % bottom boundary (*xcore replace)   the operator for divergence of velocity → the divergence for the mass flux

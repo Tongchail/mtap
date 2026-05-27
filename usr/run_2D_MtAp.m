@@ -9,7 +9,7 @@ runID     =  '2D_MtAp';           % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nop       =  20;                  % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
-save_op   =  0;                   % switch on to save output to file
+save_op   =  1;                   % switch on to save output to file
 colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
 
 % set model domain parameters

@@ -6,7 +6,7 @@ clear; close all;
 run('./par_MtAp_default.m')
 
 % set run parameters
-runID     =  '1D_MtAp';           % run identifier
+runID     =  '1D_MtAp1';          % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nrh       =  1e1;                 % record diagnostic history every 'nrh' time steps
 nop       =  1e2;                 % output frame plotted/saved every 'nop' time steps
@@ -60,7 +60,7 @@ itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
 itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
 itpar.aa.damp = 0.5;              % Anderson acceleration damping (0-1)
 itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
-Xi        =  0;
+Xi        =  0;                   % relative amplitude of random noise flux  （0 - the noise is switched off）
 
 %*****  RUN NAKHLA MODEL  *************************************************
 run('../src/main')

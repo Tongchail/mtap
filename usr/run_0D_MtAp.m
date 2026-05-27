@@ -8,7 +8,7 @@ clear; close all;
 run('./par_MtAp_default.m')
 
 % set run parameters
-runID    =  '0D_MtAp_frc10';     % run identifier  
+runID    =  '0D_MtAp_1';     % run identifier  
 restart  =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nrh      =  1;                   % record diagnostic history every 'nrh' time steps (set to 1 for 0D runs)
 nop      =  50;                  % output frame plotted/saved every 'nop' time steps
