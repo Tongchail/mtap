@@ -482,15 +482,7 @@ cP   = cPm; RhoCp = rho.*cP;
 Adbt = aT./RhoCp;
 Tp   = (Tp+273.15); %T = Tp;
 T    = Tp.*exp(Adbt.*(Pt-Pref));
-%sm   = cPm.*log(Tp./Tref);  sx = cPx.*log(Tp./Tref) + Dsx;  sf = cPf.*log(Tp./Tref) + Dsf;
-% pre-loop seed for phase entropies - use the same EOS as StoT.m so the
-% first iteration starts from a consistent state (see otherwise branch below)
-a    = aTm.*(T -Tref);  b = bPm.*(Pt-Pref);
-sm   = sref     + cPm.*log(T/Tref) - (aTm./(bPm.*rhom0)) .* log((1-a+b)./(1-a));
-a    = aTx.*(T -Tref);  b = bPx.*(Pt-Pref);
-sx   = sref+Dsx + cPx.*log(T/Tref) - (aTx./(bPx.*rhox0)) .* log((1-a+b)./(1-a));
-a    = aTf.*(T -Tref);  b = bPf.*(Pt-Pref);
-sf   = sref+Dsf + cPf.*log(T/Tref) - (aTf./(bPf.*rhof0)) .* log((1-a+b)./(1-a));
+sm   = cPm.*log(Tp./Tref);  sx = cPx.*log(Tp./Tref) + Dsx;  sf = cPf.*log(Tp./Tref) + Dsf;
 x    = xq;  m = mq;  f = fq; mu = m; chi = x; phi = f;
 
 % get volume fractions and bulk density
@@ -572,20 +564,7 @@ while res > tol
             
             sm = si(:,:,1); sx = si(:,:,2); sf = si(:,:,3);
         otherwise
-            %sm = cPm.*log(Tp./Tref);  sx = cPx.*log(Tp./Tref) + Dsx;  sf = cPf.*log(Tp./Tref) + Dsf;
-            % phase entropies must use the SAME equation of state as StoT.m
-            % (s0 reference term + P,T log-correction); the previous
-            % simplified form sm=cP*log(Tp/Tref) was inconsistent with the
-            % StoT inversion and produced a wrong initial S / temperature.
-            a  = aTm.*(T -Tref);
-            b  = bPm.*(Pt-Pref);
-            sm = sref     + cPm.*log(T/Tref) - (aTm./(bPm.*rhom0)) .* log((1-a+b)./(1-a));
-            a  = aTx.*(T -Tref);
-            b  = bPx.*(Pt-Pref);
-            sx = sref+Dsx + cPx.*log(T/Tref) - (aTx./(bPx.*rhox0)) .* log((1-a+b)./(1-a));
-            a  = aTf.*(T -Tref);
-            b  = bPf.*(Pt-Pref);
-            sf = sref+Dsf + cPf.*log(T/Tref) - (aTf./(bPf.*rhof0)) .* log((1-a+b)./(1-a));
+            sm = cPm.*log(Tp./Tref);  sx = cPx.*log(Tp./Tref) + Dsx;  sf = cPf.*log(Tp./Tref) + Dsf;
             S  = M.*sm + X.*sx + F.*sf;
 
             [Tp,~ ] = StoT(Tp,S./rho,Pref+0*Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
