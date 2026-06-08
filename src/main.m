@@ -31,7 +31,6 @@ while time <= tend && step <= Nt &&  any(mq(:)>sqrt(eps))        ...
 
         %***  update geochemical evolution
         geochem;
- 
         
         %***  report convergence
         report;
@@ -44,7 +43,7 @@ while time <= tend && step <= Nt &&  any(mq(:)>sqrt(eps))        ...
     phseql;
 
     %***  update correlation length for convective/turbulent regularisation
-    corrl;
+    % corrl;
 
     % renormalise sum of phase densities to bulk density
     % X = x.*rho;  M = m.*rho;  F = f.*rho;  RHO = X+M+F;
