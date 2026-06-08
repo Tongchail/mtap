@@ -8,20 +8,6 @@ if iter==1 || restart
     re  = randn(Nz+0, Nx+0);
     rsx = randn(Nz+0, Nx+0);
     rsf = randn(Nz+0, Nx+0);
-
-    % % filter white noise spatially to decorrelation length
-    % re  = real(ifft2(Gkpe .* fft2(re)));
-    % rex = real(ifft2(Gkpe .* fft2(rex)));
-    % ref = real(ifft2(Gkpe .* fft2(ref)));
-    % rsx = real(ifft2(Gkpx .* fft2(rsx)));
-    % rsf = real(ifft2(Gkpf .* fft2(rsf)));
-    % 
-    % % rescale filtered noise to zero mean and unit variance
-    % re  = (re - mean(re(:))) ./ std(re(:));
-    % rex = (rex - mean(rex(:))) ./ std(rex(:));
-    % ref = (ref - mean(ref(:))) ./ std(ref(:));
-    % rsx = (rsx - mean(rsx(:))) ./ std(rsx(:));
-    % rsf = (rsf - mean(rsf(:))) ./ std(rsf(:));
 end
 
 
@@ -31,13 +17,6 @@ tausx = l0x./(vx+eps);
 tausf = l0f./(vf+eps);
 Stx   = txi0x./taue;   % Stokes number for crystals
 Stf   = txi0f./taue;   % Stokes number for fluid (?)
-
-% % noise flux amplitudes
-% sge_raw  = Xi * sqrt(     fReL.*ke  ./taue  .* (L0h ./(L0h +h)).^3);    % eddy mixture noise speed
-% sgex_raw = Xi * sqrt(chi.*fReL.*ke  ./taue  .* (L0h ./(L0h +h)).^3);    % eddy crystal noise speed
-% sgef_raw = Xi * sqrt(phi.*fReL.*ke  ./taue  .* (L0h ./(L0h +h)).^3);    % eddy fluid noise speed
-% sgsx_raw = Xi * sqrt(chi.*      ks_x./tausx .* (l0xh./(l0xh+h)).^3);    % crystal segregation noise speed
-% sgsf_raw = Xi * sqrt(phi.*      ks_f./tausf .* (l0fh./(l0fh+h)).^3);    % fluid segregation noise speed
 
 % noise flux amplitudes
 sge  = Xi * sqrt(     fReL.*ke  ./taue );                     % eddy mixture noise speed
@@ -60,8 +39,8 @@ flx   = 2/sqrt(1 - exp(-h^2/(2*l0xh^2)));                         % scaling fact
 flf   = 2/sqrt(1 - exp(-h^2/(2*l0fh^2)));                         % scaling factor (fluid settling)
  
 psie  = Fte  .* psieo  + sqrt(1 - Fte .^2) .* sge .*fL .* re;    % eddy mixture noise stream function
-psix  = Fte  .* psixo  + sqrt(1 - Fte .^2) .* sgex.*fL .* re;    % eddy crystal noise potential
-psif  = Fte  .* psifo  + sqrt(1 - Fte .^2) .* sgef.*fL .* re;    % eddy fluid noise potential
+psiex = Fte  .* psiexo + sqrt(1 - Fte .^2) .* sgex.*fL .* re;    % eddy crystal noise potential
+psief = Fte  .* psiefo + sqrt(1 - Fte .^2) .* sgef.*fL .* re;    % eddy fluid noise potential
 psisx = Ftsx .* psisxo + sqrt(1 - Ftsx.^2) .* sgsx.*flx.* rsx;    % crystal settling noise potential
 psisf = Ftsf .* psisfo + sqrt(1 - Ftsf.^2) .* sgsf.*flf.* rsf;    % fluid settling noise potential
  
@@ -75,8 +54,8 @@ psisx_padl0 = zeros(Nz+padl0x,Nx);
 psisf_padl0 = zeros(Nz+padl0f,Nx);
  
 psie_padL0 (1+padL0 /2:end-padL0 /2,:) = psie;
-psix_padL0 (1+padL0 /2:end-padL0 /2,:) = psix;
-psif_padL0 (1+padL0 /2:end-padL0 /2,:) = psif;
+psix_padL0 (1+padL0 /2:end-padL0 /2,:) = psiex;
+psif_padL0 (1+padL0 /2:end-padL0 /2,:) = psief;
 psisx_padl0(1+padl0x/2:end-padl0x/2,:) = psisx;
 psisf_padl0(1+padl0f/2:end-padl0f/2,:) = psisf;
  
@@ -87,15 +66,15 @@ psisx_padl0 = real(ifft2(Gkps_padl0x .* fft2(psisx_padl0)));
 psisf_padl0 = real(ifft2(Gkps_padl0f .* fft2(psisf_padl0)));
  
 psie_flt  = psie_padL0 (1+padL0 /2:end-padL0 /2,:);
-psix_flt  = psix_padL0 (1+padL0 /2:end-padL0 /2,:);
-psif_flt  = psif_padL0 (1+padL0 /2:end-padL0 /2,:);
+psiex_flt = psix_padL0 (1+padL0 /2:end-padL0 /2,:);
+psief_flt = psif_padL0 (1+padL0 /2:end-padL0 /2,:);
 psisx_flt = psisx_padl0(1+padl0x/2:end-padl0x/2,:);
 psisf_flt = psisf_padl0(1+padl0f/2:end-padl0f/2,:);
 
 % scale back to mean and std of raw noise fields
 psie_flt  = (psie_flt -mean(psie_flt(:) )).*std(psie(:) )./(std(psie_flt(:) )+eps) + mean(psie(:) );
-psix_flt  = (psix_flt -mean(psix_flt(:) )).*std(psix(:) )./(std(psix_flt(:) )+eps) + mean(psix(:) );
-psif_flt  = (psif_flt -mean(psif_flt(:) )).*std(psif(:) )./(std(psif_flt(:) )+eps) + mean(psif(:) );
+psiex_flt = (psiex_flt-mean(psiex_flt(:))).*std(psiex(:))./(std(psiex_flt(:))+eps) + mean(psiex(:));
+psief_flt = (psief_flt-mean(psief_flt(:))).*std(psief(:))./(std(psief_flt(:))+eps) + mean(psief(:));
 psisx_flt = (psisx_flt-mean(psisx_flt(:))).*std(psisx(:))./(std(psisx_flt(:))+eps) + mean(psisx(:));
 psisf_flt = (psisf_flt-mean(psisf_flt(:))).*std(psisf(:))./(std(psisf_flt(:))+eps) + mean(psisf(:));
 
@@ -127,12 +106,12 @@ xtaperw_g = xtaperw(:,icx);   % [Nz+1 x Nx+2]  ghost-padded crystal *w taper
 ftaperw_g = ftaperw(:,icx);   % [Nz+1 x Nx+2]  ghost-padded fluid   *w taper
 
 % particle eddy noise components (crystal)  % times taper（ xtaper, ftaper）
-xixu = -ddx(psix_flt(icz,icx),1).*xtaperu;
-xixw = -ddz(psix_flt(icz,icx),1).*xtaperw_g;
+xiexu = -ddx(psiex_flt(icz,icx),1).*xtaperu;
+xixew = -ddz(psiex_flt(icz,icx),1).*xtaperw_g;
 
 % particle eddy noise components (fluid)
-xifu = -ddx(psif_flt(icz,icx),1).*ftaperu;
-xifw = -ddz(psif_flt(icz,icx),1).*ftaperw_g;
+xiefu = -ddx(psief_flt(icz,icx),1).*ftaperu;
+xiefw = -ddz(psief_flt(icz,icx),1).*ftaperw_g;
 
 % particle settling noise components (crystal)
 xisxu = -ddx(psisx_flt(icz,icx),1).*xtaperu;
@@ -144,14 +123,14 @@ xisfw = -ddz(psisf_flt(icz,icx),1).*ftaperw_g;
  
 % combine particle noise
 % xi*w are [Nz+1 x Nx+2], xi*u are [Nz+2 x Nx+1] (per init.m) -- no padding.
-xiwx = (xisxw + xixw);
-xiux = (xisxu + xixu);
-xiwf = (xisfw + xifw);
-xiuf = (xisfu + xifu);
+xixw = (xisxw + xixew);
+xixu = (xisxu + xiexu);
+xifw = (xisfw + xiefw);
+xifu = (xisfu + xiefu);
 
 % get corresponding melt flux (mass conservation: melt compensates for both crystal and fluid)
-xiwm = -x_w(:,icx)./m_w(:,icx).*xiwx - f_w(:,icx)./m_w(:,icx).*xiwf;
-xium = -x_u(icz,:)./m_u(icz,:).*xiux - f_u(icz,:)./m_u(icz,:).*xiuf;
+ximw = -x_w(:,icx)./m_w(:,icx).*xixw - f_w(:,icx)./m_w(:,icx).*xifw;
+ximu = -x_u(icz,:)./m_u(icz,:).*xixu - f_u(icz,:)./m_u(icz,:).*xifu;
 
 
 

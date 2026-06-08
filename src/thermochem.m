@@ -31,10 +31,10 @@ bnd_S = rho.*cP.*bnd_T ./ T;
 dSdt  = advn_S + diff_S + diff_Se + diss_h + bnd_S;
 
 % residual of entropy evolution
-res_S = (a1*S-a2*So-a3*Soo)/dt - (b1*dSdt + b2*dSdto + b3*dSdtoo);
+res_S = (a1*S-a2*So-a3*Soo) - (b1*dSdt + b2*dSdto + b3*dSdtoo)*dt;
 
 % semi-implicit update of bulk entropy density
-[S,GHST.S,FHST.S,specrad.S] = iterate(S,res_S*dt/a1,specrad.S,GHST.S,FHST.S,itpar,iter*~frst);
+[S,GHST.S,FHST.S,specrad.S] = iterate(S,res_S,specrad.S,GHST.S,FHST.S,itpar,iter*~frst);
 
 % convert entropy S to natural temperature T and potential temperature Tp
 [Tp,~ ] = StoT(Tp,S./rho,Pref+0*Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
@@ -66,10 +66,10 @@ end
 dCdt = advn_C + diff_C + bnd_C;                                            
   
 % residual of major component evolution
-res_C = (a1*C-a2*Co-a3*Coo)/dt - (b1*dCdt + b2*dCdto + b3*dCdtoo);
+res_C = (a1*C-a2*Co-a3*Coo) - (b1*dCdt + b2*dCdto + b3*dCdtoo)*dt;
 
 % semi-implicit update of major component density
-[C,GHST.C,FHST.C,specrad.C] = iterate(C,res_C*dt/a1,specrad.C,GHST.C,FHST.C,itpar,iter*~frst);
+[C,GHST.C,FHST.C,specrad.C] = iterate(C,res_C,specrad.C,GHST.C,FHST.C,itpar,iter*~frst);
 
 % impose min/max limits on component densities
 C = max(0,min(rho, C ));
@@ -99,19 +99,19 @@ dFdt   = advn_F + diff_F + Gf;
 dMdt   = advn_M + diff_M + Gm;
 
 % residual of phase density evolution
-res_X = (a1*X-a2*Xo-a3*Xoo)/dt - (b1*dXdt + b2*dXdto + b3*dXdtoo);
-res_F = (a1*F-a2*Fo-a3*Foo)/dt - (b1*dFdt + b2*dFdto + b3*dFdtoo);
-res_M = (a1*M-a2*Mo-a3*Moo)/dt - (b1*dMdt + b2*dMdto + b3*dMdtoo);
+res_X = (a1*X-a2*Xo-a3*Xoo) - (b1*dXdt + b2*dXdto + b3*dXdtoo)*dt;
+res_F = (a1*F-a2*Fo-a3*Foo) - (b1*dFdt + b2*dFdto + b3*dFdtoo)*dt;
+res_M = (a1*M-a2*Mo-a3*Moo) - (b1*dMdt + b2*dMdto + b3*dMdtoo)*dt;
 
 % semi-implicit update of phase fraction densities
 res_PHS = cat(3,res_X,res_F,res_M);
 PHS     = cat(3,X,F,M);
-[PHS,GHST.PHS,FHST.PHS,specrad.PHS] = iterate(PHS,res_PHS*dt/a1,specrad.PHS,GHST.PHS,FHST.PHS,itpar,iter*~frst);
+[PHS,GHST.PHS,FHST.PHS,specrad.PHS] = iterate(PHS,res_PHS,specrad.PHS,GHST.PHS,FHST.PHS,itpar,iter*~frst);
 
 % impose min/max limits on phase densities
-X     = max(0,min(rho, PHS(:,:,1) ));
-F     = max(0,min(rho, PHS(:,:,2) ));
-M     = max(0,min(rho, PHS(:,:,3) ));
+X = max(0,min(rho, PHS(:,:,1) ));
+F = max(0,min(rho, PHS(:,:,2) ));
+M = max(0,min(rho, PHS(:,:,3) ));
 
 %***  update phase fractions and component concentrations
 
@@ -151,10 +151,6 @@ end
 % fix subsolidus and superliquidus conditions
 cx(subsolc) = cxq(subsolc); x(subsol) = xq(subsol); f(subsol) = fq(subsol); m(subsol) = 0;
 cm(supliqc) = cmq(supliqc); m(supliq) = mq(supliq); f(supliq) = fq(supliq); x(supliq) = 0;
-
-% if (it==mxit && rnorm>tol)
-%     disp(['!!! Lever rule adjustment converged to ',num2str(rnorm),' after ',num2str(mxit),' iterations !!!']);
-% end
 
 % record timing
 TCtime = TCtime + toc;% - eqtime;
