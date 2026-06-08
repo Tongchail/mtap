@@ -9,10 +9,10 @@ if ~bnchm && step>0 && ~restart
 drhodt  = advn_rho;               % advection term
 
 % residual of mixture mass evolution
-res_rho = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
+res_rho = (a1*rho-a2*rhoo-a3*rhooo) - (b1*drhodt + b2*drhodto + b3*drhodtoo)*dt;
 
 % volume source and background velocity passed to fluid-mechanics solver
-[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho./2,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
+[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho/dt,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
 
 MFSmean  = mean(MFS,'all');
 
@@ -95,12 +95,6 @@ IIL = [IIL; ii(:)]; JJL = [JJL; jj3(:)];   AAL = [AAL;+open_cnv*rho3(:)/h];
 IIL = [IIL; ii(:)]; JJL = [JJL; jj4(:)];   AAL = [AAL;-open_cnv*rho4(:)/h];
 aa  = open_cnv.*MFS(end,:) + (1-open_cnv).*MFBG(end, 2:end-1)/h;
 IIR = [IIR; ii(:)]; AAR = [AAR; aa(:)];
-% ii  = MapW(end,2:end-1); jj = ii;
-% aa  = zeros(size(ii));
-% IIL = [IIL; ii(:)]; JJL = [JJL; jj(:)];   AAL = [AAL; aa(:)+1];
-% aa  = zeros(size(ii)) + WBG(end,2:end-1);
-% IIR = [IIR; ii(:)]; AAR = [AAR; aa(:)];
-
 
 % internal points
 ii    = MapW(2:end-1,2:end-1);
@@ -353,35 +347,9 @@ if ~exist('KP','var') || bnchm
     aa  = zeros(size(ii));
     IIL = [IIL; ii(:)]; JJL = [JJL; jj1(:)];   AAL = [AAL; aa(:)+1];
     IIL = [IIL; ii(:)]; JJL = [JJL; jj2(:)];   AAL = [AAL; aa(:)-1];
-      
-% if ~exist('KP','var') || bnchm || lambda1+lambda2>0
-% 
-%     % internal points
-%     ii  = MapP(2:end-1,2:end-1);
-%     jj1 = MapP(1:end-2,2:end-1);
-%     jj2 = MapP(3:end-0,2:end-1);
-%     jj3 = MapP(2:end-1,1:end-2);
-%     jj4 = MapP(2:end-1,3:end-0);
-% 
-%     % coefficients multiplying matrix pressure P
-%     aa  = zeros(size(ii)) + lambda1*eps*h^2./eta;
-%     IIL = [IIL; ii(:)]; JJL = [JJL; ii(:)];    AAL = [AAL; aa(:)];  % P on stencil centre
-% 
-%     kP  = lambda2*h^2./eta;
-%     kP1 = (kP(icz(1:end-2),:).*kP(icz(2:end-1),:)).^0.5;   kP2 = (kP(icz(2:end-1),:).*kP(icz(3:end-0),:)).^0.5;
-%     kP3 = (kP(:,icx(1:end-2)).*kP(:,icx(2:end-1))).^0.5;   kP4 = (kP(:,icx(2:end-1)).*kP(:,icx(3:end-0))).^0.5;
-% 
-%     aa  = (kP1+kP2+kP3+kP4)/h^2;
-%     IIL = [IIL; ii(:)]; JJL = [JJL;  ii(:)];   AAL = [AAL;-aa(:)     ];      % P on stencil centre
-%     IIL = [IIL; ii(:)]; JJL = [JJL; jj1(:)];   AAL = [AAL; kP1(:)/h^2];      % P one above
-%     IIL = [IIL; ii(:)]; JJL = [JJL; jj2(:)];   AAL = [AAL; kP2(:)/h^2];      % P one below
-%     IIL = [IIL; ii(:)]; JJL = [JJL; jj3(:)];   AAL = [AAL; kP3(:)/h^2];      % P one above
-%     IIL = [IIL; ii(:)]; JJL = [JJL; jj4(:)];   AAL = [AAL; kP4(:)/h^2];      % P one below
-% 
-% end
 
-% assemble coefficient matrix
-KP  = sparse(IIL,JJL,AAL,NP,NP);
+    % assemble coefficient matrix
+    KP  = sparse(IIL,JJL,AAL,NP,NP);
 
 end
 
@@ -419,7 +387,7 @@ if bnchm
     np0 = MapP(nzp,nxp);
     KP(np0,:  ) = 0;
     KP(np0,np0) = 1;
-    DD(np0,:  ) = 0;
+    DM(np0,:  ) = 0;
     RP(np0    ) = P_mms(nzp,nxp);
     
     % fix U = U_mms in middle of domain
@@ -444,50 +412,24 @@ else
     KP(np0,np0) = speye(length(np0));
 end
 
-% if bnchm
-%     % fix P = P_mms in middle of domain
-%     nzp = 1;%round((Nz+2)/2);
-%     nxp = round((Nx+2)/2);
-%     np0 = MapP(nzp,nxp);
-%     DD(MapP(nzp,nxp),:) = 0;
-%     KP(MapP(nzp,nxp),:) = 0;
-%     KP(MapP(nzp,nxp),MapP(nzp,nxp)) = 1;
-%     RP(MapP(nzp,nxp),:) = P_mms(nzp,nxp);
-% 
-%     % fix U = U_mms in middle of domain
-%     nzu = round((Nz+2)/2);
-%     nxu = round((Nx+2)/2);
-%     KV(MapU(nzu,nxu),:) = 0;
-%     GG(MapU(nzu,nxu),:) = 0;
-%     KV(MapU(nzu,nxu),MapU(nzu  ,nxu)) = 1;
-%     RV(MapU(nzp,nxp),:) = U_mms(nzu,nxu);
-% end
-
 %% assemble and scale global coefficient matrix and right-hand side vector
-% differences in how the matrix is scaled (because the mass flux divergence)
 LL  = [KV GG  ; ...
        DM KP ];
 
 RR  = [RV; RP;];
 
-% etagh = ones(size(P));  etagh(2:end-1,2:end-1) = eta;
 scl = ones(size(P));  scl(2:end-1,2:end-1) = rho./eta;
 SCL = (abs(diag(LL))).^0.5;
 SCL = diag(sparse( 1./(SCL + sqrt([zeros(NU+NW,1); 1./scl(:)])) ));
 
-% FF  = LL*[W(:);U(:);P(:)] - RR;
-% FF  = SCL*FF;
-
 FF  = SCL*(LL*SOL - RR);
 LL  = SCL*LL*SCL;
-% RR  = SCL*RR;
 
 
 %% Solve linear system of equations for W, U, P
-
 if ~exist('pcol','var') || bnchm; pcol = colamd(LL); end % get column permutation for sparsity pattern once per run
-dLL         = decomposition(LL(:,pcol), 'lu');  % get LU-decomposition for consistent performance of LL \ RR
-UPD(pcol,1) = dLL \ FF;                         % solve permuted decomposed system
+dLL         = decomposition(LL(:,pcol), 'lu');           % get LU-decomposition for consistent performance of LL \ RR
+UPD(pcol,1) = dLL \ FF;                                  % solve permuted decomposed system
 UPD         = SCL*UPD;
 
 % map solution vector to 2D arrays
@@ -524,27 +466,16 @@ if ~bnchm && step>=1
     % melt segregation speed   (mass fraction, x_w*wx + f_w*wf + m_w*wm = 0  mass flux)
     wm  = -x_w(:,icx)./m_w(:,icx).*wx - f_w(:,icx)./m_w(:,icx).*wf;
 
-    % % phase diffusion fluxes and speeds
-    % [~,wqx,uqx] = diffus(chi,k_x,h,[1,2],BCD);
-    % [~,wqf,uqf] = diffus(phi,k_f,h,[1,2],BCD);
-    % wqx  = wqx .* bndtaperwx;
-    % wqf  = wqf .* bndtaperwf;
-    % wqm  = -x_w(:,icx)./m_w(:,icx).*wqx - f_w(:,icx)./m_w(:,icx).*wqf;
-    % uqm  = -x_u(icz,:)./m_u(icz,:).*uqx - f_u(icz,:)./m_u(icz,:).*uqf;
-
     % phase diffusion rates and fluxes
     % (add the diffusive contribution to the phase velocities)
-    [dffn_X,qz_dffn_X,qx_dffn_X] = diffus(chi,k_x,h,[1,2],BCD);
-    [dffn_F,qz_dffn_F,qx_dffn_F] = diffus(phi,k_f,h,[1,2],BCD);
+    [dffn_X,qz_dffn_X,qx_dffn_X] = diffus(x,ks_x,h,[1,2],BCD);
+    [dffn_F,qz_dffn_F,qx_dffn_F] = diffus(f,ks_f,h,[1,2],BCD);
     wdx =  qz_dffn_X;
     udx =  qx_dffn_X;
     wdf =  qz_dffn_F;
     udf =  qx_dffn_F;
     wdm = -qz_dffn_X.*x_w(:,icx)./m_w(:,icx) - qz_dffn_F.*f_w(:,icx)./m_w(:,icx);
     udm = -qx_dffn_X.*x_u(icz,:)./m_u(icz,:) - qx_dffn_F.*f_u(icz,:)./m_u(icz,:);
- 
-    % wqm = -wqx-wqf;
-    % uqm = -uqx-uqf;
 
     % update stochastic noise speeds
     noise;  
@@ -552,14 +483,14 @@ if ~bnchm && step>=1
     % update phase velocities
     % phase diffusion speeds were refactored from wq*/uq* to wd*/ud*
     % (see definitions above); update them here to match.
-    Wx = W + wx + wdx + xiwx + xiew; % xtl z-velocity
-    Ux = U + 0. + udx + xiux + xieu; % xtl x-velocity
+    Wx = W + wx + wdx + xixw + xiew; % xtl z-velocity
+    Ux = U + 0. + udx + xixu + xieu; % xtl x-velocity
 
-    Wf = W + wf + wdf + xiwf + xiew; % mfe z-velocity
-    Uf = U + 0. + udf + xiuf + xieu; % mfe x-velocity
+    Wf = W + wf + wdf + xifw + xiew; % mfe z-velocity
+    Uf = U + 0. + udf + xifu + xieu; % mfe x-velocity
 
-    Wm = W + wm + wdm + xiwm + xiew; % mlt z-velocity
-    Um = U + 0. + udm + xium + xieu; % mlt x-velocity
+    Wm = W + wm + wdm + ximw + xiew; % mlt z-velocity
+    Um = U + 0. + udm + ximu + xieu; % mlt x-velocity
 
 end
 end

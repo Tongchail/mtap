@@ -5,7 +5,7 @@
 D0      =  D/20;
 dx0     =  dx0;
 df0     =  df0;
-L0      =  L0;  L0h  = (L0 +h)/2;
+L0      =  L0;  L0h  = (L0 +h)/2; L00 = L0;
 l0x     =  l0x; l0xh = (l0x+h)/2;
 l0f     =  l0f; l0fh = (l0f+h)/2;
 h0      =  h;

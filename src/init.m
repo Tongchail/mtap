@@ -74,7 +74,7 @@ Dsf =  cal.Dsf;
 % normalise major components to anhydrous unit sum, rescale to hydrous
 c0(1:end-2) = c0(1:end-2)./sum(c0(1:end-2)).*(1-sum(c0(end-1:end)));
 c1(1:end-2) = c1(1:end-2)./sum(c1(1:end-2)).*(1-sum(c1(end-1:end)));
-cwall(:,1:end-2) = cwall(:,1:end-2)./sum(cwall(:,1:end-2),2).*(1-sum(cwall(:,end:end-1),2));
+cwall(:,1:end-2) = cwall(:,1:end-2)./(sum(cwall(:,1:end-2),2)+eps).*(1-sum(cwall(:,end:end-1),2));
 dcg   = dcg-round(mean(dcg),16);
 dcr   = dcr-round(mean(dcr),16);
 Tref  = min(cal.T0)+273.15;
@@ -145,37 +145,24 @@ rp  = real(ifft2(Gkrp .* fft2(rp)));
 % Rescale to unit standard deviation
 rp  = (rp - mean(rp(:))) ./ (std(rp(:))+eps);
 
-% rng(seed);
-% smth = smth*Nx*Nz*1e-4;
-% rp   = randn(Nz,Nx);
-% for i = 1:round(smth)
-%     rp = rp + diffus(rp,1/8*ones(size(rp)),1,[1,2],BCD);
-%     rp = rp - mean(mean(rp));
-% end
-% rp = rp./max(abs(rp(:)));
-
-% gp = exp(-(XX-L/2  ).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2) ...
-%    + exp(-(XX-L/2+L).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2) ...
-%    + exp(-(XX-L/2-L).^2/(max(L,D)/8)^2 - (ZZ-D/2).^2/(max(L,D)/8)^2);
-
 % initialise noise flux potentials
-psie = zeros(Nz+0, Nx+0);
-psix = zeros(Nz+0, Nx+0);
-psif = zeros(Nz+0, Nx+0);
+psie  = zeros(Nz+0, Nx+0);
+psiex = zeros(Nz+0, Nx+0);
+psief = zeros(Nz+0, Nx+0);
 psisx = zeros(Nz+0, Nx+0);
 psisf = zeros(Nz+0, Nx+0);
 
 % initialise noise flux components
+xiew  = zeros(Nz+1, Nx+2);
+xieu  = zeros(Nz+2, Nx+1);
+xiexw = zeros(Nz+1, Nx+2);
+xiexu = zeros(Nz+2, Nx+1);
+xiefw = zeros(Nz+1, Nx+2);
+xiefu = zeros(Nz+2, Nx+1);
 xisxw = zeros(Nz+1, Nx+2);
 xisxu = zeros(Nz+2, Nx+1);
 xisfw = zeros(Nz+1, Nx+2);
 xisfu = zeros(Nz+2, Nx+1);
-xiew = zeros(Nz+1, Nx+2);
-xieu = zeros(Nz+2, Nx+1);
-xixw = zeros(Nz+1, Nx+2);
-xixu = zeros(Nz+2, Nx+1);
-xifw = zeros(Nz+1, Nx+2);
-xifu = zeros(Nz+2, Nx+1);
 
 % get mapping arrays
 NP = (Nz+2) * (Nx+2);
@@ -219,20 +206,20 @@ if ~any(bnd_h)
     switch bndmode
         case 0  % none
         case 1  % top only
-            topshape = exp( ( -ZZ)/max(h,bnd_w));
+            topshape = exp( ( -ZZ+h/2)/max(h,bnd_w));
         case 2  % bot only
-            botshape = exp(-(D-ZZ)/max(h,bnd_w));
+            botshape = exp(-(D-ZZ-h/2)/max(h,bnd_w));
         case 3  % top/bot only
-            topshape = exp( ( -ZZ)/max(h,bnd_w));
-            botshape = exp(-(D-ZZ)/max(h,bnd_w));
+            topshape = exp( ( -ZZ+h/2)/max(h,bnd_w));
+            botshape = exp(-(D-ZZ-h/2)/max(h,bnd_w));
         case 4 % all walls
-            topshape = exp( ( -ZZ)/max(h,bnd_w));
-            botshape = exp(-(D-ZZ)/max(h,bnd_w));
-            sdsshape = exp( ( -XX)/max(h,bnd_w)) ...
-                     + exp(-(L-XX)/max(h,bnd_w));
+            topshape = exp( ( -ZZ+h/2)/max(h,bnd_w));
+            botshape = exp(-(D-ZZ-h/2)/max(h,bnd_w));
+            sdsshape = exp( ( -XX+h/2)/max(h,bnd_w)) ...
+                     + exp(-(L-XX-h/2)/max(h,bnd_w));
         case 5 % only walls
-            sdsshape = exp( ( -XX)/max(h,bnd_w)) ...
-                     + exp(-(L-XX)/max(h,bnd_w));
+            sdsshape = exp( ( -XX+h/2)/max(h,bnd_w)) ...
+                     + exp(-(L-XX-h/2)/max(h,bnd_w));
     end
     sdsshape = max(0,sdsshape - topshape - botshape);
 end
@@ -270,17 +257,6 @@ end
 
 % initialise crystallinity field
 gp  =  exp(-((XX-L/2)./(L/6)).^2) .* exp(-((ZZ-D/2)./(D/6)).^2);
-% if open_sgr
-%     xin =  initshape.*xeq + (1-initshape).*x0;
-%     fin =  initshape.*feq + (1-initshape).*f0;
-% else
-%     xin = x0.*ones(Nz,Nx);
-%     fin = f0.*ones(Nz,Nx);
-% end
-% 
-% x   =  xin .* (1+dxr/x0.*rp+dxg/x0.*gp);
-% f   =  fin .* (1+dfr/f0.*rp+dfg/f0.*gp);
-% m   =  1-x-f;
 m = ones(Nz,Nx);
 x = zeros(Nz,Nx);
 f = zeros(Nz,Nx);
@@ -400,11 +376,6 @@ for i = 1:cal.ntrc
 end
 tein = trc;
 
-% U   =  zeros(Nz+2,Nx+1);  UBG = U; Ui = U; upd_U = 0*U;
-% W   =  zeros(Nz+1,Nx+2);  WBG = W; Wi = W; wf = 0.*W; wx = 0.*W; wm = 0.*W; upd_W = 0*W;
-% P   =  zeros(Nz+2,Nx+2);  Vel = 0.*Tp; upd_P = 0*P; Div_rhoV = 0.*P;  DD = sparse(length(P(:)),length([W(:);U(:)]));
-% SOL = [W(:);U(:);P(:)];
-
 % initialise auxiliary fields
 Wf  = W;        Uf  = U; 
 Wx  = W;        Ux  = U;
@@ -424,7 +395,7 @@ ReL    = eps + 0.*x;
 Rel_x  = eps + 0.*x; 
 Rel_f  = eps + 0.*x;  
 Div_V  = 0.*x;  advn_rho = 0.*x;  advn_X = 0.*x; advn_M = 0.*x; drhodt = 0.*x;  drhodto = drhodt; 
-xis = 0.*x;  xie = 0.*x;
+xis    = 0.*x;  xie = 0.*x;
 exx    = 0.*x;  ezz = 0.*x;  exz = zeros(Nz-1,Nx-1);  eII = 0.*x;  
 txx    = 0.*x;  tzz = 0.*x;  txz = zeros(Nz-1,Nx-1);  tII = 0.*x; 
 eta    = cal.etam0 + zeros(Nz,Nx);
@@ -432,18 +403,8 @@ etas_x = cal.etam0 + zeros(Nz,Nx);
 etas_f = cal.etam0 + zeros(Nz,Nx);
 MFS    = 0.*x; 
 ke     = 0.*x;
-MFBG = 0.*W;
+MFBG   = 0.*W;
 
-% Re     = eps;  
-% Div_V  = 0.*Tp;  advn_rho = 0.*Tp;  advn_X = 0.*Tp; advn_M = 0.*Tp; advn_F = 0.*Tp; drhodt = 0.*Tp;  drhodto = drhodt;
-% exx    = 0.*Tp;  ezz = 0.*Tp;  exz = zeros(Nz-1,Nx-1);  eII = 0.*Tp;  
-% txx    = 0.*Tp;  tzz = 0.*Tp;  txz = zeros(Nz-1,Nx-1);  tII = 0.*Tp; 
-% eta    = ones(Nz,Nx);
-% etamax = min(eta(:)) .* etacntr;
-% dV = 0.*Tp; 
-% ke     = 0.*Tp;
-% Tref   = min(cal.T0)+273.15;
-% Pref   = 1e5;
 sref   = 0e3;
 c0_oxd = c0*cal.cmp_oxd;
 c0_oxd_all = zeros(size(c0,1),9);
@@ -455,14 +416,13 @@ end
 rhom0  = mean(cal.rhox0-500).*ones(size(Tp)); 
 rhox0  = mean(cal.rhox0).*ones(size(Tp));
 rhof0  = cal.rhof0.*ones(size(Tp));
-% Pchmb  = Pchmb0;  Pchmbo = Pchmb;  Pchmboo = Pchmbo;  dPchmbdt = Pchmb;  dPchmbdto = dPchmbdt; dPchmbdtoo = dPchmbdto;  upd_Pchmb = dPchmbdt;
-% Pt     = Ptop + Pchmb + mean(rhom0,'all').*g0.*ZZ;  Pl = Pt;  Pto = Pt; Ptoo = Pt; dPtdt = 0*Pt; dPtdto = dPtdt; dPtdtoo = dPtdto;
 rho    = (x./rhox0 + m./rhom0).^-1;
 Pt     = Ptop + rho.*g0.*ZZ;  Pl = Pt;  Pto = Pt; Ptoo = Pt;
 rhof   = rhof0.*(1+bPf.*(Pt-Pref));
 rhox   = rhox0.*(1+bPx.*(Pt-Pref));
 rhom   = rhom0.*(1+bPm.*(Pt-Pref));
-% rho    = rhom;
+rho    = (x./rhox + m./rhom).^-1;
+Pt     = Ptop + rho.*g0.*ZZ;  Pl = Pt;  Pto = Pt; Ptoo = Pt;
 rhow   = (rho(icz(1:end-1),:)+rho(icz(2:end),:))/2;
 rhou   = (rho(:,icx(1:end-1))+rho(:,icx(2:end)))/2;
 rhoWo  = rhow.*W(:,2:end-1); rhoWoo = rhoWo; advn_mz = 0.*rhoWo(2:end-1,:);
@@ -485,7 +445,6 @@ T    = Tp.*exp(Adbt.*(Pt-Pref));
 sm   = cPm.*log(Tp./Tref);  sx = cPx.*log(Tp./Tref) + Dsx;  sf = cPf.*log(Tp./Tref) + Dsf;
 x    = xq;  m = mq;  f = fq; mu = m; chi = x; phi = f;
 
-% get volume fractions and bulk density
 step    = 0;
 EQtime  = 0;
 FMtime  = 0;
@@ -495,7 +454,7 @@ dto     = dt;
 a1      = 1; a2 = 0; a3 = 0; b1 = 1; b2 = 0; b3 = 0;
 
 if ~postprc
-res  = 1;  tol = 1e-12;  it = 1;
+res  = 1;  tol = 1e-9;  it = 1;
 while res > tol
     Ptii = Pt; Ti = T; xi = xq; fi = fq;
 
@@ -535,13 +494,9 @@ while res > tol
     eqtime = toc(eqtime);
     EQtime = EQtime + eqtime;
 
-    % T  = Tp.*exp(Adbt.*(Pt-Pref));
-    % sm = cPm.*log(Tp./T0);  sx = sm+Dsx;  sf = sx+Dsf;
-
-    X    = rho.*x; Xo = X;  res_X = 0.*X;
-    F    = rho.*f; Fo = F;  res_F = 0.*F;
-    M    = rho.*m; Mo = M;  res_M = 0.*M;
-    RHO  = X+M+F;
+    X    = rho.*x; res_X = 0.*X;
+    F    = rho.*f; res_F = 0.*F;
+    M    = rho.*m; res_M = 0.*M;
     C    = M.*cm + X.*cx + F.*cf;
 
     update;
@@ -718,7 +673,7 @@ if restart
     end
     if exist(name,'file')
         fprintf('\n   restart from %s \n\n',name);
-        load(name,'U','W','P','Pt','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','MFS','wf','wx','wm','cal');
+        load(name,'U','W','P','Pt','f','x','m','fq','xq','mq','phi','chi','mu','X','F','M','S','C','T','Tp','c','cm','cx','cf','sm','sx','sf','TRC','trc','dSdt','dCdt','dFdt','dXdt','dMdt','drhodt','dTRCdt','Gf','Gx','Gm','rho','eta','eII','tII','dt','time','step','MFS','wf','wx','wm','psie','psiex','psisx','psief','psisf','cal');
         name = [outdir,'/',runID,'/',runID,'_hist'];
         load(name,'hist');
 

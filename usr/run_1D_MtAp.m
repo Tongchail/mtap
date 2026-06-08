@@ -8,8 +8,8 @@ run('./par_MtAp_default.m')
 % set run parameters
 runID     =  '1D_MtAp1';          % run identifier
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nrh       =  1e1;                 % record diagnostic history every 'nrh' time steps
-nop       =  1e2;                 % output frame plotted/saved every 'nop' time steps
+nrh       =  5e1;                 % record diagnostic history every 'nrh' time steps
+nop       =  5e2;                 % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
 save_op   =  1;                   % switch on to save output to file
 colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
@@ -27,7 +27,7 @@ dt        =  1;                   % initial time step [s]
 
 % set initial thermo-chemical state
 init_mode =  'liquidus';          % auto calculate liquidus
-T0        =  -30;                 % offset below liquidus |||| initial temperature [deg C]
+T0        =  0;                 % offset below liquidus |||| initial temperature [deg C]
 c0        =  [15.4159   10.0390   15.4879   19.3207   39.7364  6  2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr       =  [1,1,1,-1,-1,-1,0]*0e-4;
 dr_trc    =  [1,1,1,-1,-1,-1  ]*0e-4; % trace elements random noise
@@ -36,7 +36,7 @@ dr_trc    =  [1,1,1,-1,-1,-1  ]*0e-4; % trace elements random noise
 periodic  =  1;                   % periodic side boundaries (1-无限宽)
 bndmode   =  3;                   % *** boundary assimilation mode (0 = none; 1 = top only; 2 = bot only; 3 = top/bot only; 4 = all walls; 5 = only sides)
 bnd_w     =  h;                   % boundary layer width [m]
-tau_T     =  (2*h)^2/1e-6;        % wall cooling/assimilation time [s]
+tau_T     =  (h/2)^2/1e-6;        % wall cooling/assimilation time [s]
 Twall     =  [500,500,nan];       % [top,bot,sds] wall rock temperature [degC] (nan = insulating)
 Ptop      =  1.25e8;              % *** top pressure [Pa]
 
@@ -44,7 +44,7 @@ Ptop      =  1.25e8;              % *** top pressure [Pa]
 calID     =  'MtAp_750_new';      % *** phase diagram calibration
 
 % set effective diffusivity parameters
-L0  =  4*h;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
+L0  =  D/10;                 % correlation length for eddy, convection diffusivity (multiple of h, 0.5-1)
 l0x =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
 l0f =  df0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
 
