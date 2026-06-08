@@ -503,7 +503,7 @@ dto     = dt;
 a1      = 1; a2 = 0; a3 = 0; b1 = 1; b2 = 0; b3 = 0;
 
 if ~postprc
-res  = 1;  tol = 1e-12;  it = 1;
+res  = 1;  tol = 1e-9;  it = 1;
 while res > tol
     Ptii = Pt; Ti = T; xi = xq; fi = fq;
 
@@ -546,10 +546,9 @@ while res > tol
     % T  = Tp.*exp(Adbt.*(Pt-Pref));
     % sm = cPm.*log(Tp./T0);  sx = sm+Dsx;  sf = sx+Dsf;
 
-    X    = rho.*x; Xo = X;  res_X = 0.*X;
-    F    = rho.*f; Fo = F;  res_F = 0.*F;
-    M    = rho.*m; Mo = M;  res_M = 0.*M;
-    RHO  = X+M+F;
+    X    = rho.*x; res_X = 0.*X;
+    F    = rho.*f; res_F = 0.*F;
+    M    = rho.*m; res_M = 0.*M;
     C    = M.*cm + X.*cx + F.*cf;
 
     update;
