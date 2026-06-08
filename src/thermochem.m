@@ -11,7 +11,11 @@ advn_S = - advect(M.*sm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  
          - advect(X.*sx,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  % solid advection
          - advect(F.*sf,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);     % fluid advection
 
-diff_S = diffus(T,kT./T,h,[1,2],BCD) + diffus(Tp,kh,h,[1,2],BCD);
+diff_S  = diffus(T    ,kT./T  ,h,[1,2],BCD);
+diff_Se = diffus(m.*sm,rho.*ks,h,[1,2],BCD) ...
+        + diffus(x.*sx,rho.*ks,h,[1,2],BCD) ...
+        + diffus(f.*sf,rho.*ks,h,[1,2],BCD);
+
 
 % heat dissipation
 diss_h = diss ./ T;
@@ -21,10 +25,10 @@ bnd_T = zeros(size(S));
 if ~isnan(Twall(1)); bnd_T = bnd_T + ((Twall(1)+273.15)-T)./tau_T .* topshape; end
 if ~isnan(Twall(2)); bnd_T = bnd_T + ((Twall(2)+273.15)-T)./tau_T .* botshape; end
 if ~isnan(Twall(3)); bnd_T = bnd_T + ((Twall(3)+273.15)-T)./tau_T .* sdsshape; end
-bnd_S = RHO.*cP.*bnd_T ./ T;
+bnd_S = rho.*cP.*bnd_T ./ T;
 
 % total rate of change
-dSdt  = advn_S + diff_S + diss_h + bnd_S;
+dSdt  = advn_S + diff_S + diff_Se + diss_h + bnd_S;
 
 % residual of entropy evolution
 res_S = (a1*S-a2*So-a3*Soo)/dt - (b1*dSdt + b2*dSdto + b3*dSdtoo);
@@ -46,14 +50,16 @@ advn_C = - advect(M.*cm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  
          - advect(F.*cf,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);     % fluid advection
 
 % major component diffusion (regularisation)
-diff_C = diffus(cm,M.*kc,h,[1,2],BCD) + diffus(cx,X.*kc,h,[1,2],BCD);
+diff_C = diffus(m.*cm,rho.*kc,h,[1,2],BCD) ...
+       + diffus(x.*cx,rho.*kc,h,[1,2],BCD) ...
+       + diffus(f.*cf,rho.*kc,h,[1,2],BCD);
 
 % boundary layers
 bnd_C = zeros(size(C));
 for i = 1:cal.ncmp
-    if ~isnan(cwall(1)); bnd_C(:,:,i) = bnd_C(:,:,i) + (RHO.*cwall(1,i)-C(:,:,i)).*mu./tau_a .* topshape; end
-    if ~isnan(cwall(2)); bnd_C(:,:,i) = bnd_C(:,:,i) + (RHO.*cwall(2,i)-C(:,:,i)).*mu./tau_a .* botshape; end
-    if ~isnan(cwall(3)); bnd_C(:,:,i) = bnd_C(:,:,i) + (RHO.*cwall(3,i)-C(:,:,i)).*mu./tau_a .* sdsshape; end
+    if ~isnan(cwall(1)); bnd_C(:,:,i) = bnd_C(:,:,i) + (rho.*cwall(1,i)-C(:,:,i)).*mu./tau_a .* topshape; end
+    if ~isnan(cwall(2)); bnd_C(:,:,i) = bnd_C(:,:,i) + (rho.*cwall(2,i)-C(:,:,i)).*mu./tau_a .* botshape; end
+    if ~isnan(cwall(3)); bnd_C(:,:,i) = bnd_C(:,:,i) + (rho.*cwall(3,i)-C(:,:,i)).*mu./tau_a .* sdsshape; end
 end
 
 % total rate of change
@@ -82,10 +88,15 @@ advn_F   = - advect(F,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);
 advn_M   = - advect(M,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA);
 advn_rho = advn_X+advn_F+advn_M;
 
+% phase diffusion (regularisation)
+diff_X = diffus(x,rho.*kx,h,[1,2],BCD);
+diff_F = diffus(f,rho.*kx,h,[1,2],BCD);
+diff_M = diffus(m,rho.*kx,h,[1,2],BCD);
+
 % total rates of change
-dXdt   = advn_X + Gx;
-dFdt   = advn_F + Gf;
-dMdt   = advn_M + Gm;
+dXdt   = advn_X + diff_X + Gx;
+dFdt   = advn_F + diff_F + Gf;
+dMdt   = advn_M + diff_M + Gm;
 
 % residual of phase density evolution
 res_X = (a1*X-a2*Xo-a3*Xoo)/dt - (b1*dXdt + b2*dXdto + b3*dXdtoo);
@@ -102,15 +113,12 @@ X     = max(0,min(rho, PHS(:,:,1) ));
 F     = max(0,min(rho, PHS(:,:,2) ));
 M     = max(0,min(rho, PHS(:,:,3) ));
 
-% get dynamically evolving mixture density 
-RHO = X+F+M;
-
 %***  update phase fractions and component concentrations
 
 % update phase fractions
-x = X./RHO; 
-f = F./RHO; 
-m = M./RHO;
+x = X./sum(PHS,3); 
+f = F./sum(PHS,3); 
+m = M./sum(PHS,3);
 
 % identify subsolidus and superliquidus regions
 subsol  = m<=1e-9 & T<=reshape(cal.Tsol+273.15,Nz,Nx);
