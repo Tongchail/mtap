@@ -27,13 +27,13 @@ xq = xq./(mq+xq+fq);
 fq = fq./(mq+xq+fq);
 
 % phase mass transfer rates
-Gm  = (mq-m).*RHO/max(tau_r,5*dt);
-Gx  = (xq-x).*RHO/max(tau_r,5*dt); 
-Gf  = (fq-f).*RHO/max(tau_r,5*dt);
+Gm  = (mq-m).*rho/max(tau_r,5*dt);
+Gx  = (xq-x).*rho/max(tau_r,5*dt); 
+Gf  = (fq-f).*rho/max(tau_r,5*dt);
 
-Gmc = (cmq.*mq-cm.*m).*RHO/max(tau_r,5*dt);
-Gxc = (cxq.*xq-cx.*x).*RHO/max(tau_r,5*dt);
-Gfc = (cfq.*fq-cf.*f).*RHO/max(tau_r,5*dt);
+Gmc = (cmq.*mq-cm.*m).*rho/max(tau_r,5*dt);
+Gxc = (cxq.*xq-cx.*x).*rho/max(tau_r,5*dt);
+Gfc = (cfq.*fq-cf.*f).*rho/max(tau_r,5*dt);
 
 cxq = reshape(var.cx,Nz,Nx,cal.ncmp);
 cmq = reshape(var.cm,Nz,Nx,cal.ncmp);

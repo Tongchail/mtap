@@ -12,7 +12,7 @@ drhodt  = advn_rho;               % advection term
 res_rho = (a1*rho-a2*rhoo-a3*rhooo)/dt - (b1*drhodt + b2*drhodto + b3*drhodtoo);
 
 % volume source and background velocity passed to fluid-mechanics solver
-[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho./2,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
+[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
 
 MFSmean  = mean(MFS,'all');
 
@@ -534,8 +534,8 @@ if ~bnchm && step>=1
 
     % phase diffusion rates and fluxes
     % (add the diffusive contribution to the phase velocities)
-    [dffn_X,qz_dffn_X,qx_dffn_X] = diffus(chi,k_x,h,[1,2],BCD);
-    [dffn_F,qz_dffn_F,qx_dffn_F] = diffus(phi,k_f,h,[1,2],BCD);
+    [dffn_X,qz_dffn_X,qx_dffn_X] = diffus(x,ks_x,h,[1,2],BCD);
+    [dffn_F,qz_dffn_F,qx_dffn_F] = diffus(f,ks_f,h,[1,2],BCD);
     wdx =  qz_dffn_X;
     udx =  qx_dffn_X;
     wdf =  qz_dffn_F;
