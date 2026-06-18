@@ -630,6 +630,76 @@ else % create 2D plots
     set(fh8,'CurrentAxes',ax(86));
     set(gca,'YTickLabel',[]);
 
+    % ---- horizontal-mean depth profiles (Fig. 16) ----
+    % Every 2-D field is averaged over x (the horizontal, dim 2) -> a 1-D
+    % profile vs depth Zc. This makes the 2-D run directly comparable to a
+    % 1-D run and reads out horizontal layering (cumulates, Fe/melt-rich
+    % layers) that is hard to see in the 2-D colour maps.
+    % Oxide columns follow cal.oxdStr order: SiO2=1, Al2O3=3, FeO=4.
+    if ~exist('fh16','var'); fh16 = figure(VIS{:});
+    else; set(0, 'CurrentFigure', fh16); clf;
+    end
+    sgtitle(['horizontal means, time = ',num2str(time/TimeScale,3),' [',TimeUnits,']'],TX{:},FS{:},'Color','k');
+
+    sumanh_h  = sum( c_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (bulk)  for wt% normalisation
+    sumanh_hm = sum(cm_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (melt)
+    sumanh_hx = sum(cx_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (xtal)
+
+    % 1: potential temperature (with liquidus/solidus, as in 1-D fh1)
+    subplot(1,6,1)
+    plot(mean(Tp,2)-273.15, Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
+    % cal.Tliq/Tsol are stored flattened (Nz*Nx x 1); reshape before averaging
+    plot(mean(reshape(cal.Tliq,Nz,Nx),2), Zsc.', CL{[1,3]}, LW{:});
+    plot(mean(reshape(cal.Tsol,Nz,Nx),2), Zsc.', CL{[1,4]}, LW{:});
+    title('$\langle T_p\rangle_x$ [$^\circ$C]',TX{:},FS{:});
+    ylabel(['Depth [',SpaceUnits,']'],TX{:},FS{:}); set(gca,TL{:},TS{:});
+
+    % 2: phase fractions (crystal / melt / mfe), masked as in 1-D fh1
+    subplot(1,6,2)
+    plot(mean(chi*100.*(chi>eps^0.5),2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
+    plot(mean(mu *100.*(mu >eps^0.5),2), Zsc.', CL{[1,3]}, LW{:});
+    plot(mean(phi*100.*(phi>eps^0.5),2), Zsc.', CL{[1,5]}, LW{:});
+    legend({'$\chi$','$\mu$','$\phi$'},TX{:},'Location','best','Box','on','FontSize',9);
+    title('$\langle\chi,\mu,\phi\rangle_x$ [vol\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+
+    % 3: density (single phases + bulk, colours as in 1-D fh2)
+    subplot(1,6,3)
+    plot(mean(rhox,2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
+    plot(mean(rhom,2), Zsc.', CL{[1,3]}, LW{:});
+    plot(mean(rhof,2), Zsc.', CL{[1,5]}, LW{:});
+    plot(mean(rho ,2), Zsc.', CL{[1,2]}, LW{:});
+    title('$\langle\bar{\rho}\rangle_x$ [kg/m$^3$]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+
+    % 4: viscosity (single phases + bulk; arithmetic mean, log axis as in 1-D fh2)
+    subplot(1,6,4)
+    semilogx(mean(etax,2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
+    semilogx(mean(etam,2), Zsc.', CL{[1,3]}, LW{:});
+    semilogx(mean(etaf,2), Zsc.', CL{[1,5]}, LW{:});
+    semilogx(mean(eta ,2), Zsc.', CL{[1,2]}, LW{:});
+    title('$\langle\bar{\eta}\rangle_x$ [Pas]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+
+    % 5: SiO2 (bulk / melt / xtal; differentiation index)
+    subplot(1,6,5)
+    cSi  = squeeze( c_oxd(:,:,1)./sumanh_h .*100);
+    cSim = squeeze(cm_oxd(:,:,1)./sumanh_hm.*100);
+    cSix = squeeze(cx_oxd(:,:,1)./sumanh_hx.*100);
+    plot(mean(cSi ,2), Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
+    plot(mean(cSim,2), Zsc.', CL{[1,3]}, LW{:});
+    plot(mean(cSix,2), Zsc.', CL{[1,4]}, LW{:});
+    legend({'bulk','melt','xtal'},TX{:},'Location','best','Box','on','FontSize',9);
+    title('$\langle$SiO$_2\rangle_x$ [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+
+    % 6: FeO (bulk / melt / xtal; Fe-rich layers)
+    subplot(1,6,6)
+    cFe  = squeeze( c_oxd(:,:,4)./sumanh_h .*100);
+    cFem = squeeze(cm_oxd(:,:,4)./sumanh_hm.*100);
+    cFex = squeeze(cx_oxd(:,:,4)./sumanh_hx.*100);
+    plot(mean(cFe ,2), Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
+    plot(mean(cFem,2), Zsc.', CL{[1,3]}, LW{:});
+    plot(mean(cFex,2), Zsc.', CL{[1,4]}, LW{:});
+    legend({'bulk','melt','xtal'},TX{:},'Location','best','Box','on','FontSize',9);
+    title('$\langle$FeO$\rangle_x$ [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+
 end
 
 
@@ -957,6 +1027,8 @@ if save_op && ~restart
         print(fh7,name,'-dpng','-r300','-image');
         name = [outdir,'/',runID,'/',runID,'_gch',num2str(floor(step/nop))];
         print(fh8,name,'-dpng','-r300','-image');
+        name = [outdir,'/',runID,'/',runID,'_prf',num2str(floor(step/nop))];
+        print(fh16,name,'-dpng','-r300','-image');
     end
     % print petrological figures
     name = [outdir,'/',runID,'/',runID,'_TAS',num2str(floor(step/nop))];
