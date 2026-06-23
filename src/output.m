@@ -644,6 +644,7 @@ else % create 2D plots
     sumanh_h  = sum( c_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (bulk)  for wt% normalisation
     sumanh_hm = sum(cm_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (melt)
     sumanh_hx = sum(cx_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (xtal)
+    sumanh_hf = sum(cf_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (mfe)
 
     % 1: potential temperature (with liquidus/solidus, as in 1-D fh1)
     subplot(1,6,1)
@@ -672,32 +673,36 @@ else % create 2D plots
 
     % 4: viscosity (single phases + bulk; arithmetic mean, log axis as in 1-D fh2)
     subplot(1,6,4)
-    semilogx(mean(etax,2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
-    semilogx(mean(etam,2), Zsc.', CL{[1,3]}, LW{:});
-    semilogx(mean(etaf,2), Zsc.', CL{[1,5]}, LW{:});
+    semilogx(mean(etax0,2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
+    semilogx(mean(etam0,2), Zsc.', CL{[1,3]}, LW{:});
+    semilogx(mean(etaf0,2), Zsc.', CL{[1,5]}, LW{:});
     semilogx(mean(eta ,2), Zsc.', CL{[1,2]}, LW{:});
     title('$\langle\bar{\eta}\rangle_x$ [Pas]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
-    % 5: SiO2 (bulk / melt / xtal; differentiation index)
+    % 5: SiO2 (bulk / melt / xtal / mfe; differentiation index)
     subplot(1,6,5)
     cSi  = squeeze( c_oxd(:,:,1)./sumanh_h .*100);
     cSim = squeeze(cm_oxd(:,:,1)./sumanh_hm.*100);
     cSix = squeeze(cx_oxd(:,:,1)./sumanh_hx.*100);
+    cSif = squeeze(cf_oxd(:,:,1)./sumanh_hf.*100);
     plot(mean(cSi ,2), Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
     plot(mean(cSim,2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(cSix,2), Zsc.', CL{[1,4]}, LW{:});
-    legend({'bulk','melt','xtal'},TX{:},'Location','best','Box','on','FontSize',9);
+    plot(mean(cSif,2), Zsc.', CL{[1,5]}, LW{:});
+    legend({'bulk','melt','xtal','mfe'},TX{:},'Location','best','Box','on','FontSize',9);
     title('$\langle$SiO$_2\rangle_x$ [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
-    % 6: FeO (bulk / melt / xtal; Fe-rich layers)
+    % 6: FeO (bulk / melt / xtal / mfe; Fe-rich layers)
     subplot(1,6,6)
     cFe  = squeeze( c_oxd(:,:,4)./sumanh_h .*100);
     cFem = squeeze(cm_oxd(:,:,4)./sumanh_hm.*100);
     cFex = squeeze(cx_oxd(:,:,4)./sumanh_hx.*100);
+    cFef = squeeze(cf_oxd(:,:,4)./sumanh_hf.*100);
     plot(mean(cFe ,2), Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
     plot(mean(cFem,2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(cFex,2), Zsc.', CL{[1,4]}, LW{:});
-    legend({'bulk','melt','xtal'},TX{:},'Location','best','Box','on','FontSize',9);
+    plot(mean(cFef,2), Zsc.', CL{[1,5]}, LW{:});
+    legend({'bulk','melt','xtal','mfe'},TX{:},'Location','best','Box','on','FontSize',9);
     title('$\langle$FeO$\rangle_x$ [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
 end
