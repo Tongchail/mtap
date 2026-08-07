@@ -2,7 +2,7 @@
 clear; close all;
 
 % load default parameters
-run('../usr/par_default')
+run('../usr/par_MtAp_default')
 
 % test decreasing time step
 ATOL = [1e-6,1e-9,1e-12];
@@ -21,16 +21,16 @@ for atol = ATOL
     L        =  10;                  % chamber width [m]
     N        =  100;                 % number of grid points in z-direction (incl. 2 ghosts)
     h        =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
-
+    L0 = h/2;   % reset eddy correlation length
     % set model timing parameters
     Nt       =  nop;                 % number of time steps to take
     dt       =  1;                   % set initial time step
-
+    nrh      =  1;                   % record history every step
     % set initial thermo-chemical state
     smth     =  15;
     T0       =  1200;                % temperature top  layer [deg C]
     T1       =  T0;                  % temperature base layer [deg C]
-    c0       =  [11  17  35  31  3  3  5]/100;  % components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
+    c0       =  [16   11   16   19   38  7  2]/100;  % components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
     c1       =  c0;                  % components (maj comp, H2O) base layer [wt] (will be normalised to unit sum!)
     dcr      =  [1,1,1,-1,-1,-1,0]*1e-3;  % amplitude of random noise [wt]
     dcg      =  [-1,-1,-1,1,1,1,0]*1e-2;  % amplitude of centred gaussian [wt]
@@ -49,7 +49,7 @@ for atol = ATOL
     fin       =  0;
     fout      =  0;
 
-    calID    =  'DEMO';              % phase diagram calibration
+    calID    =  'MtAp_750_new';             % phase diagram calibration
 
     % set numerical model parameters
     TINT     =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')

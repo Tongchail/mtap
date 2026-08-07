@@ -1,8 +1,8 @@
 % prepare workspace
-clear; close all;
+clear; close all;  
 
 % load default parameters
-run('../usr/par_default')
+run('../usr/par_MtAp_default')
 
 % set run parameters
 runID    =  'bnchm_TC_diff';     % run identifier
@@ -16,7 +16,7 @@ save_op  =  0;                   % switch on to save output to file
 T0       =  1050;                % temperature top  layer [deg C]
 T1       =  T0;                  % temperature base layer [deg C]
 dTg      =  0;                   % amplitude of centred gaussian [deg C]
-c0       =  [0.04,0.12,0.44,0.24,0.14,0.02,0.04];  % components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
+c0       =  [16   11   16   19   38  7  2]/100;  % components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 c1       =  c0;                  % components (maj comp, H2O) base layer [wt] (will be normalised to unit sum!)
 dcr      =  [0,0,0,0,0,0,0];     % amplitude of random noise [wt]
 dcg      =  [-1,-1,-1,1,1,1,0]*1e-2;  % amplitude of centred gaussian [wt]
@@ -32,7 +32,8 @@ atol     =  1e-12;               % outer its absolute tolerance
 maxit    =  50;                  % maximum outer its
 alpha    =  0.75;
 beta     =  0.10;
-
+nrh      =  1;                   % record history every step
+calID = 'MtAp_750_new';
 % create output directory
 if ~isfolder([opdir,'/',runID])
     mkdir([opdir,'/',runID]);
@@ -72,41 +73,43 @@ while time <= tend && step <= Nt
     TCtime  = 0;
     UDtime  = 0;
 
-    if     strcmp(TINT,'be1im') || step==1 || frst % first step / 1st-order backward-Euler implicit scheme
-        a1 = 1; a2 = 1; a3 = 0;
-        b1 = 1; b2 = 0; b3 = 0;
-    elseif strcmp(TINT,'bd2im') || step==2         % second step / 2nd-order 3-point backward-difference implicit scheme
-        a1 = 3/2; a2 = 4/2; a3 = -1/2;
-        b1 = 1;   b2 =  0;  b3 = 0;
-    elseif strcmp(TINT,'cn2si')                    % other steps / 2nd-order Crank-Nicolson semi-implicit scheme
-        a1 = 1;   a2 = 1;   a3 = 0;
-        b1 = 1/2; b2 = 1/2; b3 = 0;
-    elseif strcmp(TINT,'bd2si')                    % other steps / 2nd-order 3-point backward-difference semi-implicit scheme
-        a1 = 3/2; a2 = 4/2; a3 = -1/2;
-        b1 = 3/4; b2 = 2/4; b3 = -1/4;
-    end
+    % if     strcmp(TINT,'be1im') || step==1 || frst % first step / 1st-order backward-Euler implicit scheme
+    %     a1 = 1; a2 = 1; a3 = 0;
+    %     b1 = 1; b2 = 0; b3 = 0;
+    % elseif strcmp(TINT,'bd2im') || step==2         % second step / 2nd-order 3-point backward-difference implicit scheme
+    %     a1 = 3/2; a2 = 4/2; a3 = -1/2;
+    %     b1 = 1;   b2 =  0;  b3 = 0;
+    % elseif strcmp(TINT,'cn2si')                    % other steps / 2nd-order Crank-Nicolson semi-implicit scheme
+    %     a1 = 1;   a2 = 1;   a3 = 0;
+    %     b1 = 1/2; b2 = 1/2; b3 = 0;
+    % elseif strcmp(TINT,'bd2si')                    % other steps / 2nd-order 3-point backward-difference semi-implicit scheme
+    %     a1 = 3/2; a2 = 4/2; a3 = -1/2;
+    %     b1 = 3/4; b2 = 2/4; b3 = -1/4;
+    % end
+    timing;
 
-    % store previous solution
-    Soo = So; So = S;
-    Coo = Co; Co = C;
-    Xoo = Xo; Xo = X;
-    Foo = Fo; Fo = F;
-    Moo = Mo; Mo = M;
-    rhooo = rhoo; rhoo = rho;
-    TRCoo = TRCo; TRCo = TRC;
-    dSdtoo = dSdto; dSdto = dSdt;
-    dCdtoo = dCdto; dCdto = dCdt;
-    dXdtoo = dXdto; dXdto = dXdt;
-    dFdtoo = dFdto; dFdto = dFdt;
-    dMdtoo = dMdto; dMdto = dMdt;
-    drhodtoo = drhodto; drhodto = drhodt;
-    dTRCdtoo = dTRCdto; dTRCdto = dTRCdt;
-    Div_Vo  = Div_V;
-    rhoWoo  = rhoWo; rhoWo = rhofz.*W(:,2:end-1);
-    rhoUoo  = rhoUo; rhoUo = rhofx.*U(2:end-1,:);
-    Pchmboo = Pchmbo; Pchmbo = Pchmb;
-    dPchmbdtoo = dPchmbdto; dPchmbdto = dPchmbdt;
-    dto     = dt;
+    % % store previous solution
+    % Soo = So; So = S;
+    % Coo = Co; Co = C;
+    % Xoo = Xo; Xo = X;
+    % Foo = Fo; Fo = F;
+    % Moo = Mo; Mo = M;
+    % rhooo = rhoo; rhoo = rho;
+    % TRCoo = TRCo; TRCo = TRC;
+    % dSdtoo = dSdto; dSdto = dSdt;
+    % dCdtoo = dCdto; dCdto = dCdt;
+    % dXdtoo = dXdto; dXdto = dXdt;
+    % dFdtoo = dFdto; dFdto = dFdt;
+    % dMdtoo = dMdto; dMdto = dMdt;
+    % drhodtoo = drhodto; drhodto = drhodt;
+    % dTRCdtoo = dTRCdto; dTRCdto = dTRCdt;
+    % Div_Vo  = Div_V;
+    % rhoWoo  = rhoWo; rhoWo = rhofz.*W(:,2:end-1);
+    % rhoUoo  = rhoUo; rhoUo = rhofx.*U(2:end-1,:);
+    % Pchmboo = Pchmbo; Pchmbo = Pchmb;
+    % dPchmbdtoo = dPchmbdto; dPchmbdto = dPchmbdt;
+    % dto     = dt;
+    store;
 
     % reset residuals and iteration count
     resnorm  = 1;
@@ -114,7 +117,8 @@ while time <= tend && step <= Nt
     iter     = 1;
 
     % non-linear iteration loop
-    while resnorm/resnorm0 >= rtol && resnorm >= atol && iter <= maxit
+    while resnorm/resnorm0 >= rtol/(1 + frst*10) && resnorm >= atol/(1 + frst*10) && iter <= maxit*(1 + frst)
+    %while resnorm/resnorm0 >= rtol && resnorm >= atol && iter <= maxit
 
         % dt = (h/2)^2./max([kc(:)./rho(:);(kT0+ks(:).*T(:))./rho(:)./cP])/16;
 
@@ -144,6 +148,7 @@ while time <= tend && step <= Nt
     % increment time/step
     time = time+dt;
     step = step+1;
+    if frst; frst=0; end
 
     figure(100); clf;
     subplot(3,2,1)

@@ -2,7 +2,7 @@
 clear; close all;
 
 % load default parameters
-run('../usr/par_default')
+run('../usr/par_MtAp_default')
 
 % set run parameters
 runID    =  'bnchm_TC_h';        % run identifier
@@ -23,7 +23,7 @@ h        =  D/N;                 % grid spacing (equal in both dimensions, do no
 smth     =  15;
 T0       =  1150;                % temperature top  layer [deg C]
 T1       =  T0;                  % temperature base layer [deg C]
-c0       =  [11  17  35  31  3  3  5]/100;  % components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
+c0       =  [16   11   16   19   38  7  2]/100;  % components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 c1       =  c0;                  % components (maj comp, H2O) base layer [wt] (will be normalised to unit sum!)
 dcr      =  [1,1,1,-1,-1,-1,0]*0e-3;  % amplitude of random noise [wt]
 dcg      =  [-1,-1,-1,1,1,1,0]*1e-2;  % amplitude of centred gaussian [wt]
@@ -39,7 +39,7 @@ Ptop     =  2.0e8;               % top pressure [Pa]
 fin      =  0;
 fout     =  0;
 tau_r    =  1e32;
-calID    =  'DEMO';              % phase diagram calibration
+calID    =  'MtAp_750_new';             % phase diagram calibration
 
 % set numerical model parameters
 TINT     =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
@@ -69,7 +69,7 @@ for Ni = NN
     
     N     =  Ni;                % number of grid points in z-direction
     h     =  D/N;               % grid spacing
-
+    L0    = h/2;   % reset eddy correlation length
     % initialise fields
     init;
 
@@ -110,11 +110,11 @@ for Ni = NN
         resnorm  = 1;
         resnorm0 = resnorm;
         iter     = 1;
-        if frst; alpha = alpha/2; beta = beta/2; end
+     %   if frst; alpha = alpha/2; beta = beta/2; end
 
         % non-linear iteration loop
-        while resnorm/resnorm0 >= rtol && resnorm >= atol && iter <= maxit
-
+     %   while resnorm/resnorm0 >= rtol && resnorm >= atol && iter <= maxit
+         while resnorm/resnorm0 >= rtol/(1 + frst*10) && resnorm >= atol/(1 + frst*10) && iter <= maxit*(1 + frst)
             % solve thermo-chemical equations
             thermochem;
 
@@ -143,8 +143,8 @@ for Ni = NN
         % increment time/step
         time = time+dt;
         step = step+1;
-        if frst; alpha = alpha*2; beta = beta*2; frst=0; end
-
+     %  if frst; alpha = alpha*2; beta = beta*2; frst=0; end
+        if frst; frst=0; end
         figure(100); clf;
         subplot(2,1,1)
         plot(XX(ceil(Nz/2),:),Xout(ceil(Nz/2),:)./rhoout(ceil(Nz/2),:),'k',XX(ceil(Nz/4),:),X(ceil(Nz/2),:)./rho(ceil(Nz/2),:),'r','LineWidth',1.5); axis tight; box on;

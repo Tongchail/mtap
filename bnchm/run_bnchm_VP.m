@@ -1,7 +1,7 @@
 clear; close all;
-
+load('../src/colmap/lapaz.mat');
 % load default parameters
-run('../usr/par_default')
+run('../usr/par_MtAp_default')
 
  % test decreasing grid step
 NN = 25.*[1,2,4]; 
