@@ -4,7 +4,7 @@ load('../src/colmap/lapaz.mat');
 run('../usr/par_MtAp_default')
 
  % test decreasing grid step
-NN = 25.*[1,2,4]; 
+NN = 50.*[1,2,4]; 
 
 for nn = NN
 
@@ -31,7 +31,7 @@ for nn = NN
     run('../src/mms')
 
     figure(17); clf;
-    colormap(ocean);
+    colormap(lapaz);
     subplot(2,3,1); imagesc(x_mms,zw_mms,-W*hr); axis ij equal tight; box on; colorbar('TicklabelInterpreter','latex'); title('num. sol. $W$ [m/hr]','Interpreter','latex'); set(gca,'TicklabelInterpreter','latex')
     subplot(2,3,2); imagesc(xu_mms,z_mms, U*hr); axis ij equal tight; box on; colorbar('TicklabelInterpreter','latex'); title('num. sol. $U$ [m/hr]','Interpreter','latex'); set(gca,'TicklabelInterpreter','latex')
     subplot(2,3,3); imagesc(x_mms ,z_mms, P/1e3); axis ij equal tight; box on; colorbar('TicklabelInterpreter','latex'); title('num. sol. $P$ [kPa]','Interpreter','latex'); set(gca,'TicklabelInterpreter','latex')
