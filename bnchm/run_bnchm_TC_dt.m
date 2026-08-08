@@ -16,7 +16,7 @@ save_op  =  0;
 % set model domain parameters
 D        =  10;                  % chamber depth [m]
 L        =  10;                  % chamber width [m]
-N        =  50;                  % number of grid points in z-direction (incl. 2 ghosts)
+N        =  100;                 % number of grid points in z-direction (incl. 2 ghosts)
 h        =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
 
 % set model timing parameters
@@ -25,13 +25,12 @@ dt       =  1;                   % set initial time step
 
 % set initial thermo-chemical state
 smth     =  15;
-T0       =  1150;                % temperature top  layer [deg C]
-T1       =  T0;                  % temperature base layer [deg C]
-c0       =  [16   11   16   19   38  7  2]/100;  % components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
-c1       =  c0;                  % components (maj comp, H2O) base layer [wt] (will be normalised to unit sum!)
+init_mode=  'liquidus';          % init_mode = 'constant', 'liquidus', 'layer','linear', 'chamber'.
+T0       =  -200;                 % initial temperature [deg C] 
+c0       =  [16 11 16 19 38 10 2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr      =  [1,1,1,-1,-1,-1,0]*0e-3;  % amplitude of random noise [wt]
-dcg      =  [-1,-1,-1,1,1,1,0]*1e-2;  % amplitude of centred gaussian [wt]
-dTg      =  5;
+dcg      =  [-1,-1,-1,1,1,1,0]*5e-2;  % amplitude of centred gaussian [wt]
+dTg      =  10;
 dTr      =  0.0;
 dr_trc   =  [1,1,1,-1,-1,-1].*0e-3;
 dg_trc   =  [-1,-1,-1,1,1,1].*1e-2;
@@ -49,10 +48,13 @@ calID    =  'MtAp_750_new';              % phase diagram calibration
 TINT     =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
 ADVN     =  'weno5';             % advection scheme ('centr','upw1','quick','fromm','weno3','weno5','tvdim')
 CFL      =  1;                   % (physical) time stepping courant number (multiplies stable step) [0,1]
-atol     =  1e-12;               % outer its absolute tolerance
+atol     =  1e-9;               % outer its absolute tolerance
 rtol     =  atol/1e6;            % outer its absolute tolerance
 maxit    =  100;                 % maximum outer its
-alpha    =  0.75;                % iterative step size parameter
+itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
+itpar.aa.m    = 2;                % Anderson acceleration depth (2-5)
+itpar.aa.damp = 0.0;              % Anderson acceleration damping (0-1)
+itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
 
 % create output directory
 if ~isfolder([opdir,'/',runID])
@@ -62,36 +64,36 @@ end
 cd ../src
 
 DT    = [h/2,h/4,h/8];  % time step sizes to test relative to grid step
-nshft = 4;              % number of grid steps target is shifted from initial
+nshft = 2;              % number of grid steps target is shifted from initial
 
 for dti = DT
     
     dt    =  dti;
     dtmax =  dti;
     Nt    =  nshft*h/dti;
-    L0 = h/2;   % reset eddy correlation length
+    L0    =  mean(L0(:));
+
+    Delta_cnv = h;
+
     % initialise fields
     init;
 
     % set velocities to constant values for lateral translation with no segregation
-    W(:) = 0; Wm(:) = 0; Wx(:) = 0; Wf(:) = 0; wx(:) = 0;  wm(:) = 0;  wf(:) = 0;
-    U(:) = 0; Um(:) = 1; Ux(:) = 1; Uf(:) = 1;
-    P(:) = 0;
+    W(:) = 0;  Wm(:) = 0;  Wx(:) = 0;  Wf(:) = 0;  wx(:) = 0;  wm(:) = 0;  wf(:) = 0;  upd_W(:) = 0;
+    U(:) = 0;  Um(:) = 1;  Ux(:) = 1;  Uf(:) = 1; upd_U(:) = 0;   
+    P(:) = 0;  upd_P(:) = 0; upd_MFS(:) = 0;
 
     % set diffusion parameters to zero to isolate advection
-    kT(:) = 0;  ks(:) = 0;  kc(:) = 0;  km(:) = 0;  kx(:) = 0;  kf(:) = 0;  diss(:) = 0;
-
-    % set parameters for non-dissipative, non-reactive flow
+    kT(:)   = 0;  ks(:) = 0;  kx(:) = 0;  ks_x(:) = 0;  ks_f(:) = 0;  ke(:) = 0;
     diss(:) = 0;
     res_rho = 0.*rho;
 
-    Sin   = S;   Sout   = circshift(S  ,nshft,2);
+    % set parameters for non-dissipative, non-reactive flow
     rhoin = rho; rhoout = circshift(rho,nshft,2);
+    Sin   = S;   Sout   = circshift(S  ,nshft,2);
+    Fin   = F;   Fout   = circshift(F  ,nshft,2);
     Min   = M;   Mout   = circshift(M  ,nshft,2);
     Xin   = X;   Xout   = circshift(X  ,nshft,2);
-    Fin   = F;   Fout   = circshift(F  ,nshft,2);
-    Cin   = C;   Cout   = circshift(C  ,nshft,2);
-    TRCin = TRC; TRCout = circshift(TRC,nshft,2);
 
     dt    = dti;
     dtmax = dti;
@@ -112,29 +114,23 @@ for dti = DT
         resnorm  = 1;
         resnorm0 = resnorm;
         iter     = 1;
-        %if frst; alpha = alpha/2; beta = beta/2; end
 
         % non-linear iteration loop
-       % while resnorm/resnorm0 >= rtol && resnorm >= atol && iter <= maxit
-         while resnorm/resnorm0 >= rtol/(1 + frst*10) && resnorm >= atol/(1 + frst*10) && iter <= maxit*(1 + frst)
+        while resnorm/resnorm0 >= rtol && resnorm >= atol && iter <= maxit
+
             % solve thermo-chemical equations
             thermochem;
 
             % update non-linear parameters and auxiliary variables
             update;
 
-            kT(:) = 0;  ks(:) = 0;  kc(:) = 0;  km(:) = 0;  kx(:) = 0;  kf(:) = 0;  diss(:) = 0;
-
-            % update geochemical evolution
-            geochem;
+            kT(:) = 0;  ks(:) = 0;  kx(:) = 0;  ks_x(:) = 0;  ks_f(:) = 0;  ke(:) = 0;  diss(:) = 0;
 
             % report convergence
             report;
 
             iter = iter+1;
         end
-
-        % X = X./RHO.*rho;  M = M./RHO.*rho;  F = F./RHO.*rho;  RHO = X+M+F;
 
         % print model diagnostics
         diagnose;
@@ -145,53 +141,52 @@ for dti = DT
         % increment time/step
         time = time+dt;
         step = step+1;
-       
-        % if frst; alpha = alpha*2; beta = beta*2; frst=0; end
         if frst; frst=0; end
 
         figure(100); clf;
-        subplot(2,1,1)
-        plot(XX(ceil(Nz/2),:),Xout(ceil(Nz/2),:)./rhoout(ceil(Nz/2),:),'k',XX(ceil(Nz/4),:),X(ceil(Nz/2),:)./rho(ceil(Nz/2),:),'r','LineWidth',1.5); axis tight; box on;
-        subplot(2,1,2)
-        plot(XX(ceil(Nz/2),:),Sout(ceil(Nz/2),:)./rhoout(ceil(Nz/2),:),'k',XX(ceil(Nz/2),:),S(ceil(Nz/2),:)./rho(ceil(Nz/2),:),'r','LineWidth',1.5); axis tight; box on;
+        plot(XX(ceil(Nz/2),:), Xout(ceil(Nz/2),:)./rhoout(ceil(Nz/2),:),'k',XX(ceil(Nz/4),:), X(ceil(Nz/2),:)./rho(ceil(Nz/2),:),'r','LineWidth',1.5); axis tight; box on;
+        set(gca,'LineWidth',1.5,'TickLabelInterpreter','latex','FontSize',12)
+        xlabel('Distance [m]','Interpreter','latex','FontSize',16)
+        ylabel('Crystallinity [wt]','Interpreter','latex','FontSize',16)
         drawnow;
 
     end
 
+    figure(200);
+    plot(XX(ceil(Nz/2),:),X(ceil(Nz/2),:)./rho(ceil(Nz/2),:)-Xout(ceil(Nz/2),:)./rhoout(ceil(Nz/2),:),'LineWidth',1.5); axis tight; box on; hold on;
+    set(gca,'LineWidth',1.5,'TickLabelInterpreter','latex','FontSize',12)
+    xlabel('Distance [m]','Interpreter','latex','FontSize',16)
+    ylabel('Residual [wt]','Interpreter','latex','FontSize',16)
 
     % plot convergence
-    ES = norm(S-Sout,'fro')./norm(Sout,'fro');
-    EB = norm(rho-rhoout,'fro')./norm(rhoout,'fro');
-    EM = norm(M-Mout,'fro')./norm(Mout,'fro');
-    EX = norm(X-Xout,'fro')./norm(Xout,'fro');
-    EF = norm(F-Fout,'fro')./norm(Fout,'fro');
-    EC = norm(C-Cout,'fro')./norm(Cout,'fro');
-    ET = norm(TRC-TRCout,'fro')./norm(TRCout,'fro');
+    % EB = norm(rho-rhoout)./norm(rhoout);
+    EM = norm(  M-  Mout)./norm(Mout);
+    EX = norm(  X-  Xout)./norm(Xout);
+    EF = norm(  F-  Fout)./norm(Fout);
+    ES = norm(  S-  Sout)./norm(Sout);
 
     clist = [colororder;[0 0 0]];
 
-    fh15 = figure(15);
-    p1 = loglog(dt,ES,'+','Color',clist(1,:),'MarkerSize',10,'LineWidth',2); hold on; box on;
-    % p2 = loglog(dt,EB,'s','Color',clist(2,:),'MarkerSize',10,'LineWidth',2);
-    p3 = loglog(dt,EM,'o','Color',clist(3,:),'MarkerSize',10,'LineWidth',2);
-    p4 = loglog(dt,EX,'d','Color',clist(4,:),'MarkerSize',10,'LineWidth',2);
-    p5 = loglog(dt,EF,'*','Color',clist(5,:),'MarkerSize',10,'LineWidth',2);
-    p6 = loglog(dt,EC,'^','Color',clist(6,:),'MarkerSize',10,'LineWidth',2);
-    p7 = loglog(dt,ET,'v','Color',clist(7,:),'MarkerSize',10,'LineWidth',2);
-    xlabel('time step [s]','Interpreter','latex','FontSize',16)
-    ylabel('rel. numerical error [1]','Interpreter','latex','FontSize',16)
-    title('Numerical convergence in time','Interpreter','latex','FontSize',20)
+    fh24 = figure(24);
+    loglog(dt,EM,'o','Color',clist(2,:),'MarkerSize',10,'LineWidth',2); hold on; box on;
+    loglog(dt,EX,'d','Color',clist(1,:),'MarkerSize',10,'LineWidth',2);
+    loglog(dt,EF,'^','Color',clist(3,:),'MarkerSize',10,'LineWidth',2);
+    loglog(dt,ES,'v','Color',clist(4,:),'MarkerSize',10,'LineWidth',2);
+    set(gca,'LineWidth',1.5,'TickLabelInterpreter','latex','FontSize',12)
+    xlabel('Time step [s]','Interpreter','latex','FontSize',15)
+    ylabel('Rel. numerical error [1]','Interpreter','latex','FontSize',15)
+    title('Numerical convergence in time','Interpreter','latex','FontSize',18)
 
-    if dt == DT(1)
-        p8 = loglog(DT,geomean([ES,EM,EX,EF,EC,ET]).*(DT./DT(1)).^1,'k--','LineWidth',2);  % plot trend for comparison
-        p9 = loglog(DT,geomean([ES,EM,EX,EF,EC,ET]).*(DT./DT(1)).^2,'k-' ,'LineWidth',2);
+    if round(dt,4) == DT(1)
+        % loglog(DT,geomean([EM,EX,EF,ES]).*(DT./DT(1)).^1,'k--','LineWidth',2);  % plot trend for comparison
+        loglog(DT,geomean([EM,EX,EF,ES]).*(DT./DT(1)).^2,'k-' ,'LineWidth',2);
     end
-    if dt == DT(end)
-        legend({'error $S$','error $M$','error $X$','error $F$','error $C_j$','error $\Theta_k$','linear','quadratic'},'Interpreter','latex','box','on','location','southeast')
+    if round(dt,4) == DT(end)
+        legend({'error $M$','error $X$','error $F$','error $S$','linear','quadratic'},'Interpreter','latex','box','on','location','southeast')
     end
     drawnow;
 
 end
 
 name = [opdir,'/',runID,'/',runID,'_',TINT];
-print(fh15,name,'-dpng','-r300','-vector');
+print(fh24,name,'-dpng','-r300','-vector');
