@@ -7,15 +7,22 @@ if iter==1; upd_S = 0; upd_C = 0; upd_M = 0; upd_X = 0; upd_F = 0; end
 %***  update heat content (entropy) density
 
 % heat advection
-advn_S = - advect(M.*sm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  % melt  advection
-         - advect(X.*sx,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  % solid advection
-         - advect(F.*sf,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);     % fluid advection
+[advn_Sm,qz_advn_Sm,qx_advn_Sm] = advect(M.*sm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+[advn_Sx,qz_advn_Sx,qx_advn_Sx] = advect(X.*sx,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+[advn_Sf,qz_advn_Sf,qx_advn_Sf] = advect(F.*sf,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);
 
-diff_S  = diffus(T    ,kT./T  ,h,[1,2],BCD);
-diff_Se = diffus(m.*sm,rho.*ks,h,[1,2],BCD) ...
-        + diffus(x.*sx,rho.*ks,h,[1,2],BCD) ...
-        + diffus(f.*sf,rho.*ks,h,[1,2],BCD);
+advn_S    = - advn_Sm - advn_Sx - advn_Sf;
+qz_advn_S = qz_advn_Sm + qz_advn_Sx + qz_advn_Sf;
+qx_advn_S = qx_advn_Sm + qx_advn_Sx + qx_advn_Sf;
 
+[diff_S ,qz_dffn_ST,qx_dffn_ST] = diffus(T    ,kT./T  ,h,[1,2],BCD);
+[diff_Sm,qz_dffn_Sm,qx_dffn_Sm] = diffus(m.*sm,rho.*ks,h,[1,2],BCD);
+[diff_Sx,qz_dffn_Sx,qx_dffn_Sx] = diffus(x.*sx,rho.*ks,h,[1,2],BCD);
+[diff_Sf,qz_dffn_Sf,qx_dffn_Sf] = diffus(f.*sf,rho.*ks,h,[1,2],BCD);
+
+diff_Se   = diff_Sm + diff_Sx + diff_Sf;
+qz_dffn_S = qz_dffn_ST + qz_dffn_Sm + qz_dffn_Sx + qz_dffn_Sf;
+qx_dffn_S = qx_dffn_ST + qx_dffn_Sm + qx_dffn_Sx + qx_dffn_Sf;
 
 % heat dissipation
 diss_h = diss ./ T;
@@ -45,14 +52,24 @@ sm = si(:,:,1); sx = si(:,:,2); sf = si(:,:,3);  % read out phase entropies
 %***  update major component densities
 
 % major component advection
-advn_C = - advect(M.*cm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  % melt  advection
-         - advect(X.*cx,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...  % solid advection
-         - advect(F.*cf,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);     % fluid advection
+[advn_Cm,qz_advn_Cm,qx_advn_Cm] = advect(M.*cm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+[advn_Cx,qz_advn_Cx,qx_advn_Cx] = advect(X.*cx,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+[advn_Cf,qz_advn_Cf,qx_advn_Cf] = advect(F.*cf,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+
+advn_C    = - advn_Cm - advn_Cx - advn_Cf;
+
+qz_advn_C = qz_advn_Cm + qz_advn_Cx + qz_advn_Cf;
+qx_advn_C = qx_advn_Cm + qx_advn_Cx + qx_advn_Cf;
 
 % major component diffusion (regularisation)
-diff_C = diffus(m.*cm,rho.*kc,h,[1,2],BCD) ...
-       + diffus(x.*cx,rho.*kc,h,[1,2],BCD) ...
-       + diffus(f.*cf,rho.*kc,h,[1,2],BCD);
+[diff_Cm,qz_dffn_Cm,qx_dffn_Cm] = diffus(m.*cm,rho.*kc,h,[1,2],BCD);
+[diff_Cx,qz_dffn_Cx,qx_dffn_Cx] = diffus(x.*cx,rho.*kc,h,[1,2],BCD);
+[diff_Cf,qz_dffn_Cf,qx_dffn_Cf] = diffus(f.*cf,rho.*kc,h,[1,2],BCD);
+
+diff_C    = diff_Cm + diff_Cx + diff_Cf;
+
+qz_dffn_C = qz_dffn_Cm + qz_dffn_Cx + qz_dffn_Cf;
+qx_dffn_C = qx_dffn_Cm + qx_dffn_Cx + qx_dffn_Cf;
 
 % boundary layers
 bnd_C = zeros(size(C));
@@ -83,15 +100,19 @@ if Rcouple; phseql; end
 %***  update phase fraction densities
 
 % phase advection rates
-advn_X   = - advect(X,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA);
-advn_F   = - advect(F,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);
-advn_M   = - advect(M,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+[advn_X,qz_advn_X,qx_advn_X] = advect(X,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+[advn_F,qz_advn_F,qx_advn_F] = advect(F,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+[advn_M,qz_advn_M,qx_advn_M] = advect(M,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+
+advn_X   = - advn_X;
+advn_F   = - advn_F;
+advn_M   = - advn_M;
 advn_rho = advn_X+advn_F+advn_M;
 
 % phase diffusion (regularisation)
-diff_X = diffus(x,rho.*kx,h,[1,2],BCD);
-diff_F = diffus(f,rho.*kx,h,[1,2],BCD);
-diff_M = diffus(m,rho.*kx,h,[1,2],BCD);
+[diff_X,qz_dffn_X,qx_dffn_X] = diffus(x,rho.*kx,h,[1,2],BCD);
+[diff_F,qz_dffn_F,qx_dffn_F] = diffus(f,rho.*kx,h,[1,2],BCD);
+[diff_M,qz_dffn_M,qx_dffn_M] = diffus(m,rho.*kx,h,[1,2],BCD);
 
 % total rates of change
 dXdt   = advn_X + diff_X + Gx;

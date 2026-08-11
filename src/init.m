@@ -390,6 +390,12 @@ qz_advn_F = W;  qx_advn_F = W;
 qz_dffn_X = W;  qx_dffn_X = W;
 qz_dffn_M = W;  qx_dffn_M = W;
 qz_dffn_F = W;  qx_dffn_F = W;
+qz_advn_S   = W;  qx_advn_S   = U;
+qz_dffn_S   = W;  qx_dffn_S   = U;
+qz_advn_C   = zeros(Nz+1,Nx+2,cal.ncmp);  qx_advn_C   = zeros(Nz+2,Nx+1,cal.ncmp);
+qz_dffn_C   = zeros(Nz+1,Nx+2,cal.ncmp);  qx_dffn_C   = zeros(Nz+2,Nx+1,cal.ncmp);
+qz_advn_TRC = zeros(Nz+1,Nx+2,cal.ntrc);  qx_advn_TRC = zeros(Nz+2,Nx+1,cal.ntrc);
+qz_dffn_TRC = zeros(Nz+1,Nx+2,cal.ntrc);  qx_dffn_TRC = zeros(Nz+2,Nx+1,cal.ntrc);
 
 ReL    = eps + 0.*x; 
 Rel_x  = eps + 0.*x; 
