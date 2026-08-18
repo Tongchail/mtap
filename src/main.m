@@ -18,7 +18,7 @@ while time <= tend && step <= Nt &&  any(mq(:)>sqrt(eps))        ...
     iter     = 1;
 
     %***  non-linear iteration loop
-    while resnorm/resnorm0 >= rtol/(1 + frst*10) && resnorm >= atol/(1 + frst*10) && iter <= maxit*(1 + frst)
+    while resnorm/resnorm0 >= rtol && resnorm >= atol && iter <= maxit
         
         %***  solve thermo-chemical equations
         thermochem;
@@ -39,6 +39,9 @@ while time <= tend && step <= Nt &&  any(mq(:)>sqrt(eps))        ...
 
     end % end non-linear iterations
 
+    %***  record model history
+    if ~mod(step,nrh); history; end
+
     %*** update phase equilibrium
     phseql;
 
@@ -50,9 +53,6 @@ while time <= tend && step <= Nt &&  any(mq(:)>sqrt(eps))        ...
 
     %***  fractionation mode for 0D-models
     fractionate;
-
-    %***  record model history
-    if ~mod(step,nrh); history; end
 
     %***  print model diagnostics
     diagnose;

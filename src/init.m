@@ -268,7 +268,17 @@ SOL = [W(:);U(:);P(:)];
 
 % initialise solution fields
 switch init_mode
-    case {'constant' , 'liquidus'}
+    case {'constant'}
+        Tp  =  T0 + dTr.*rp + dTg.*gp;  % potential temperature [C]
+        c = zeros(Nz,Nx,cal.ncmp);
+        for i = 1:cal.ncmp
+            c(:,:,i)  =  c0(i) + dcr(i).*rp + dcg(i).*gp;  % trace elements
+        end
+        trc = zeros(Nz,Nx,cal.ntrc);
+        for i = 1:cal.ntrc
+            trc(:,:,i)  =  trc0(i) + dr_trc(i).*rp + dg_trc(i).*gp;  % trace elements
+        end
+    case {'liquidus'}
         Tp  =  max(cal.T0) + 0.*rp;  % potential temperature [C]
         c = zeros(Nz,Nx,cal.ncmp);
         for i = 1:cal.ncmp
@@ -528,7 +538,6 @@ while res > tol
             sm = cPm.*log(Tp./Tref);  sx = cPx.*log(Tp./Tref) + Dsx;  sf = cPf.*log(Tp./Tref) + Dsf;
             S  = M.*sm + X.*sx + F.*sf;
 
-            [Tp,~ ] = StoT(Tp,S./rho,Pref+0*Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
             [T ,si] = StoT(T ,S./rho,       Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
             sm = si(:,:,1); sx = si(:,:,2); sf = si(:,:,3);
     end
@@ -638,13 +647,13 @@ upd_MFS = 0.*MFS;
 bnd_TRC = zeros(Nz,Nx,cal.ntrc);
 adv_TRC = zeros(Nz,Nx,cal.ntrc);
 dff_TRC = zeros(Nz,Nx,cal.ntrc);
-K_trc     = zeros(Nz,Nx,cal.ntrc);
+K_trc   = zeros(Nz,Nx,cal.ntrc);
 dTRCdt  = 0.*trc; dTRCdto = dTRCdt;
-specrad.S.est   = 0.5.*ones(Nz*Nx,1);          specrad.S.mean   = 0.5;
-specrad.MFS.est = 0.5.*ones(Nz*Nx,1);          specrad.MFS.mean = 0.5;
-specrad.C.est   = 0.5.*ones(Nz*Nx*cal.ncmp,1); specrad.C.mean   = 0.5;
-specrad.TRC.est = 0.5.*ones(Nz*Nx*cal.ntrc,1); specrad.TRC.mean = 0.5;
-specrad.PHS.est = 0.5.*ones(Nz*Nx*3       ,1); specrad.PHS.mean = 0.5;
+specrad.S   = 0.5;
+specrad.MFS = 0.5;
+specrad.C   = 0.5;
+specrad.TRC = 0.5;
+specrad.PHS = 0.5;
 GHST.S   = zeros(Nz*Nx, itpar.aa.m+1);
 GHST.MFS = zeros(Nz*Nx, itpar.aa.m+1);
 GHST.C   = zeros(Nz*Nx*cal.ncmp, itpar.aa.m+1);

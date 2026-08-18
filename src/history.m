@@ -75,25 +75,25 @@ if step>=2; hist.DF(stp  ) = (a2*hist.DF(max(1,stp-1)  ) + a3*hist.DF(max(1,stp-
 if step>=2; hist.DC(stp,:) = (a2*hist.DC(max(1,stp-1),:) + a3*hist.DC(max(1,stp-2),:) + (b1*dsumCdt + b2*dsumCdto + b3*dsumCdtoo)*dt)/a1; else; hist.DC(stp,:) = zeros(1,cal.ncmp); end  % [kg]
 if step>=2; hist.DT(stp,:) = (a2*hist.DT(max(1,stp-1),:) + a3*hist.DT(max(1,stp-2),:) + (b1*dsumTdt + b2*dsumTdto + b3*dsumTdtoo)*dt)/a1; else; hist.DT(stp,:) = zeros(1,cal.ntrc); end  % [kg]
 
+% % alternative way to calculate i/o rate, tested but accumulates more error
+% if stp>=2; hist.DS(stp  ) = hist.DS(max(1,stp-1)  ) + dsumSdt*dt; else; hist.DS(stp  ) = 0; end  % [J/K]
+% if stp>=2; hist.DB(stp  ) = hist.DB(max(1,stp-1)  ) + dsumBdt*dt; else; hist.DB(stp  ) = 0; end  % [kg]
+% if stp>=2; hist.DM(stp  ) = hist.DM(max(1,stp-1)  ) + dsumMdt*dt; else; hist.DM(stp  ) = 0; end  % [kg]
+% if stp>=2; hist.DX(stp  ) = hist.DX(max(1,stp-1)  ) + dsumXdt*dt; else; hist.DX(stp  ) = 0; end  % [kg]
+% if stp>=2; hist.DF(stp  ) = hist.DF(max(1,stp-1)  ) + dsumFdt*dt; else; hist.DF(stp  ) = 0; end  % [kg]
+% if stp>=2; hist.DC(stp,:) = hist.DC(max(1,stp-1),:) + dsumCdt*dt; else; hist.DC(stp,:) = zeros(1,cal.ncmp); end  % [kg]
+% if stp>=2; hist.DT(stp,:) = hist.DT(max(1,stp-1),:) + dsumTdt*dt; else; hist.DT(stp,:) = zeros(1,cal.ntrc); end  % [kg]
+
 % record conservation error of heat S, total mass B, phase masses M/X/F,
 % components C, tracers T (xcore normalisation: all mass-like errors are
 % measured relative to the initial TOTAL mass sumB(1))
 hist.ES(stp  ) = (hist.sumS(stp  ) - hist.DS(stp  ) - hist.sumS(1  ))./hist.sumS(1);  % [JK/JK]
 hist.EB(stp  ) = (hist.sumB(stp  ) - hist.DB(stp  ) - hist.sumB(1  ))./hist.sumB(1);  % [kg/kg]
-hist.EM(stp  ) = (hist.sumM(stp  ) - hist.DM(stp  ) - hist.sumM(1  ))./hist.sumB(1);  % [kg/kg]
-hist.EX(stp  ) = (hist.sumX(stp  ) - hist.DX(stp  ) - hist.sumX(1  ))./hist.sumB(1);  % [kg/kg]
-hist.EF(stp  ) = (hist.sumF(stp  ) - hist.DF(stp  ) - hist.sumF(1  ))./hist.sumB(1);  % [kg/kg]
-hist.EC(stp,:) = (hist.sumC(stp,:) - hist.DC(stp,:) - hist.sumC(1,:))./hist.sumB(1);  % [kg/kg]
-hist.ET(stp,:) = (hist.sumT(stp,:) - hist.DT(stp,:) - hist.sumT(1,:))./hist.sumB(1);  % [kg/kg]
-
-% % alternative way to calculate i/o rate, tested but accumulates more error
-% if stp>=2; hist.DS2(stp  ) = hist.DS2(max(1,stp-1)  ) + dsumSdt*dt; else; hist.DS2(stp  ) = 0; end  % [J/K]
-% if stp>=2; hist.DB2(stp  ) = hist.DB2(max(1,stp-1)  ) + dsumBdt*dt; else; hist.DB2(stp  ) = 0; end  % [kg]
-% if stp>=2; hist.DM2(stp  ) = hist.DM2(max(1,stp-1)  ) + dsumMdt*dt; else; hist.DM2(stp  ) = 0; end  % [kg]
-% if stp>=2; hist.DX2(stp  ) = hist.DX2(max(1,stp-1)  ) + dsumXdt*dt; else; hist.DX2(stp  ) = 0; end  % [kg]
-% if stp>=2; hist.DF2(stp  ) = hist.DF2(max(1,stp-1)  ) + dsumFdt*dt; else; hist.DF2(stp  ) = 0; end  % [kg]
-% if stp>=2; hist.DC2(stp,:) = hist.DC2(max(1,stp-1),:) + dsumCdt*dt; else; hist.DC2(stp,:) = zeros(1,cal.ncmp); end  % [kg]
-% if stp>=2; hist.DT2(stp,:) = hist.DT2(max(1,stp-1),:) + dsumTdt*dt; else; hist.DT2(stp,:) = zeros(1,cal.ntrc); end  % [kg]
+hist.EM(stp  ) = (hist.sumM(stp  ) - hist.DM(stp  ) - hist.sumM(1  ))./hist.sumM(1);  % [kg/kg]
+hist.EX(stp  ) = (hist.sumX(stp  ) - hist.DX(stp  ) - hist.sumX(1  ))./hist.sumX(1);  % [kg/kg]
+hist.EF(stp  ) = (hist.sumF(stp  ) - hist.DF(stp  ) - hist.sumF(1  ))./hist.sumF(1);  % [kg/kg]
+hist.EC(stp,:) = (hist.sumC(stp,:) - hist.DC(stp,:) - hist.sumC(1,:))./hist.sumC(1);  % [kg/kg]
+hist.ET(stp,:) = (hist.sumT(stp,:) - hist.DT(stp,:) - hist.sumT(1,:))./hist.sumT(1);  % [kg/kg]
 % 
 % hist.ES2(stp  ) = (hist.sumS(stp  ) - hist.DS2(stp  ))./hist.sumS(1  ) - 1;  % [JK/JK]
 % hist.EB2(stp  ) = (hist.sumB(stp  ) - hist.DB2(stp  ))./hist.sumB(1  ) - 1;  % [kg/kg]

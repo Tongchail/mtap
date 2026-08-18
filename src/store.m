@@ -32,13 +32,13 @@ dto = dt;
 Pto = Pt;
 
 % reset update history
-specrad.S.est   = specrad.S.mean + 0.*specrad.S.est;
-specrad.C.est   = specrad.S.mean + 0.*specrad.C.est;
-specrad.PHS.est = specrad.S.mean + 0.*specrad.PHS.est;
-specrad.TRC.est = specrad.S.mean + 0.*specrad.TRC.est;
-specrad.MFS.est = specrad.S.mean + 0.*specrad.MFS.est;
-FHST.S          = 0.*FHST.S;
-FHST.C          = 0.*FHST.C;
-FHST.PHS        = 0.*FHST.PHS;
-FHST.TRC        = 0.*FHST.TRC;
-FHST.MFS        = 0.*FHST.MFS;
+FHST.S           = 0.*FHST.S;
+FHST.C           = 0.*FHST.C;
+FHST.PHS         = 0.*FHST.PHS;
+FHST.TRC         = 0.*FHST.TRC;
+FHST.MFS         = 0.*FHST.MFS;
+GHST.S           = 0.*GHST.S;
+GHST.C           = 0.*GHST.C;
+GHST.PHS         = 0.*GHST.PHS;
+GHST.TRC         = 0.*GHST.TRC;
+GHST.MFS         = 0.*GHST.MFS;

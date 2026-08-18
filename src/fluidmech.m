@@ -5,14 +5,14 @@ tic;
 if ~bnchm && step>0 && ~restart
 
 %***  update mixture mass density
-% advn_rho is defined in thermochem.m as advn_X+advn_F+advn_M, and each advn_* = -advect(...) = -div(v*phase). So advn_rho already equals -div(rho*v), which is the mass-conservation rate d(rho)/dt. The model's other conservation laws use the same convention with NO extra sign:dXdt=advn_X, dCdt=advn_C, dSdt=advn_S.
-drhodt  = advn_rho;               % advection term
+% advn_rho is defined in thermochem.m as advn_X+advn_F+advn_M, and each advn_* = advect(...) = -div(v*phase). So advn_rho already equals -div(rho*v), which is the mass-conservation rate d(rho)/dt. The model's other conservation laws use the same convention with NO extra sign:dXdt=advn_X, dCdt=advn_C, dSdt=advn_S.
+drhodt  = - advn_rho;               % advection term
 
 % residual of mixture mass evolution
 res_rho = (a1*rho-a2*rhoo-a3*rhooo) - (b1*drhodt + b2*drhodto + b3*drhodtoo)*dt;
 
 % volume source and background velocity passed to fluid-mechanics solver
-[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho/dt,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter*~frst);
+[MFS,GHST.MFS,FHST.MFS,specrad.MFS] = iterate(MFS,res_rho/dt,specrad.MFS,GHST.MFS,FHST.MFS,itpar,iter);
 
 MFSmean  = mean(MFS,'all');
 
@@ -468,14 +468,10 @@ if ~bnchm && step>=1
 
     % phase diffusion rates and fluxes
     % (add the diffusive contribution to the phase velocities)
-    [dffn_X,qz_dffn_X,qx_dffn_X] = diffus(x,ks_x,h,[1,2],BCD);
-    [dffn_F,qz_dffn_F,qx_dffn_F] = diffus(f,ks_f,h,[1,2],BCD);
-    wdx =  qz_dffn_X;
-    udx =  qx_dffn_X;
-    wdf =  qz_dffn_F;
-    udf =  qx_dffn_F;
-    wdm = -qz_dffn_X.*x_w(:,icx)./m_w(:,icx) - qz_dffn_F.*f_w(:,icx)./m_w(:,icx);
-    udm = -qx_dffn_X.*x_u(icz,:)./m_u(icz,:) - qx_dffn_F.*f_u(icz,:)./m_u(icz,:);
+    [dffn_X,wdx,udx] = diffus(x,ks_x,h,[1,2],BCD);
+    [dffn_F,wdf,udf] = diffus(f,ks_f,h,[1,2],BCD);
+    wdm = -wdx.*x_w(:,icx)./m_w(:,icx) - wdf.*f_w(:,icx)./m_w(:,icx);
+    udm = -udx.*x_u(icz,:)./m_u(icz,:) - udf.*f_u(icz,:)./m_u(icz,:);
 
     % update stochastic noise speeds
     noise;  
