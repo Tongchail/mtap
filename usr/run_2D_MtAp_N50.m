@@ -5,7 +5,8 @@ clear; close all;
 run('./par_MtAp_default.m')
 
 % set run parameters
-runID     =  '2D_MtAp';           % run identifier
+runID     =  '2D_MtAp_N50';           % run identifier
+outdir    =  '/mnt/home/2388600c/sharedscratch/mtap/out1';
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nop       =  50;                  % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
@@ -14,7 +15,7 @@ colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla'
 
 % set model domain parameters
 D         =  100;                 % chamber depth [m]
-N         =  100;                 % number of grid points in z-direction
+N         =  50;                 % number of grid points in z-direction
 h         =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
 L         =  D;                   % chamber width (equal to h for 1-D mode) [m]
 
@@ -35,7 +36,7 @@ dr_trc    =  [1,1,0,-1,-1,0  ]*1e-5; % trace elements random noise
 periodic  =  1;                   % periodic side boundaries
 bndmode   =  3;                   % boundary assimilation mode (0 = none; 1 = top only; 2 = bot only; 3 = top/bot only; 4 = all walls; 5 = only sides)
 bnd_w     =  D/100;               % boundary layer width [m]
-tau_T     =  (D/400)^2/1e-6;      % (h/4)^2/1e-6;        % wall cooling/assimilation time [s]
+tau_T     =  (D/400)^2/1e-6;        % wall cooling/assimilation time [s]
 %tau_a    =  tau_T/10;
 Twall     =  [500,500,nan];       % [top,bot,sds] wall rock temperature [degC] (nan = insulating)
 Ptop      =  1.25e8;              % top pressure [Pa]

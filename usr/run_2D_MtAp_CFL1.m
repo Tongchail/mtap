@@ -5,7 +5,8 @@ clear; close all;
 run('./par_MtAp_default.m')
 
 % set run parameters
-runID     =  '2D_MtAp';           % run identifier
+runID     =  '2D_MtAp_CFL1';           % run identifier
+outdir    =  '/mnt/home/2388600c/sharedscratch/mtap/out';
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nop       =  50;                  % output frame plotted/saved every 'nop' time steps
 plot_op   =  1;                   % switch on to live plot results
@@ -35,15 +36,15 @@ dr_trc    =  [1,1,0,-1,-1,0  ]*1e-5; % trace elements random noise
 periodic  =  1;                   % periodic side boundaries
 bndmode   =  3;                   % boundary assimilation mode (0 = none; 1 = top only; 2 = bot only; 3 = top/bot only; 4 = all walls; 5 = only sides)
 bnd_w     =  D/100;               % boundary layer width [m]
-tau_T     =  (D/400)^2/1e-6;      % (h/4)^2/1e-6;        % wall cooling/assimilation time [s]
-%tau_a    =  tau_T/10;
+tau_T     =  (D/400)^2/1e-6;      %(h/4)^2/1e-6;        % wall cooling/assimilation time [s]
+%tau_a     =  tau_T/10;
 Twall     =  [500,500,nan];       % [top,bot,sds] wall rock temperature [degC] (nan = insulating)
 Ptop      =  1.25e8;              % top pressure [Pa]
 
 % set physical control parameters
 dx0       =  0.003;
 df0       =  0.0003;
-L0        =  D/200;                 % correlation length for eddy diffusivity (multiple of h, 0.5-1)
+L0        =  D/200;               % correlation length for eddy diffusivity (multiple of h, 0.5-1)
 l0x       =  dx0*20;              % correlation length for xtal  phase fluctuation diffusivity (multiple of d0, 10-20)
 l0f       =  df0*20;              % correlation length for fluid phase fluctuation diffusivity (multiple of d0, 10-20)
 Xi        =  0.5;                 % relative amplitude of random noise flux
@@ -54,7 +55,7 @@ calID     =  'MtAp_750_new';      % phase diagram calibration
 % set numerical model parameters
 TINT      =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
 ADVN      =  'weno5';             % advection scheme ('centr','upw1','quick','fromm','weno3','weno5','tvdim')
-CFL       =  0.75;                % (physical) time stepping courant number (multiplies stable step) [0,1]
+CFL       =  0.375;                % (physical) time stepping courant number (multiplies stable step) [0,1]
 rtol      =  1e-3;                % outer its relative tolerance
 atol      =  1e-9;                % outer its absolute tolerance
 maxit     =  10;                  % maximum outer its

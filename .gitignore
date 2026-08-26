@@ -1,0 +1,7 @@
+*.log
+out/
+*.mat
+*.asv
+*.fig
+*.png
+slurm-*.out

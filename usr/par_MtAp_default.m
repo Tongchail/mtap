@@ -1,7 +1,7 @@
 % set run parameters
 runID     =  'default';           % run identifier
 srcdir    =  '../src';            % output directory
-outdir    =  '../out';            % output directory
+%outdir    =  '../out';            % output directory
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nrh       =  10;                  % record diagnostic history every 'nrh' time steps
 nop       =  100;                 % output frame plotted/saved every 'nop' time steps
