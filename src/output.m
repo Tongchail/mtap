@@ -646,13 +646,17 @@ else % create 2D plots
     sumanh_hx = sum(cx_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (xtal)
     sumanh_hf = sum(cf_oxd(:,:,1:end-1),3);   % anhydrous oxide sum (mfe)
 
-    % 1: potential temperature (with liquidus/solidus, as in 1-D fh1)
+    % 1: full temperature (with liquidus/solidus, as in 1-D fh1)
+    % Use full T (not Tp): the liquidus/solidus carry a pressure dependence,
+    % so the temperature compared against them must carry the same adiabatic
+    % pressure dependence for internal consistency. (Adiabatic effect is small
+    % over this pressure range, so T and Tp look very similar.)
     subplot(1,6,1)
-    plot(mean(Tp,2)-273.15, Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
+    plot(mean(T,2)-273.15, Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
     % cal.Tliq/Tsol are stored flattened (Nz*Nx x 1); reshape before averaging
     plot(mean(reshape(cal.Tliq,Nz,Nx),2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(reshape(cal.Tsol,Nz,Nx),2), Zsc.', CL{[1,4]}, LW{:});
-    title('$\langle T_p\rangle_x$ [$^\circ$C]',TX{:},FS{:});
+    title('$\langle T\rangle_x$ [$^\circ$C]',TX{:},FS{:});
     ylabel(['Depth [',SpaceUnits,']'],TX{:},FS{:}); set(gca,TL{:},TS{:});
 
     % 2: phase fractions (crystal / melt / mfe), masked as in 1-D fh1

@@ -1,4 +1,4 @@
-function [adv, advscl] = advect (f, u, w, h, scheme, dim, BC)
+function [adv, qz, qx, advscl] = advect (f, u, w, h, scheme, dim, BC)
 %
 % [adv, advscl] = advect(f, u, w, h, scheme, dim, BC)
 %
@@ -121,26 +121,53 @@ switch scheme{1}
         [fzppos, fzpneg, fzmpos, fzmneg] = tvd(fcc, wmpos, wmneg, wppos, wpneg, zdim, zBC);
 end
 
+% get fluxes on p/m stencil positions (xcore-style)
+qxp = uppos.*fxppos + upneg.*fxpneg;
+qxm = umpos.*fxmpos + umneg.*fxmneg;
+
+qzp = wppos.*fzppos + wpneg.*fzpneg;
+qzm = wmpos.*fzmpos + wmneg.*fzmneg;
 
 % now calculate div(f v)
-adv = (uppos.*fxppos + upneg.*fxpneg - umpos.*fxmpos - umneg.*fxmneg)./h + ...
-      (wppos.*fzppos + wpneg.*fzpneg - wmpos.*fzmpos - wmneg.*fzmneg)./h;
+adv =   (qxp - qxm)./h  ...
+      + (qzp - qzm)./h;
 
 % if you only want the advection term, remove f x div(v)
 if strcmp(scheme{2}, 'vdf')
     % calculate f x div(v)
     fdv = f.*(diff(u,1,xdim)./h + diff(w,1,zdim)./h);
-    
+
     % v x grad(f) = div (f v) - f x div(v)
     adv = adv - fdv;
 end
 
 if nargout>1
+    % return advective fluxes on grid faces (ported from xcore)
+    % assembly assumes dim = [1,2]: z along rows, x along columns;
+    % generalised to 3D stacks (Nz x Nx x Ncmp) for components/tracers
+    qz = zeros(size(f,1)+1, size(f,2)+2, size(f,3));
+    qx = zeros(size(f,1)+2, size(f,2)+1, size(f,3));
+    qz(1:end-1,2:end-1,:) = qzm;
+    qz(end    ,2:end-1,:) = qzp(end,:,:);
+    if strcmp(xBC,'periodic') && size(f,xdim)>1
+        qz(:      ,[1,end],:) = qz(:,[end-1,2],:);
+    else
+        qz(:      ,[1,end],:) = qz(:,[2,end-1],:);
+    end
+    qx(2:end-1,1:end-1,:) = qxm;
+    qx(2:end-1,end    ,:) = qxp(:,end,:);
+    if strcmp(zBC,'periodic') && size(f,zdim)>1
+        qx([1,end],:      ,:) = qx([end-1,2],:,:);
+    else
+        qx([1,end],:      ,:) = qx([2,end-1],:,:);
+    end
+end
+
+if nargout>3
     % return advection scale for calculating time step
     advscl = max(abs([f.*(uppos+upneg); f.*(wppos+wpneg)]), [], 'all');
 end
 end
-
 
 
 %%  utility functions used for many schemes

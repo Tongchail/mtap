@@ -58,10 +58,10 @@ CFL       =  0.75;                % (physical) time stepping courant number (mul
 rtol      =  1e-3;                % outer its relative tolerance
 atol      =  1e-9;                % outer its absolute tolerance
 maxit     =  10;                  % maximum outer its
-itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
-itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
-itpar.aa.damp = 0.5;              % Anderson acceleration damping (0-1)
-itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
+itpar.fp.damp = 1.0;              % fixed-point iterative damping (0-1)
+itpar.aa.m    = 5;                % Anderson acceleration depth (2-5)
+itpar.aa.damp = 0.3;              % Anderson acceleration damping (0-1)
+itpar.aa.reg  = 1e-9;             % Anderson acceleration regularisation (0-1)
 
 %*****  RUN MTAP MODEL  *************************************************
 run('../src/main')
