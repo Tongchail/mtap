@@ -75,7 +75,7 @@ cal.cmp_mem = [  94.0000    5.0000         0         1         0         0      
                  29.0000   14.4000    0.4000       0.5    6.6000    1.0000    1.0000   17.0000         0    4.5000   25.6000         0         0         0         0         0    % opx-gabbro (ogb)
                  10.2000   55.5000    6.4000         0         0    2.2000         0         0    6.4000         0         0   13.0000    6.3000         0         0         0    % trachy-andesite (tan)
                        0   22.5000   43.8000         0         0         0         0         0    1.4000         0         0         0    1.3000    1.0000   30.0000         0    % rhyolite (rhy)
-                       0         0         0         0   16.1675         0         0   16.7050         0         0         0   42.7373    7.5968   15.0440         0    1.7495    % mfe
+                       0         0         0         0   16.9406         0         0   11.7475         0         0         0   42.8075   10.7821   16.0092         0    1.7131    % mfe
                        0         0         0         0         0         0         0         0         0         0         0         0         0         0         0   100.0000];
 cal.cmp_mem = cal.cmp_mem./sum(cal.cmp_mem,2)*100;
 
@@ -114,15 +114,14 @@ cal.pH2O  = 0.75;                                  % solidus shift from water co
 
 cal.T_liquidus   = 1125;     % Liquidus temperature (°C)
 cal.T_solidus    = 697;      % Solidus temperature (°C)
-cal.MFE_liquidus = 0.07;     % MFE saturation at liquidus (wt fraction)
+cal.MFE_liquidus = 0.05;     % MFE saturation at liquidus (wt fraction)
 cal.k            = 0.75;      % Empirical coefficient
 
 % primary and evolved end-member compositions used in calibration
 %                ano      cnr       ogb      bta      rhy       mFe     vol
-cal.c0      =  [11.5713  15.5442   15.5544  18.4093  35.3908  1.7111  1.8188]/100;
-%cal.c1     = [0.001  0.001  0.001  0.001  0.299  0.697  0.024];
+cal.c0      = [12.9000   18.8000   12.3000   16.4000   39.6000  4  2]/100;
 
-cal.c0_oxd  = [57.2396    0.9866   16.1902    6.8329    4.1644    6.9505    3.5368    1.9812    0.2568    1.8610];
+cal.c0_oxd  = cal.c0 * (cal.cmp_mem/100) * cal.mem_oxd;
 %cal.c1_oxd = [76.34  0.16  11.84  2.80   0.71   1.61  4.42  2.12  2.40];
 
 % specify geochemical model parameters
@@ -134,11 +133,13 @@ cal.Ktrc_mem = [0.01;0.10;1.0;3.0;10.0;1.0].*ones(cal.ntrc,cal.nmem);
 %               ant   alb   san   mmt   tmt   mgt   mhy   fhy   hyp   mau  fau   aug   ilm   apt   qtz   wat
 cal.rhox0   = [2680, 2600, 2550, 4500, 4500, 4650, 3410, 3410, 3410, 3470, 3470, 3470, 4700, 3190, 2540, 1000]; % mem ref densities [kg/m3]
 cal.rhof0   = 4000;    %1000          %*** fluid ref density [kg/m3]
+cal.rhom0   = 2400;
 
 % specify three-phase coefficient model parameters
 %               ant   alb   san   mmt   tmt   mgt   mhy   fhy   hyp   mau  fau   aug   ilm   apt   qtz   wat
 cal.etax0   = [1e17, 1e17, 1e17, 1e17, 1e17,  1e17, 1e19,1e19,  1e19,1e19, 1e19, 1e19, 1e17, 1e17 ,1e19,1e0];% mem ref viscosities [Pas]
-%cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
+cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
+cal.etam0   = 1e5;
 cal.Eax     = 300e3;                  % solid viscosity activation energy [J/mol]
 cal.AA      =[ 0.25, 0.25, 0.35; ...  % permission slopes
                0.25, 0.25, 0.25; ...  % generally numbers between 0 and 1

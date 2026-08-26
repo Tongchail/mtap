@@ -5,3 +5,4 @@ out/
 *.fig
 *.png
 slurm-*.out
+usr/run_2D_MtAp_timing.m

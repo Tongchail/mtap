@@ -6,7 +6,7 @@
 #SBATCH --time=120:00:00
 #SBATCH --mem=16G
 
-cd ~/matp/usr
+cd ~/mtap/usr
 module load matlab/r2023b
 
 matlab -nosplash -nodisplay -singleCompThread -r "run_$RUNID" > $RUNID.log
