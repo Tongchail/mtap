@@ -15,8 +15,8 @@ end
 taue  = L0 ./(V +eps);
 tausx = l0x./(vx+eps);
 tausf = l0f./(vf+eps);
-Stx   = txi0x./taue;   % Stokes number for crystals
-Stf   = txi0f./taue;   % Stokes number for fluid (?)
+Stx   = txi0./taue;   % Stokes number for crystals
+Stf   = tfi0./taue;   % Stokes number for fluid (?)
 
 % noise flux amplitudes
 sge  = Xi * sqrt(     fReL.*ke  ./taue );                     % eddy mixture noise speed
