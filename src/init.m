@@ -513,6 +513,7 @@ while res > tol
     X    = rho.*x; res_X = 0.*X;
     F    = rho.*f; res_F = 0.*F;
     M    = rho.*m; res_M = 0.*M;
+    PHS  = cat(3,X,F,M);
     C    = M.*cm + X.*cx + F.*cf;
 
     update;
@@ -562,10 +563,6 @@ Mxo  = Mx;
 rhoo = rho;
 dto  = dt; 
 
-% initialise correlation length for convective/turbulent regularisation
-Delta_cnv0 = Delta_cnv;
-corrl;
-
 m0  = mean(m(:)); 
 x0  = mean(x(:)); 
 f0  = mean(f(:)); 
@@ -607,7 +604,7 @@ end
 
 rho0 = (x0./rhox0 + m0./rhom0).^-1;
 
-fprintf('    initial T   : %4.3f \n'  ,T0);
+fprintf('\n    initial T   : %4.3f \n'  ,T0);
 fprintf('    initial SiO2: %4.3f \n'  ,c0_oxd(1)./sum(c0_oxd(1:end-1)).*100);
 fprintf('    initial H2O : %4.3f \n'  ,c0_oxd(end));
 fprintf('    initial x   : %4.3f \n'  ,x0);
