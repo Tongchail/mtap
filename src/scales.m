@@ -32,8 +32,8 @@ cal.MFEsat = mfesat(var.T,cal);           % ** mfe saturation [wt] T[K]
 
 if strcmp(init_mode,'liquidus')          
     [var,cal]  = leappartmfe(var,cal,'T');
-    var.T      = cal.Tliq-T0;
-    T00        = var.T + 273.15;
+    var.T      = cal.Tliq+T0;
+    T00        = var.T;
     cal.MFEsat = mfesat(var.T,cal);           % ** mfe saturation [wt] T[K] 
 else
     T00        = T0;
@@ -79,17 +79,19 @@ rhox0  = rhox0 .* (1 - aTx.*(T00-Tref) + bPx.*(Ptop-Pref));
 rhof0  = rhof0 .* (1 - aTf.*(T00-Tref) + bPf.*(Ptop-Pref));
 
 rho0   = 1./(m0./rhom0 + x0./rhox0 + f0./rhof0);
+aT0    = x0*aTx + f0*aTf + m0*aTm;
 
-etam0  = Giordano08(cm0_oxd_all,T00-273.15);
-etaf0  =     etamfe(cf0_oxd_all,T00-273.15);
+etam0  = Giordano08(cm0_oxd_all,T00);
+etaf0  =     etamfe(cf0_oxd_all,T00);
 
 Drho_x0 =  abs(rhox0-rho0);
 Drho_f0 =  abs(rhof0-rho0);
-Dchi0   =  x0/20 + 0.0005;
-chi0    =  x0 + 0.01;
-Dphi0   =  f0/20 + 0.0005;
-phi0    =  f0 + 0.01;
-Drho0   =  Dchi0*Drho_x0 + Dphi0*Drho_f0;
+Drho_T0 =  rho0 * aT0*(T00-Twall(1))/10;
+Dchi0   =  x0/10 + 0.0001;
+chi0    =  x0 + 0.001;
+Dphi0   =  f0/10 + 0.0001;
+phi0    =  f0 + 0.001;
+Drho0   =  Dchi0*Drho_x0 + Dphi0*Drho_f0 + Drho_T0;
 eta0    =  etam0;
 
 % speed scales
@@ -168,7 +170,7 @@ end
 %%===================== end ==============================================
 
 % diffusivities
-eII0    =  W0/D0/2;
+eII0    =  W0/D0;
 ke0     =  eII0*L0^2;
 ks_x0   =  wx0*l0x;
 ks_f0   =  wf0*l0f;
@@ -177,33 +179,34 @@ kf0     =  double(ks_f0 + fReL0.*ke0);
 kT0     =  (m0*kTm+x0*kTx+f0*kTf)/rho0/(m0*cPm+x0*cPx+f0*cPf);
 
 % times
-tW0     =  D./W0;
-twx0    =  D./wx0;
-twf0    =  D./wf0;
-tkx0    =  D.^2./kx0;
-tkf0    =  D.^2./kf0;
-txi0x   =  rhox0*dx0^2/18/eta0;
-txi0f   =  rhof0*df0^2/18/eta0;
-ti0     =  rho0.*W0/(Drho0.*g0);
-t0      =  ti0/2 + min([tW0, twx0, twf0, tkx0, tkf0]);
-dt0     =  min([(h0/2)^2./kx0 , (h0/2)^2./kf0, (h0/2)./(W0+wx0), (h0/2)./(W0+wf0)]);
+tW0     =  D/W0;
+twx0    =  D/wx0;
+twf0    =  D/wf0;
+tkx0    =  D^2/kx0;
+tkf0    =  D^2/kf0;
+tkT0    =  D^2/kT0;
+txi0    =  rhox0*dx0^2/18/eta0;
+tfi0    =  rhof0*df0^2/18/eta0;
+ti0     =  D/W0i;
+t0      =  (1/(ti0+tW0) + 1/twx0 + 1/twf0 + 1/tkx0 + 1/tkf0 + 1/tkT0)^-1;
+dt0     =  min([(h0/2)^2/kx0 , (h0/2)^2/kf0, (h0/2)^2/kT0 , (h0/2)/(W0+wx0), (h0/2)/(W0+wf0)]);
 
 % noise flux amplitudes
 taue0   =  L0/W0;
 tausx0  =  l0x/wx0;
 tausf0  =  l0f/wf0;
-Stx0    =  txi0x/taue0;
-Stf0    =  txi0f/taue0;
+Stx0    =  txi0/taue0;
+Stf0    =  tfi0/taue0;
 xie0    =  Xi*sqrt(     fReL0*ke0/taue0);
-xix0  =  Xi*sqrt(chi0*fReL0*ke0/taue0 *Stx0/(1+Stx0^2));
-xif0  =  Xi*sqrt(phi0*fReL0*ke0/taue0 *Stf0/(1+Stf0^2));
-%xis0    =  Xi*sqrt(chi0*      ks0/taus0);
-xisx0 =  Xi*sqrt(chi0*ks_x0/tausx0);
-xisf0 =  Xi*sqrt(phi0*ks_f0/tausf0);
+xix0    =  Xi*sqrt(chi0*fReL0*ke0/taue0*Stx0/(1+Stx0^2));
+xif0    =  Xi*sqrt(phi0*fReL0*ke0/taue0*Stf0/(1+Stf0^2));
+xisx0   =  Xi*sqrt(chi0      *ks_x0/tausx0);
+xisf0   =  Xi*sqrt(phi0      *ks_f0/tausf0);
 
 % phase change rate
-tau0    =  h0/(W0 + max(wx0, wf0)) + dt0;
-G0      =  chi0*rho0./tau0;
+tau0    =  tau_r + 5*dt0;
+Gx0     =  chi0*rho0/tau0;
+Gf0     =  phi0*rho0/tau0;
 
 % viscosities, stress/pressure
 etae0   =  double(fReL0  *ke0  *rho0);
@@ -216,7 +219,8 @@ fRel0_x  =  double(fRel0_x);
 fRel0_f  =  double(fRel0_f);
 
 % general dimensionless numbers
-Da0     =  G0/(rho0/t0);                     % Damkohler number
+Dax0    =  Gx0/(rho0/t0);                     % xtl Damkohler number
+Daf0    =  Gf0/(rho0/t0);                     % fld Damkohler number
 % noise numbers (No = noise; e/s = eddy/settling; x/f = crystal/fluid)
 Noe0    =  xie0 /W0;                          % mixture eddy noise number
 Nox0    =  xix0 /wx0;                         % crystal eddy noise number
@@ -224,11 +228,10 @@ Nof0    =  xif0 /wf0;                         % fluid eddy noise number
 Nosx0   =  xisx0/wx0;                         % crystal settling noise number
 Nosf0   =  xisf0/wf0;                         % fluid settling noise number
 % convection numbers (background convection speed vs phase segregation speed)
-Rc_x0   =  W0/wx0;                            % crystal convection number
-Rc_f0   =  W0/wf0;                            % fluid convection number
+Rs_x0   =  wx0/W0;                            % crystal settling number
+Rs_f0   =  wf0/W0;                            % fluid settling number
 % Rayleigh numbers (buoyancy driving vs diffusive damping)
-Ra_x0   =  W0*D0/(kx0+kf0+kT0);               % crystal Rayleigh number
-Ra_f0   =  W0*D0/kf0;                         % fluid Rayleigh number
+Ra0     =  W0*D0/(kx0+kf0+kT0);               % convective Rayleigh number
 % Reynolds numbers (inertial vs viscous forces)
 ReD0    =  W0*D0/((eta0+etae0)/rho0);         % convection Reynolds number
 Red_x0  =  wx0*dx0/((eta0+etas_x0)/rho0);     % crystal (particle) Reynolds number
@@ -249,58 +252,58 @@ Red_f0  =  wf0*df0/((eta0+etas_f0)/rho0);     % fluid (droplet) Reynolds number
 
 % print scaling analysis to standard output
 fprintf(1,'\n  Scaled domain depth D0    = %1.0e [m]',D0);
-fprintf(1,'\n  Part. size       dx0    = %1.0e [m]',dx0);
-fprintf(1,'\n  Fluid size         df0    = %1.0e [m]',df0);
+fprintf(1,'\n  Part. size          dx0   = %1.0e [m]',dx0);
+fprintf(1,'\n  Fluid size          df0   = %1.0e [m]',df0);
 fprintf(1,'\n  Eddy  corrl. length L0    = %1.0e [m]',L0);
-fprintf(1,'\n  Segr. corrl. length l0_x  = %1.0e [m]',l0x);
-fprintf(1,'\n  Segr. corrl. length l0_f  = %1.0e [m]\n',l0f);
+fprintf(1,'\n  Part. corrl. length l0_x  = %1.0e [m]',l0x);
+fprintf(1,'\n  Drop. corrl. length l0_f  = %1.0e [m]\n',l0f);
 
 fprintf(1,'\n  Density             rho0  = %1.0f  [kg/m3]',rho0);
 fprintf(1,'\n  Density dff. xtal   Drho0 = %1.0f   [kg/m3]',Drho_x0);
 fprintf(1,'\n  Density dff. fluid  Drho0 = %1.0f   [kg/m3]',Drho_f0);
 fprintf(1,'\n  Density dff. bulk   Drho0 = %1.2f  [kg/m3]',Drho0);
-fprintf(1,'\n  Xtal frc contrast   Dchi0 = %1.3f [wt]',Dchi0);
-fprintf(1,'\n  Fluid frc contrast  Dphi0 = %1.3f [wt]',Dphi0);
+fprintf(1,'\n  Xtl frc contrast    Dchi0 = %1.3f [wt]',Dchi0);
+fprintf(1,'\n  Fld frc contrast    Dphi0 = %1.3f [wt]',Dphi0);
 fprintf(1,'\n  Viscosity           eta0  = %1.0e [Pas]\n',eta0);
 
 fprintf(1,'\n  Convection        speed  W0  = %1.2e [m/s]',W0);
 fprintf(1,'\n  Part. segregation speed  wx0 = %1.2e [m/s]',wx0);
-fprintf(1,'\n  Fluid segregation speed  wf0 = %1.2e [m/s]\n',wf0);
+fprintf(1,'\n  Drop. segregation speed  wf0 = %1.2e [m/s]\n',wf0);
 
 fprintf(1,'\n  Thermal     diffusivity  kT0     = %1.1e [m2/s]',kT0);
 fprintf(1,'\n  Eddy        diffusivity  ke0     = %1.1e [m2/s]',ke0);
 fprintf(1,'\n  Part. segr. diffusivity  ks_x0   = %1.1e [m2/s]',ks_x0);
-fprintf(1,'\n  Fluid segr. diffusivity  ks_f0   = %1.1e [m2/s]',ks_f0);
+fprintf(1,'\n  Drop. segr. diffusivity  ks_f0   = %1.1e [m2/s]',ks_f0);
 fprintf(1,'\n  Eddy  viscosity          etae    = %1.1e [Pas]',etae0);
-fprintf(1,'\n  Segr. viscosity          etas_x0 = %1.1e [Pas]',etas_x0);
-fprintf(1,'\n  Segr. viscosity          etas_f0 = %1.1e [Pas]\n',etas_f0);
+fprintf(1,'\n  Part. segr. viscosity    etas_x0 = %1.1e [Pas]',etas_x0);
+fprintf(1,'\n  Drop. segr. viscosity    etas_f0 = %1.1e [Pas]\n',etas_f0);
 
 fprintf(1,'\n  Eddy        noise rate   xie0 = %1.2e [m/s]',xie0);
 fprintf(1,'\n  Part. segr. noise rate   xix0 = %1.2e [m/s]',xix0);
-fprintf(1,'\n  Fluid segr. noise rate   xif0 = %1.2e [m/s]\n',xif0);
+fprintf(1,'\n  Drop. segr. noise rate   xif0 = %1.2e [m/s]\n',xif0);
 
 fprintf(1,'\n  Inertial    time    ti0  = %1.2e [s]',ti0);
 fprintf(1,'\n  Convection  time    tW0  = %1.2e [s]',tW0);
 fprintf(1,'\n  Part. segr. time    twx0 = %1.2e [s]',twx0);
-fprintf(1,'\n  Fluid segr. time    twf0 = %1.2e [s]',twf0);
-fprintf(1,'\n  Diffusion   time    tkx0 = %1.2e [s]',tkx0);
-fprintf(1,'\n  Diffusion   time    tkf0 = %1.2e [s]\n',tkf0);
+fprintf(1,'\n  Drop. segr. time    twf0 = %1.2e [s]',twf0);
+fprintf(1,'\n  Ther. diff. time    tkT0 = %1.2e [s]',tkT0);
+fprintf(1,'\n  Part. diff. time    tkx0 = %1.2e [s]',tkx0);
+fprintf(1,'\n  Drop. diff. time    tkf0 = %1.2e [s]\n',tkf0);
 
-fprintf(1,'\n  Dahmköhler No         Da0  = %1.2e [1]',Da0);
-fprintf(1,'\n  Mix. eddy noise No      Noe0  = %1.2e [1]',Noe0);
-fprintf(1,'\n  Xtl eddy noise No       Nox0  = %1.2e [1]',Nox0);
-fprintf(1,'\n  Fluid eddy noise No     Nof0  = %1.2e [1]',Nof0);
-fprintf(1,'\n  Xtl settling noise No   Nosx0 = %1.2e [1]',Nosx0);
-fprintf(1,'\n  Fluid settling noise No Nosf0 = %1.2e [1]\n',Nosf0);
+fprintf(1,'\n  Xtl Dahmköhler No      Dax0  = %1.2e [1]',Dax0);
+fprintf(1,'\n  Fld Dahmköhler No      Daf0  = %1.2e [1]',Daf0);
+fprintf(1,'\n  Mix eddy noise No      Noe0  = %1.2e [1]',Noe0);
+fprintf(1,'\n  Xtl eddy noise No      Nox0  = %1.2e [1]',Nox0);
+fprintf(1,'\n  Fld eddy noise No      Nof0  = %1.2e [1]',Nof0);
+fprintf(1,'\n  Xtl settling noise No  Nosx0 = %1.2e [1]',Nosx0);
+fprintf(1,'\n  Fld settling noise No  Nosf0 = %1.2e [1]\n',Nosf0);
 
-
-fprintf(1,'\n  Convection No       Rc_x0 = %1.2e [1]',Rc_x0);
-fprintf(1,'\n  Convection No       Rc_f0 = %1.2e [1]',Rc_f0);
-fprintf(1,'\n  Rayleigh No         Ra_x0 = %1.2e [1]',Ra_x0);
-fprintf(1,'\n  Rayleigh No         Ra_f0 = %1.2e [1]',Ra_f0);
-fprintf(1,'\n  Domain  Reynolds No ReD0  = %1.2e [1]',ReD0);
-fprintf(1,'\n  Part. Reynolds No Red_x0  = %1.2e [1]',Red_x0);
-fprintf(1,'\n  Part. Reynolds No Red_f0  = %1.2e [1]\n\n\n',Red_f0);
+fprintf(1,'\n  Part. settling No   Rs_x0  = %1.2e [1]',Rs_x0);
+fprintf(1,'\n  Drop. settling No   Rs_f0  = %1.2e [1]',Rs_f0);
+fprintf(1,'\n  Rayleigh No         Ra_f0  = %1.2e [1]',Ra0);
+fprintf(1,'\n  Domain  Reynolds No ReD0   = %1.2e [1]',ReD0);
+fprintf(1,'\n  Part. Reynolds No   Red_x0 = %1.2e [1]',Red_x0);
+fprintf(1,'\n  Drop. Reynolds No   Red_f0 = %1.2e [1]\n\n',Red_f0);
 
 
 % adjust scales and units for visualisation
