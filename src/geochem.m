@@ -2,31 +2,34 @@
 
 % *****  Trace Elements  **************************************************
 
-bnd_TRC = zeros(Nz,Nx,cal.ntrc);
 Ktrc    = zeros(Nz,Nx,cal.ntrc);
-for i = 1:cal.ntrc
-    
+for i = 1:cal.ntrc  
     % update bulk partitioning coefficients
     for j=1:cal.nmem; Ktrc(:,:,i) = Ktrc(:,:,i) + cal.Ktrc_mem(i,j) .* cx_mem(:,:,j)./100; end
+end  
 
-    % update trace element phase compositions
-    % guard denominators against division by zero: Ktrc can be 0 if the only mineral phases present have zero partitioning for element i, and m/x can vanish in pure-solid/pure-melt limits (esp. 0-D runs).
-    Ktrc_safe   = max(Ktrc(:,:,i),eps);
-    trcm(:,:,i) = trc(:,:,i)./max(m + x.*Ktrc_safe, eps);
-    trcx(:,:,i) = trc(:,:,i)./max(m./Ktrc_safe + x, eps);
+% update trace element phase compositions
+trcmq = trc./(m + x.*Ktrc);
+trcxq = trc./(m./Ktrc + x);
 
-    % get trace element advection
-    adv_TRC(:,:,i) = - advect(M.*trcm(:,:,i),Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...
-                     - advect(X.*trcx(:,:,i),Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA);
+% get trace element advection
+adv_TRC = - advect(M.*trcm,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA) ...
+          - advect(X.*trcx,Ux(2:end-1,:),Wx(:,2:end-1),h,{ADVN,''},[1,2],BCA);
 
-    % get trace element diffusion (regularisation)
-    dff_TRC(:,:,i) = diffus(trcm(:,:,i),M.*kc,h,[1,2],BCD) + diffus(trcx(:,:,i),X.*kc,h,[1,2],BCD);
+% major component diffusion (regularisation)
+[diff_TRCm,qz_dffn_TRCm,qx_dffn_TRCm] = diffus(m.*trcm,rho.*kc,h,[1,2],BCD);
+[diff_TRCx,qz_dffn_TRCx,qx_dffn_TRCx] = diffus(x.*trcx,rho.*kc,h,[1,2],BCD);
 
-    % get trace element assimilation
-    if ~isnan(trcwall(1,i)); bnd_TRC(:,:,i) = bnd_TRC(:,:,i) + (rho.*trcwall(1,i)-TRC(:,:,i)).*mu./tau_a .* topshape; end
-    if ~isnan(trcwall(2,i)); bnd_TRC(:,:,i) = bnd_TRC(:,:,i) + (rho.*trcwall(2,i)-TRC(:,:,i)).*mu./tau_a .* botshape; end
-    if ~isnan(trcwall(3,i)); bnd_TRC(:,:,i) = bnd_TRC(:,:,i) + (rho.*trcwall(3,i)-TRC(:,:,i)).*mu./tau_a .* sdsshape; end
-end
+diff_TRC    = diff_TRCm + diff_TRCx;
+
+qz_dffn_TRC = qz_dffn_TRCm + qz_dffn_TRCx;
+qx_dffn_TRC = qx_dffn_TRCm + qx_dffn_TRCx;
+
+% get trace element assimilation
+bnd_TRC = zeros(size(TRC));
+if ~isnan(trcwall(1)); bnd_TRC = bnd_TRC + (permute(repmat(trcwall(1,:).',1,Nz,Nx),[2,3,1]).*rho-TRC)./(tau_a+dt) .* topshape; end
+if ~isnan(trcwall(2)); bnd_TRC = bnd_TRC + (permute(repmat(trcwall(2,:).',1,Nz,Nx),[2,3,1]).*rho-TRC)./(tau_a+dt) .* botshape; end
+if ~isnan(trcwall(3)); bnd_TRC = bnd_TRC + (permute(repmat(trcwall(3,:).',1,Nz,Nx),[2,3,1]).*rho-TRC)./(tau_a+dt) .* sdsshape; end
 
 % get total rate of change
 dTRCdt = adv_TRC + dff_TRC + bnd_TRC;
@@ -38,4 +41,4 @@ res_TRC = (a1*TRC-a2*TRCo-a3*TRCoo)/dt - (b1*dTRCdt + b2*dTRCdto + b3*dTRCdtoo);
 [TRC,GHST.TRC,FHST.TRC,specrad.TRC] = iterate(TRC,res_TRC*dt/a1,specrad.TRC,GHST.TRC,FHST.TRC,itpar,iter);
 
 % convert from densites to concentrations
-for i = 1:cal.ntrc; trc(:,:,i) = TRC(:,:,i)./rho; end
+trc = TRC./sum(PHS,3);
