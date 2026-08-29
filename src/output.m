@@ -656,15 +656,16 @@ else % create 2D plots
     % cal.Tliq/Tsol are stored flattened (Nz*Nx x 1); reshape before averaging
     plot(mean(reshape(cal.Tliq,Nz,Nx),2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(reshape(cal.Tsol,Nz,Nx),2), Zsc.', CL{[1,4]}, LW{:});
+    legend({'$T$','$T_\mathrm{liq}$','$T_\mathrm{sol}$'},TX{:},'Location','east','Box','on','FontSize',9);
     title('$\langle T\rangle_x$ [$^\circ$C]',TX{:},FS{:});
     ylabel(['Depth [',SpaceUnits,']'],TX{:},FS{:}); set(gca,TL{:},TS{:});
 
     % 2: phase fractions (crystal / melt / mfe), masked as in 1-D fh1
     subplot(1,6,2)
     plot(mean(chi*100.*(chi>eps^0.5),2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
-    plot(mean(mu *100.*(mu >eps^0.5),2), Zsc.', CL{[1,3]}, LW{:});
+    % plot(mean(mu *100.*(mu >eps^0.5),2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(phi*100.*(phi>eps^0.5),2), Zsc.', CL{[1,5]}, LW{:});
-    legend({'$\chi$','$\mu$','$\phi$'},TX{:},'Location','best','Box','on','FontSize',9);
+    legend({'$\chi$','$\phi$'},TX{:},'Location','east','Box','on','FontSize',9);
     title('$\langle\chi,\mu,\phi\rangle_x$ [vol\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
     % 3: density (single phases + bulk, colours as in 1-D fh2)
@@ -673,15 +674,16 @@ else % create 2D plots
     plot(mean(rhom,2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(rhof,2), Zsc.', CL{[1,5]}, LW{:});
     plot(mean(rho ,2), Zsc.', CL{[1,2]}, LW{:});
-    title('$\langle\bar{\rho}\rangle_x$ [kg/m$^3$]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+    legend({'bulk','melt','xtal','mfe'},TX{:},'Location','east','Box','on','FontSize',9);
+    title('$\langle \rho \rangle_x$ [kg/m$^3$]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
     % 4: viscosity (single phases + bulk; arithmetic mean, log axis as in 1-D fh2)
     subplot(1,6,4)
-    semilogx(mean(etax0,2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
-    semilogx(mean(etam0,2), Zsc.', CL{[1,3]}, LW{:});
+    % semilogx(mean(etax0,2), Zsc.', CL{[1,4]}, LW{:}); 
+    semilogx(mean(etam0,2), Zsc.', CL{[1,3]}, LW{:}); axis ij tight; box on; hold on;
     semilogx(mean(etaf0,2), Zsc.', CL{[1,5]}, LW{:});
     semilogx(mean(eta ,2), Zsc.', CL{[1,2]}, LW{:});
-    title('$\langle\bar{\eta}\rangle_x$ [Pas]',TX{:},FS{:}); set(gca,TL{:},TS{:});
+    title('$\langle \eta \rangle_x$ [Pas]',TX{:},FS{:}); set(gca,TL{:},TS{:},'XTick',[1e0,1e2,1e4,1e6,1e8,1e10],'XTickLabels',{'$10^0$','$10^2$','$10^4$','$10^6$','$10^8$','$10^10$'},'XMinorTick','off');
 
     % 5: SiO2 (bulk / melt / xtal / mfe; differentiation index)
     subplot(1,6,5)
@@ -693,7 +695,6 @@ else % create 2D plots
     plot(mean(cSim,2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(cSix,2), Zsc.', CL{[1,4]}, LW{:});
     plot(mean(cSif,2), Zsc.', CL{[1,5]}, LW{:});
-    legend({'bulk','melt','xtal','mfe'},TX{:},'Location','best','Box','on','FontSize',9);
     title('$\langle$SiO$_2\rangle_x$ [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
     % 6: FeO (bulk / melt / xtal / mfe; Fe-rich layers)
@@ -706,7 +707,7 @@ else % create 2D plots
     plot(mean(cFem,2), Zsc.', CL{[1,3]}, LW{:});
     plot(mean(cFex,2), Zsc.', CL{[1,4]}, LW{:});
     plot(mean(cFef,2), Zsc.', CL{[1,5]}, LW{:});
-    legend({'bulk','melt','xtal','mfe'},TX{:},'Location','best','Box','on','FontSize',9);
+    % legend({'bulk','melt','xtal','mfe'},TX{:},'Location','east','Box','on','FontSize',9);
     title('$\langle$FeO$\rangle_x$ [wt\%]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
 end
