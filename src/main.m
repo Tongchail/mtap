@@ -45,11 +45,9 @@ while time <= tend && step <= Nt &&  any(mq(:)>sqrt(eps))        ...
     %*** update phase equilibrium
     phseql;
 
-    %***  update correlation length for convective/turbulent regularisation
-    % corrl;
-
     % renormalise sum of phase densities to bulk density
-    % X = x.*rho;  M = m.*rho;  F = f.*rho;  RHO = X+M+F;
+    X = x.*rho;  M = m.*rho;  F = f.*rho;  PHS  = cat(3,X,F,M);
+    C = c.*rho;  TRC = trc.*rho;  S = s.*rho;
 
     %***  fractionation mode for 0D-models
     fractionate;

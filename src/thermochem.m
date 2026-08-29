@@ -43,9 +43,11 @@ res_S = (a1*S-a2*So-a3*Soo) - (b1*dSdt + b2*dSdto + b3*dSdtoo)*dt;
 % semi-implicit update of bulk entropy density
 [S,GHST.S,FHST.S,specrad.S] = iterate(S,res_S,specrad.S,GHST.S,FHST.S,itpar,iter);
 
+s = S./sum(PHS,3);
+
 % convert entropy S to natural temperature T and potential temperature Tp
-[Tp,~ ] = StoT(Tp,S./rho,Pref+0*Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
-[T ,si] = StoT(T ,S./rho,       Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
+[Tp,~ ] = StoT(Tp,s,Pref+0*Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
+[T ,si] = StoT(T ,s,       Pt,cat(3,m,x,f),[cPm;cPx;cPf],[aTm;aTx;aTf],[bPm;bPx;bPf],cat(3,rhom0,rhox0,rhof0),[sref;sref+Dsx;sref+Dsf],Tref,Pref);
 sm = si(:,:,1); sx = si(:,:,2); sf = si(:,:,3);  % read out phase entropies
 
 
@@ -73,11 +75,9 @@ qx_dffn_C = qx_dffn_Cm + qx_dffn_Cx + qx_dffn_Cf;
 
 % boundary layers
 bnd_C = zeros(size(C));
-for i = 1:cal.ncmp
-    if ~isnan(cwall(1)); bnd_C(:,:,i) = bnd_C(:,:,i) + (rho.*cwall(1,i)-C(:,:,i)).*mu./tau_a .* topshape; end
-    if ~isnan(cwall(2)); bnd_C(:,:,i) = bnd_C(:,:,i) + (rho.*cwall(2,i)-C(:,:,i)).*mu./tau_a .* botshape; end
-    if ~isnan(cwall(3)); bnd_C(:,:,i) = bnd_C(:,:,i) + (rho.*cwall(3,i)-C(:,:,i)).*mu./tau_a .* sdsshape; end
-end
+if ~isnan(cwall(1)); bnd_C = bnd_C + (permute(repmat(cwall(1,:).',1,Nz,Nx),[2,3,1]).*rho-C)./(tau_a+dt) .* topshape; end
+if ~isnan(cwall(2)); bnd_C = bnd_C + (permute(repmat(cwall(1,:).',1,Nz,Nx),[2,3,1]).*rho-C)./(tau_a+dt) .* botshape; end
+if ~isnan(cwall(3)); bnd_C = bnd_C + (permute(repmat(cwall(1,:).',1,Nz,Nx),[2,3,1]).*rho-C)./(tau_a+dt) .* sdsshape; end
 
 % total rate of change
 dCdt = advn_C + diff_C + bnd_C;                                            
@@ -104,7 +104,7 @@ if Rcouple; phseql; end
 [advn_F,qz_advn_F,qx_advn_F] = advect(F,Uf(2:end-1,:),Wf(:,2:end-1),h,{ADVN,''},[1,2],BCA);
 [advn_M,qz_advn_M,qx_advn_M] = advect(M,Um(2:end-1,:),Wm(:,2:end-1),h,{ADVN,''},[1,2],BCA);
 
-advn_rho = advn_X+advn_F+advn_M;
+advn_rho = advn_X + advn_F + advn_M;
 
 % phase diffusion (regularisation)
 [diff_X,qz_dffn_X,qx_dffn_X] = diffus(x,rho.*kx,h,[1,2],BCD);
@@ -123,7 +123,6 @@ res_M = (a1*M-a2*Mo-a3*Moo) - (b1*dMdt + b2*dMdto + b3*dMdtoo)*dt;
 
 % semi-implicit update of phase fraction densities
 res_PHS = cat(3,res_X,res_F,res_M);
-PHS     = cat(3,X,F,M);
 [PHS,GHST.PHS,FHST.PHS,specrad.PHS] = iterate(PHS,res_PHS,specrad.PHS,GHST.PHS,FHST.PHS,itpar,iter);
 
 % impose min/max limits on phase densities
