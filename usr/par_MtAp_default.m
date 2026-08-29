@@ -1,7 +1,7 @@
 % set run parameters
 runID     =  'default';           % run identifier
 srcdir    =  '../src';            % output directory
-%outdir    =  '../out';            % output directory
+outdir    =  '../out';            % output directory
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nrh       =  10;                  % record diagnostic history every 'nrh' time steps
 nop       =  100;                 % output frame plotted/saved every 'nop' time steps
@@ -59,7 +59,6 @@ fractxtl  =  0;                   % fractional crystallisation mode for 0-D (Nz=
 fractmlt  =  0;                   % fractional melting mode for 0-D (Nz=Nx=1)
 fractres  =  0;                   % residual fraction for fractionation mode
 dPdT      =  0e5;                 % decompression rate for 0D models
-Ptop      =  125e6;               % top pressure [Pa]
 periodic  =  0;                   % set side boundaries to periodic
 bndmode   =  3;                   % boundary assimilation mode (0 = none; 1 = top only; 2 = bot only; 3 = top/bot only; 4 = all walls; 5 = only sides)
 bnd_w     =  h;                   % boundary layer width [m]
@@ -119,9 +118,7 @@ itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
 gamma     =  1e-4;                % artificial horizontal inertia parameter (only applies if periodic)
 lambda1   =  0e-7;                % pressure regularisation parameter
 lambda2   =  0e-7;                % pressure regularisation parameter
-etacntr   =  1e+8;                % maximum viscosity contrast
-Delta_cnv =  h/2;                 % correlation length for eddy diffusivity (multiple of h, 0.5-1)
-Delta_sgr =  dx0*10;              % correlation length for phase fluctuation diffusivity (multiple of dx0, df0, 10-20)
+etacntr   =  1e+6;                % maximum viscosity contrast
 Prt       =  1;                   % turbulent Prandtl number (ratio of momentum to heat diffusivity)
 Sct       =  1;                   % turbulent Schmidt number (ratio of momentum to mass diffusivity)
 etamin    =  0.01;                % minimum viscosity
@@ -129,19 +126,8 @@ kmin      =  1e-9;                % minimum diffusivity
 kmax      =  1e+9;                % maximum diffusivity
 Pcouple   =  0;                   % coupling phase equilibria and material properties to dynamic pressure
 Rcouple   =  0;                   % coupling phase equilibria into nonlinear iterations, else update once per time step
-dtmax     =  1e32;                % maximum time step [s]
 
 % set various options
 calibrt   =  0;                   % not in calibrate mode
 bnchm     =  0;                   % not a benchmark run
 postprc   =  0;                   % not postprocessing mode
-
-% set initial phase fraction parameters
-xeq       =  0.01;                % equilibrium crystallinity of boundary layer [wt]
-x0        =  xeq/10;              % initial background crystallinity [wt]
-dxr       =  x0/10;               % initial random perturbation [wt]
-dxg       =  0;                   % initial gaussian perturbation [wt] (for benchmarking)
-feq       =  0.01;                 % equilibrium fluid fraction in boundary layer
-f0        =  feq/10;               % initial background fluid fraction
-dfr       =  f0/10;                % initial random perturbation (same structure as dxr)
-dfg       =  0;                    % initial gaussian perturbation (same as dxg)
