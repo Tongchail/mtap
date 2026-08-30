@@ -670,10 +670,10 @@ else % create 2D plots
 
     % 3: density (single phases + bulk, colours as in 1-D fh2)
     subplot(1,6,3)
-    plot(mean(rhox,2), Zsc.', CL{[1,4]}, LW{:}); axis ij tight; box on; hold on;
+    plot(mean(rho ,2), Zsc.', CL{[1,2]}, LW{:}); axis ij tight; box on; hold on;
     plot(mean(rhom,2), Zsc.', CL{[1,3]}, LW{:});
+    plot(mean(rhox,2), Zsc.', CL{[1,4]}, LW{:});
     plot(mean(rhof,2), Zsc.', CL{[1,5]}, LW{:});
-    plot(mean(rho ,2), Zsc.', CL{[1,2]}, LW{:});
     legend({'bulk','melt','xtal','mfe'},TX{:},'Location','east','Box','on','FontSize',9);
     title('$\langle \rho \rangle_x$ [kg/m$^3$]',TX{:},FS{:}); set(gca,TL{:},TS{:});
 
