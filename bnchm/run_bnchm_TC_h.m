@@ -5,35 +5,31 @@ clear; close all;
 run('../usr/par_MtAp_default')
 
 % set run parameters
-runID    =  'bnchm_TC_dt';       % run identifier
+runID    =  'bnchm_TC_h';        % run identifier
 opdir    =  '../out/';           % output directory
 restart  =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
-nop      =  1e4;                 % output frame plotted/saved every 'nop' time steps
+nop      =  1e5;                 % output frame plotted/saved every 'nop' time steps
 plot_op  =  1;                   % switch on to live plot of results
 plot_cv  =  0;                   % switch on to live plot iterative convergence
 save_op  =  0;
 
 % set model domain parameters
-D        =  10;                  % chamber depth [m]
-L        =  10;                  % chamber width [m]
-N        =  100;                 % number of grid points in z-direction (incl. 2 ghosts)
+D        =  30;                  % chamber depth [m]
+L        =  30;                  % chamber width [m]
+N        =  120;                 % number of grid points in z-direction (incl. 2 ghosts)
 h        =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
-
-% set model timing parameters
-Nt       =  nop;                 % number of time steps to take
-dt       =  1;                   % set initial time step
 
 % set initial thermo-chemical state
 smth     =  15;
-init_mode=  'liquidus';          % init_mode = 'constant', 'liquidus', 'layer','linear', 'chamber'.
-T0       =  -200;                 % initial temperature [deg C] 
-c0       =  [16 11 16 19 38 10 2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
+init_mode=  'constant';          % init_mode = 'constant', 'liquidus', 'layer','linear', 'chamber'.
+T0       =  1035;                 % initial temperature [deg C] 
+c0       =  [12.9  18.8  12.3  16.4  39.6  10   2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr      =  [1,1,1,-1,-1,-1,0]*0e-3;  % amplitude of random noise [wt]
-dcg      =  [-1,-1,-1,1,1,1,0]*5e-2;  % amplitude of centred gaussian [wt]
-dTg      =  10;
+dcg      =  [1,1,-1,-1,-1,1,0]*1e-2;  % amplitude of centred gaussian [wt]
+dTg      =  -10;
 dTr      =  0.0;
 dr_trc   =  [1,1,1,-1,-1,-1].*0e-3;
-dg_trc   =  [-1,-1,-1,1,1,1].*1e-2;
+dg_trc   =  [1,1,1,-1,-1,-1].*1e-2;
 
 % closed boundaries for gas flux
 periodic =  1;
@@ -47,14 +43,14 @@ calID    =  'MtAp_750_new';              % phase diagram calibration
 % set numerical model parameters
 TINT     =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
 ADVN     =  'weno5';             % advection scheme ('centr','upw1','quick','fromm','weno3','weno5','tvdim')
-CFL      =  1;                   % (physical) time stepping courant number (multiplies stable step) [0,1]
-atol     =  1e-9;               % outer its absolute tolerance
+CFL      =  10;                  % (physical) time stepping courant number (multiplies stable step) [0,1]
+atol     =  1e-9;                % outer its absolute tolerance
 rtol     =  atol/1e6;            % outer its absolute tolerance
 maxit    =  100;                 % maximum outer its
-itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
-itpar.aa.m    = 2;                % Anderson acceleration depth (2-5)
-itpar.aa.damp = 0.0;              % Anderson acceleration damping (0-1)
-itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
+itpar.fp.damp = 1;               % fixed-point iterative damping (0-1)
+itpar.aa.m    = 4;               % Anderson acceleration depth (2-5)
+itpar.aa.damp = 0.3;             % Anderson acceleration damping (0-1)
+itpar.aa.reg  = 1e-6;            % Anderson acceleration regularisation (0-1)
 
 % create output directory
 if ~isfolder([opdir,'/',runID])
@@ -66,8 +62,8 @@ cd ../src
 NN    = 40*[1,2,4];
 nshft = 1;
 
-dt     =  D/NN(3)/400;
-dtmax  =  D/NN(3)/400;
+dt     =  D/NN(3)/200;
+dtmax  =  D/NN(3)/200;
 
 Nt     =  nshft*D/NN(1)/dt;           % number of time steps to take
 
@@ -81,14 +77,14 @@ for Ni = NN
     init;
 
     % set velocities to constant values for lateral translation with no segregation
-    W(:) = 0;  Wm(:) = 0;  Wx(:) = 0;  Wf(:) = 0;  wx(:) = 0;  wm(:) = 0;  wf(:) = 0;  upd_W(:) = 0;
-    U(:) = 0;  Um(:) = 1;  Ux(:) = 1;  Uf(:) = 1; upd_U(:) = 0;   
-    P(:) = 0;  upd_P(:) = 0; upd_MFS(:) = 0;
+    W(:) = 0;  Wm(:) = 0;  Wx(:) = 0;  Wf(:) = 0;  wx(:) = 0;  wm(:) = 0;  wf(:) = 0;
+    U(:) = 0;  Um(:) = 1;  Ux(:) = 1;  Uf(:) = 1; 
+    P(:) = 0;  
 
     % set diffusion parameters to zero to isolate advection
     kT(:)   = 0;  ks(:) = 0;  kx(:) = 0;  ks_x(:) = 0;  ks_f(:) = 0;  ke(:) = 0;
     diss(:) = 0;
-    res_rho = 0.*rho;
+    res_rho = 0.*rho; Div_rhoV(:) = 0;
 
     % set parameters for non-dissipative, non-reactive flow
     rhoin = rho; rhoout = circshift(rho,Ni/NN(1)*nshft,2);
@@ -143,14 +139,14 @@ for Ni = NN
         step = step+1;
         if frst; frst=0; end
 
-        if ~mod(step,10)
-        figure(100); clf;
-        plot(XX(ceil(Nz/2),:), Xout(ceil(Nz/2),:)./rhoout(ceil(Nz/2),:),'k',XX(ceil(Nz/4),:), X(ceil(Nz/2),:)./rho(ceil(Nz/2),:),'r','LineWidth',1.5); axis tight; box on;
-        set(gca,'LineWidth',1.5,'TickLabelInterpreter','latex','FontSize',12)
-        xlabel('Distance [m]','Interpreter','latex','FontSize',16)
-        ylabel('Crystallinity [wt]','Interpreter','latex','FontSize',16)
-        drawnow;
-        end
+        % if ~mod(step,10)
+        % figure(100); clf;
+        % plot(XX(ceil(Nz/2),:), Xout(ceil(Nz/2),:)./rhoout(ceil(Nz/2),:),'k',XX(ceil(Nz/4),:), X(ceil(Nz/2),:)./rho(ceil(Nz/2),:),'r','LineWidth',1.5); axis tight; box on;
+        % set(gca,'LineWidth',1.5,'TickLabelInterpreter','latex','FontSize',12)
+        % xlabel('Distance [m]','Interpreter','latex','FontSize',16)
+        % ylabel('Crystallinity [wt]','Interpreter','latex','FontSize',16)
+        % drawnow;
+        % end
 
     end
 

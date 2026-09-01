@@ -206,20 +206,20 @@ if ~any(bnd_h)
     switch bndmode
         case 0  % none
         case 1  % top only
-            topshape = exp( ( -ZZ+h/2)/max(h,bnd_w));
+            topshape = exp( ( -ZZ)/bnd_w);
         case 2  % bot only
-            botshape = exp(-(D-ZZ-h/2)/max(h,bnd_w));
+            botshape = exp(-(D-ZZ)/bnd_w);
         case 3  % top/bot only
-            topshape = exp( ( -ZZ+h/2)/max(h,bnd_w));
-            botshape = exp(-(D-ZZ-h/2)/max(h,bnd_w));
+            topshape = exp( ( -ZZ)/bnd_w);
+            botshape = exp(-(D-ZZ)/bnd_w);
         case 4 % all walls
-            topshape = exp( ( -ZZ+h/2)/max(h,bnd_w));
-            botshape = exp(-(D-ZZ-h/2)/max(h,bnd_w));
-            sdsshape = exp( ( -XX+h/2)/max(h,bnd_w)) ...
-                     + exp(-(L-XX-h/2)/max(h,bnd_w));
+            topshape = exp( ( -ZZ)/bnd_w);
+            botshape = exp(-(D-ZZ)/bnd_w);
+            sdsshape = exp( ( -XX)/bnd_w) ...
+                     + exp(-(L-XX)/bnd_w);
         case 5 % only walls
-            sdsshape = exp( ( -XX+h/2)/max(h,bnd_w)) ...
-                     + exp(-(L-XX-h/2)/max(h,bnd_w));
+            sdsshape = exp( ( -XX)/bnd_w) ...
+                     + exp(-(L-XX)/bnd_w);
     end
     sdsshape = max(0,sdsshape - topshape - botshape);
 end
@@ -256,13 +256,13 @@ else         % closed side boundaries
 end
 
 % initialise crystallinity field
-gp  =  exp(-((XX-L/2)./(L/6)).^2) .* exp(-((ZZ-D/2)./(D/6)).^2);
+gp  =  exp(-((XX-L/2)./(L/8)).^2) .* exp(-((ZZ-D/2)./(D/8)).^2);
 m = ones(Nz,Nx);
 x = zeros(Nz,Nx);
 f = zeros(Nz,Nx);
 
 U   =  zeros(Nz+2,Nx+1);  UBG = U; upd_U = 0*U; 
-W   =  zeros(Nz+1,Nx+2);  WBG = W; wx = 0.*W; wf = 0.*W; wm = 0.*W; wx0 = 0.*W; wf0 = 0.*W; wxo = wx; wfo = wf; upd_W = 0*W; Mx = 0*wx(:,2:end-1); Mf = 0*wf(:,2:end-1); 
+W   =  zeros(Nz+1,Nx+2);  WBG = W; wx = 0.*W; wf = 0.*W; wm = 0.*W; wxo = wx; wfo = wf; upd_W = 0*W; Mx = 0*wx(:,2:end-1); Mf = 0*wf(:,2:end-1); 
 P   =  zeros(Nz+2,Nx+2);  V   = 0.*x; vx = V; vxo = vx; vf = V; vfo = vf; upd_P = 0*P;
 SOL = [W(:);U(:);P(:)];
 

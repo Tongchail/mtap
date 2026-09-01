@@ -20,8 +20,8 @@ for atol = ATOL
     colourmap = 'lapaz';              % choose colourmap ('ocean','lipari','lajolla','lapaz','navia','batlow(W/K)','glasgow')
 
     % set model domain parameters
-    D         =  100;                 % chamber depth [m]
-    N         =  50;                 % number of grid points in z-direction
+    D         =  30;                 % chamber depth [m]
+    N         =  60;                 % number of grid points in z-direction
     h         =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
     L         =  D;                   % chamber width (equal to h for 1-D mode) [m]
 
@@ -32,25 +32,25 @@ for atol = ATOL
 
     % set initial thermo-chemical state
     % simple- make the boundaries of the 2D domain represent the boundaries of the magma chamber.
-    init_mode =  'constant';          % init_mode = 'constant', 'liquidus', 'layer','linear', 'chamber'.
-    T0        =  1025;                 % initial temperature [deg C]
-    c0        =  [16   11   16   19   38  7  2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
-    dcr       =  [1,1,1,-1,-1,-1,0]*1e-3;
+    init_mode =  'liquidus';          % init_mode = 'constant', 'liquidus', 'layer','linear', 'chamber'.
+    T0        =  -100;                % initial temperature [deg C]
+    c0        =  [12.9  18.8  12.3  16.4  39.6  6   2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
+    dcr       =  [1,1,1,-1,-1,-1,0]*1e-4;
     dr_trc    =  [1,1,1,-1,-1,-1]*1e-3; % trace elements random noise
 
     % set thermo-chemical boundary parameters
     periodic  =  1;                   % periodic side boundaries
     bndmode   =  3;                   % boundary assimilation mode (0 = none; 1 = top only; 2 = bot only; 3 = top/bot only; 4 = all walls; 5 = only sides)
     bnd_w     =  h;                   % boundary layer width [m]
-    tau_T     =  (h/4)^2/1e-6;        % wall cooling/assimilation time [s]
+    tau_T     =  h^2/5e-7*(0.25/h);   % wall cooling time [s]
     tau_a     =  tau_T/10;
     Twall     =  [500,500,nan];       % [top,bot,sds] wall rock temperature [degC] (nan = insulating)
     Ptop      =  1.25e8;              % top pressure [Pa]
 
     % set physical control parameters
-    dx0       =  0.01;
-    df0       =  0.01;
-    L0        =  h/2;                 % correlation length for eddy diffusivity (multiple of h, 0.5-1)
+    dx0       =  0.001;
+    df0       =  0.001;
+    L0        =  0.25;                % correlation length for eddy diffusivity (multiple of h, 0.5-1)
     l0x       =  dx0*20;              % correlation length for xtal  phase fluctuation diffusivity (multiple of d0, 10-20)
     l0f       =  df0*20;              % correlation length for fluid phase fluctuation diffusivity (multiple of d0, 10-20)
     Xi        =  0.5;                 % relative amplitude of random noise flux
@@ -62,13 +62,13 @@ for atol = ATOL
     % set numerical model parameters
     TINT      =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
     ADVN      =  'weno5';             % advection scheme ('centr','upw1','quick','fromm','weno3','weno5','tvdim')
-    CFL       =  0.9;                 % (physical) time stepping courant number (multiplies stable step) [0,1]
+    CFL       =  0.75;                % (physical) time stepping courant number (multiplies stable step) [0,1]
     rtol      =  atol/1e6;            % outer its relative tolerance
     maxit     =  100;                 % maximum outer its
     itpar.fp.damp = 1.0;              % fixed-point iterative damping (0-1)
-    itpar.aa.m    = 5;                % Anderson acceleration depth (2-5)
+    itpar.aa.m    = 4;                % Anderson acceleration depth (2-5)
     itpar.aa.damp = 0.3;              % Anderson acceleration damping (0-1)
-    itpar.aa.reg  = 1e-9;             % Anderson acceleration regularisation (0-1)
+    itpar.aa.reg  = 1e-6;             % Anderson acceleration regularisation (0-1)
 
     % create output directory
     if ~isfolder([outdir,'/',runID])

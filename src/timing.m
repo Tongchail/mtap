@@ -6,7 +6,7 @@ TCtime  = 0;
 UDtime  = 0;
 
 if strcmp(TINT(end-1:end),'im')                    % implicit schemes
-    if     strcmp(TINT,'be1im')                    % 1st/2nd step / 1st-order backward-Euler implicit scheme
+    if     strcmp(TINT,'be1im') || frst            % 1st/2nd step / 1st-order backward-Euler implicit scheme
         a1 = 1; a2 = 1; a3 = 0;
         b1 = 1; b2 = 0; b3 = 0;
     elseif strcmp(TINT,'bd2im')                    % other steps  / 2nd-order 3-point backward-difference implicit scheme

@@ -14,9 +14,9 @@ plot_cv  =  0;                   % switch on to live plot iterative convergence
 save_op  =  0;
 
 % set model domain parameters
-D        =  10;                  % chamber depth [m]
-L        =  10;                  % chamber width [m]
-N        =  100;                 % number of grid points in z-direction (incl. 2 ghosts)
+D        =  30;                  % chamber depth [m]
+L        =  30;                  % chamber width [m]
+N        =  120;                 % number of grid points in z-direction (incl. 2 ghosts)
 h        =  D/N;                 % grid spacing (equal in both dimensions, do not set) [m]
 
 % set model timing parameters
@@ -25,15 +25,15 @@ dt       =  1;                   % set initial time step
 
 % set initial thermo-chemical state
 smth     =  15;
-init_mode=  'liquidus';          % init_mode = 'constant', 'liquidus', 'layer','linear', 'chamber'.
-T0       =  -200;                 % initial temperature [deg C] 
-c0       =  [16 11 16 19 38 10 2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
+init_mode=  'constant';          % init_mode = 'constant', 'liquidus', 'layer','linear', 'chamber'.
+T0       =  1035;                 % initial temperature [deg C] 
+c0       =  [12.9  18.8  12.3  16.4  39.6  10   2]/100;  % *** components (maj comp, H2O) top  layer [wt] (will be normalised to unit sum!)
 dcr      =  [1,1,1,-1,-1,-1,0]*0e-3;  % amplitude of random noise [wt]
-dcg      =  [-1,-1,-1,1,1,1,0]*5e-2;  % amplitude of centred gaussian [wt]
-dTg      =  10;
+dcg      =  [1,1,-1,-1,-1,1,0]*1e-2;  % amplitude of centred gaussian [wt]
+dTg      =  -10;
 dTr      =  0.0;
 dr_trc   =  [1,1,1,-1,-1,-1].*0e-3;
-dg_trc   =  [-1,-1,-1,1,1,1].*1e-2;
+dg_trc   =  [1,1,1,-1,-1,-1].*1e-2;
 
 % closed boundaries for gas flux
 periodic =  1;
@@ -47,14 +47,14 @@ calID    =  'MtAp_750_new';              % phase diagram calibration
 % set numerical model parameters
 TINT     =  'bd2im';             % time integration scheme ('be1im','bd2im','cn2si','bd2si')
 ADVN     =  'weno5';             % advection scheme ('centr','upw1','quick','fromm','weno3','weno5','tvdim')
-CFL      =  1;                   % (physical) time stepping courant number (multiplies stable step) [0,1]
-atol     =  1e-9;               % outer its absolute tolerance
+CFL      =  10;                  % (physical) time stepping courant number (multiplies stable step) [0,1]
+atol     =  1e-9;                % outer its absolute tolerance
 rtol     =  atol/1e6;            % outer its absolute tolerance
 maxit    =  100;                 % maximum outer its
-itpar.fp.damp = 1;                % fixed-point iterative damping (0-1)
-itpar.aa.m    = 2;                % Anderson acceleration depth (2-5)
-itpar.aa.damp = 0.0;              % Anderson acceleration damping (0-1)
-itpar.aa.reg  = 0.01;             % Anderson acceleration regularisation (0-1)
+itpar.fp.damp = 1;               % fixed-point iterative damping (0-1)
+itpar.aa.m    = 4;               % Anderson acceleration depth (2-5)
+itpar.aa.damp = 0.3;             % Anderson acceleration damping (0-1)
+itpar.aa.reg  = 1e-6;            % Anderson acceleration regularisation (0-1)
 
 % create output directory
 if ~isfolder([opdir,'/',runID])
@@ -63,7 +63,7 @@ end
 
 cd ../src
 
-DT    = [h/2,h/4,h/8];  % time step sizes to test relative to grid step
+DT    = h./[2,4,8];  % time step sizes to test relative to grid step
 nshft = 2;              % number of grid steps target is shifted from initial
 
 for dti = DT
@@ -79,14 +79,14 @@ for dti = DT
     init;
 
     % set velocities to constant values for lateral translation with no segregation
-    W(:) = 0;  Wm(:) = 0;  Wx(:) = 0;  Wf(:) = 0;  wx(:) = 0;  wm(:) = 0;  wf(:) = 0;  upd_W(:) = 0;
-    U(:) = 0;  Um(:) = 1;  Ux(:) = 1;  Uf(:) = 1; upd_U(:) = 0;   
-    P(:) = 0;  upd_P(:) = 0; upd_MFS(:) = 0;
+    W(:) = 0;  Wm(:) = 0;  Wx(:) = 0;  Wf(:) = 0;  wx(:) = 0;  wm(:) = 0;  wf(:) = 0;
+    U(:) = 0;  Um(:) = 1;  Ux(:) = 1;  Uf(:) = 1;
+    P(:) = 0;  
 
     % set diffusion parameters to zero to isolate advection
     kT(:)   = 0;  ks(:) = 0;  kx(:) = 0;  ks_x(:) = 0;  ks_f(:) = 0;  ke(:) = 0;
     diss(:) = 0;
-    res_rho = 0.*rho;
+    res_rho = 0.*rho; Div_rhoV(:) = 0;
 
     % set parameters for non-dissipative, non-reactive flow
     rhoin = rho; rhoout = circshift(rho,nshft,2);
@@ -160,9 +160,9 @@ for dti = DT
 
     % plot convergence
     % EB = norm(rho-rhoout)./norm(rhoout);
-    EM = norm(  M-  Mout)./norm(Mout);
-    EX = norm(  X-  Xout)./norm(Xout);
-    EF = norm(  F-  Fout)./norm(Fout);
+    EM = norm(  M-  Mout)./norm(rhoout);
+    EX = norm(  X-  Xout)./norm(rhoout);
+    EF = norm(  F-  Fout)./norm(rhoout);
     ES = norm(  S-  Sout)./norm(Sout);
 
     clist = [colororder;[0 0 0]];
@@ -177,12 +177,12 @@ for dti = DT
     ylabel('Rel. numerical error [1]','Interpreter','latex','FontSize',15)
     title('Numerical convergence in time','Interpreter','latex','FontSize',18)
 
-    if round(dt,4) == DT(1)
+    if round(dt,5) == DT(1)
         % loglog(DT,geomean([EM,EX,EF,ES]).*(DT./DT(1)).^1,'k--','LineWidth',2);  % plot trend for comparison
         loglog(DT,geomean([EM,EX,EF,ES]).*(DT./DT(1)).^2,'k-' ,'LineWidth',2);
     end
-    if round(dt,4) == DT(end)
-        legend({'error $M$','error $X$','error $F$','error $S$','linear','quadratic'},'Interpreter','latex','box','on','location','southeast')
+    if round(dt,5) == DT(end)
+        legend({'error $M$','error $X$','error $F$','error $S$','quadratic'},'Interpreter','latex','box','on','location','southeast')
     end
     drawnow;
 

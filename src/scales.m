@@ -2,7 +2,7 @@
 %*****  calculate and print characteristic scales  ************************
 
 % length scales
-D0      =  D/20;
+D0      =  D/30;
 dx0     =  dx0;
 df0     =  df0;
 L0      =  L0;  L0h  = (L0 +h)/2; L00 = L0;
@@ -84,15 +84,16 @@ aT0    = x0*aTx + f0*aTf + m0*aTm;
 etam0  = Giordano08(cm0_oxd_all,T00);
 etaf0  =     etamfe(cf0_oxd_all,T00);
 
+DT0     =  (T00-Twall(1))/100;
 Drho_x0 =  abs(rhox0-rho0);
 Drho_f0 =  abs(rhof0-rho0);
-Drho_T0 =  rho0 * aT0*(T00-Twall(1))/10;
-Dchi0   =  x0/10 + 0.0001;
-chi0    =  x0 + 0.001;
-Dphi0   =  f0/10 + 0.0001;
-phi0    =  f0 + 0.001;
+Drho_T0 =  rho0 * aT0*DT0;
+chi0    =  x0*(rho0/rhox0) + 0.001;
+Dchi0   =  chi0/100;
+phi0    =  f0*(rho0/rhox0) + 0.001;
+Dphi0   =  phi0/100;
 Drho0   =  Dchi0*Drho_x0 + Dphi0*Drho_f0 + Drho_T0;
-eta0    =  etam0;
+eta0    =  etam0*(1-chi0-phi0)^-5;
 
 % speed scales
 W0l     =  Drho0  *g0*D0 ^2/eta0;  % laminar convection speed
@@ -117,28 +118,26 @@ if open_cnv; Ri0 = 1; else; Ri0 = W0i./W0t; end
 digits(24);
 tol = 1e-9;  res = 1;
 while res > tol
-    W0prv = W0;  wx0prv = wx0;  wf0prv = wf0;
-  
-    % Reynolds numbers from the current speeds
-    ReL0    =  W0l  *L0/(eta0/rho0);         % laminar convective Reynolds No at L0  
-    Rel0_x  =  w0l_x*l0x/(eta0/rho0);        % laminar settling Reynolds No at L0
-    Rel0_f  =  w0l_f*l0f/(eta0/rho0);        % laminar settling Reynolds No at L0
-   
-    % Re-dependent ramp factors
-    fReL0   = vpa(1-exp(-ReL0  ));
-    fRel0_x = vpa(1-exp(-Rel0_x));
-    fRel0_f = vpa(1-exp(-Rel0_f));
-   
-    % recompute the three speeds (same formulae as before; fReL0 etc.
-    % now come from the iterated values above)
-    %W0  = double(D0.*(sqrt(2.*Drho0.*g0.*rho0.*Ri0.^-2.*fReL0.*L0.^2.*D0 + eta0.^2) - eta0)./(Ri0.^-2.*fReL0.*L0.^2.*rho0));
-    W0  = double((sqrt(4./Ri0.^2.*Dchi0.*Drho0  .*g0.*rho0.*fReL0  .*L0.^2.*D0   + eta0.^2) - eta0).*D0./(2.*fReL0.*L0.^2.*rho0./Ri0.^2));
+    W0prv  = W0;
+    wx0prv = wx0;
+    wf0prv = wf0;
 
-    wx0 = double((sqrt(4               .*Drho_x0.*g0.*rho0.*fRel0_x.*l0x.*dx0.^2 + eta0.^2) - eta0)    ./(2.*fRel0_x.*l0x .*rho0));
-    wf0 = double((sqrt(4               .*Drho_f0.*g0.*rho0.*fRel0_f.*l0f.*df0.^2 + eta0.^2) - eta0)    ./(2.*fRel0_f.*l0f .*rho0));
-   
-    % residual: all three speeds must converge
-    res = abs(W0-W0prv)./W0 + abs(wx0-wx0prv)./wx0 + abs(wf0-wf0prv)./wf0;
+    ReL0   = W0 *L0 /(eta0/rho0);       % convective Reynolds No at L0, eta0
+    Rel0_x = wx0*l0x/(eta0/rho0);       % settling Reynolds No at l0, eta0
+    Rel0_f = wf0*l0f/(eta0/rho0);       % settling Reynolds No at l0, eta0
+
+    fReL0   = vpa(1-exp(-ReL0));        % Re-dependent ramp factor
+    fRel0_x = vpa(1-exp(-Rel0_x));        % Re-dependent ramp factor
+    fRel0_f = vpa(1-exp(-Rel0_f));        % Re-dependent ramp factor
+
+    % general convective speed
+    W0    = double((sqrt(4./Ri0^2*Drho0  *g0*rho0*fReL0  *L0^2*D0   + eta0^2) - eta0)*D0/(2*fReL0 *L0^2*rho0/Ri0^2));
+
+    % general settling speed
+    wx0   = double((sqrt(4       *Drho_x0*g0*rho0*fRel0_x*l0x*dx0^2 + eta0^2) - eta0)   /(2*fRel0_x*l0x*rho0      ));
+    wf0   = double((sqrt(4       *Drho_f0*g0*rho0*fRel0_f*l0f*df0^2 + eta0^2) - eta0)   /(2*fRel0_f*l0f*rho0      ));
+
+    res   = abs(W0-W0prv)/W0 + abs(wx0-wx0prv)/wx0 + abs(wf0-wf0prv)/wf0;  % residual
 end
 %%===================== end ==============================================
 
@@ -210,8 +209,8 @@ Gf0     =  phi0*rho0/tau0;
 
 % viscosities, stress/pressure
 etae0   =  double(fReL0  *ke0  *rho0);
-etas_x0 =  double(fRel0_x*ks_x0*rho0);
-etas_f0 =  double(fRel0_f*ks_f0*rho0);
+etat_x0 =  double(fRel0_x*ks_x0*rho0);
+etat_f0 =  double(fRel0_f*ks_f0*rho0);
 p0      =  (eta0+etae0)*eII0;
 
 fReL0    =  double(fReL0);
@@ -234,8 +233,8 @@ Rs_f0   =  wf0/W0;                            % fluid settling number
 Ra0     =  W0*D0/(kx0+kf0+kT0);               % convective Rayleigh number
 % Reynolds numbers (inertial vs viscous forces)
 ReD0    =  W0*D0/((eta0+etae0)/rho0);         % convection Reynolds number
-Red_x0  =  wx0*dx0/((eta0+etas_x0)/rho0);     % crystal (particle) Reynolds number
-Red_f0  =  wf0*df0/((eta0+etas_f0)/rho0);     % fluid (droplet) Reynolds number
+Red_x0  =  wx0*dx0/((eta0+etat_x0)/rho0);     % crystal (particle) Reynolds number
+Red_f0  =  wf0*df0/((eta0+etat_f0)/rho0);     % fluid (droplet) Reynolds number
 
 % % general dimensionless numbers
 % Da0     =  G0/(rho0/t0);                % Dahmköhler number
@@ -251,32 +250,33 @@ Red_f0  =  wf0*df0/((eta0+etas_f0)/rho0);     % fluid (droplet) Reynolds number
 % Red_f0  =  wf0*df0/((eta0+etas_f0)/rho0);   % Droplet Reynolds number
 
 % print scaling analysis to standard output
-fprintf(1,'\n  Scaled domain depth D0    = %1.0e [m]',D0);
-fprintf(1,'\n  Part. size          dx0   = %1.0e [m]',dx0);
-fprintf(1,'\n  Fluid size          df0   = %1.0e [m]',df0);
-fprintf(1,'\n  Eddy  corrl. length L0    = %1.0e [m]',L0);
-fprintf(1,'\n  Part. corrl. length l0_x  = %1.0e [m]',l0x);
-fprintf(1,'\n  Drop. corrl. length l0_f  = %1.0e [m]\n',l0f);
+fprintf(1,'\n  Scaled domain depth D0    = %1.2e [m]',D0);
+fprintf(1,'\n  Part. size          dx0   = %1.2e [m]',dx0);
+fprintf(1,'\n  Fluid size          df0   = %1.2e [m]',df0);
+fprintf(1,'\n  Eddy  corrl. length L0    = %1.2e [m]',L0);
+fprintf(1,'\n  Part. corrl. length l0_x  = %1.2e [m]',l0x);
+fprintf(1,'\n  Drop. corrl. length l0_f  = %1.2e [m]\n',l0f);
 
-fprintf(1,'\n  Density             rho0  = %1.0f  [kg/m3]',rho0);
-fprintf(1,'\n  Density dff. xtal   Drho0 = %1.0f   [kg/m3]',Drho_x0);
-fprintf(1,'\n  Density dff. fluid  Drho0 = %1.0f   [kg/m3]',Drho_f0);
-fprintf(1,'\n  Density dff. bulk   Drho0 = %1.2f  [kg/m3]',Drho0);
-fprintf(1,'\n  Xtl frc contrast    Dchi0 = %1.3f [wt]',Dchi0);
-fprintf(1,'\n  Fld frc contrast    Dphi0 = %1.3f [wt]',Dphi0);
-fprintf(1,'\n  Viscosity           eta0  = %1.0e [Pas]\n',eta0);
+fprintf(1,'\n  Density             rho0    = %1.2f [kg/m3]',rho0);
+fprintf(1,'\n  Density dff. xtal   Drho_x0 = %1.2f [kg/m3]',Drho_x0);
+fprintf(1,'\n  Density dff. fluid  Drho_f0 = %1.2f [kg/m3]',Drho_f0);
+fprintf(1,'\n  Density dff. therm  Drho_T0 = %1.2f [kg/m3]',Drho_T0);
+fprintf(1,'\n  Density dff. bulk   Drho0   = %1.2f [kg/m3]',Drho0);
+fprintf(1,'\n  Xtl frc contrast    Dchi0   = %1.3f [wt]',Dchi0);
+fprintf(1,'\n  Fld frc contrast    Dphi0   = %1.3f [wt]',Dphi0);
+fprintf(1,'\n  Viscosity           eta0    = %1.2e [Pas]\n',eta0);
 
 fprintf(1,'\n  Convection        speed  W0  = %1.2e [m/s]',W0);
 fprintf(1,'\n  Part. segregation speed  wx0 = %1.2e [m/s]',wx0);
 fprintf(1,'\n  Drop. segregation speed  wf0 = %1.2e [m/s]\n',wf0);
 
-fprintf(1,'\n  Thermal     diffusivity  kT0     = %1.1e [m2/s]',kT0);
-fprintf(1,'\n  Eddy        diffusivity  ke0     = %1.1e [m2/s]',ke0);
-fprintf(1,'\n  Part. segr. diffusivity  ks_x0   = %1.1e [m2/s]',ks_x0);
-fprintf(1,'\n  Drop. segr. diffusivity  ks_f0   = %1.1e [m2/s]',ks_f0);
-fprintf(1,'\n  Eddy  viscosity          etae    = %1.1e [Pas]',etae0);
-fprintf(1,'\n  Part. segr. viscosity    etas_x0 = %1.1e [Pas]',etas_x0);
-fprintf(1,'\n  Drop. segr. viscosity    etas_f0 = %1.1e [Pas]\n',etas_f0);
+fprintf(1,'\n  Thermal     diffusivity  kT0     = %1.2e [m2/s]',kT0);
+fprintf(1,'\n  Eddy        diffusivity  ke0     = %1.2e [m2/s]',ke0);
+fprintf(1,'\n  Part. segr. diffusivity  ks_x0   = %1.2e [m2/s]',ks_x0);
+fprintf(1,'\n  Drop. segr. diffusivity  ks_f0   = %1.2e [m2/s]',ks_f0);
+fprintf(1,'\n  Eddy  viscosity          etae    = %1.2e [Pas]',etae0);
+fprintf(1,'\n  Part. segr. viscosity    etat_x0 = %1.2e [Pas]',etat_x0);
+fprintf(1,'\n  Drop. segr. viscosity    etat_f0 = %1.2e [Pas]\n',etat_f0);
 
 fprintf(1,'\n  Eddy        noise rate   xie0 = %1.2e [m/s]',xie0);
 fprintf(1,'\n  Part. segr. noise rate   xix0 = %1.2e [m/s]',xix0);
@@ -325,8 +325,8 @@ if ndm_op
     xisfsc = xisf0;  xisfun = '1';
     esc   = eta0;  eun   = '1';
     eesc  = etae0; 
-    essc_x = etas_x0;   % crystal drag 
-    essc_f = etas_f0;   % fluid drag 
+    essc_x = etat_x0;   % crystal drag 
+    essc_f = etat_f0;   % fluid drag 
     rsc   = rho0;  dun   = '1';
     MFSsc = rho0/t0; MFSun = '1';
     xsc   = chi0;  xun = '1';
