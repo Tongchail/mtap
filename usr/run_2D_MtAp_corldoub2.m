@@ -5,7 +5,7 @@ clear; close all;
 run('./par_MtAp_default.m')
 
 % set run parameters
-runID     =  '2D_MtAp_corldoub';           % run identifier
+runID     =  '2D_MtAp_corldoub2';           % run identifier
 outdir    =  '/mnt/home/2388600c/sharedscratch/mtap/out5'; %'../out';
 restart   =  0;                   % restart from file (0: new run; <1: restart from last; >1: restart from specified frame)
 nop       =  100;                 % output frame plotted/saved every 'nop' time steps
@@ -45,7 +45,7 @@ Ptop      =  1.25e8;              % top pressure [Pa]
 % set physical control parameters
 dx0       =  0.001;               % xtal size [mm]
 df0       =  0.001;               % droplet size [mm]
-L0        =  2*h/2;               % correlation length for eddy diffusivity (multiple of h, 0.5-1)
+L0        =  h/2;               % correlation length for eddy diffusivity (multiple of h, 0.5-1)
 l0x       =  2*dx0*10;            % correlation length for xtal  phase fluctuation diffusivity (multiple of d0, 10-20)
 l0f       =  2*df0*10;            % correlation length for fluid phase fluctuation diffusivity (multiple of d0, 10-20)
 Xi        =  0.5;                 % relative amplitude of random noise flux
