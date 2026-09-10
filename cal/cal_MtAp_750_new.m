@@ -141,7 +141,7 @@ cal.etaf0   = 1;% 0.1;                %*** fluid viscosity constant [Pas]
 cal.etam0   = 1e5;
 
 cal.Eax     = 300e3;                  % solid viscosity activation energy [J/mol]
-cal.AA      =[ 0.25, 0.25, 0.35; ...  % permission slopes
+cal.AA      =[ 0.25, 0.25, 0.25; ...  % permission slopes
                0.25, 0.25, 0.25; ...  % generally numbers between 0 and 1
                0.25, 0.25, 0.25; ];   % increases permission slopes away from step function 
 
