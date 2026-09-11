@@ -115,9 +115,9 @@ if open_cnv; Ri0 = 1; else; Ri0 = W0i./W0t; end
 % number, which sets the Re-dependent ramp factor, which feeds back into
 % the speed. Fixed-point iteration until all three speeds converge.
 % Ri0 不依赖 W0/wx0/wf0,可以在迭代外先算(它依赖 W0t/W0i,那俩是闭式)
-digits(24);
-tol = 1e-9;  res = 1;
-while res > tol
+%digits(24);
+tol = 1e-9;  res = 1;  it = 0;
+while res > tol && it < 100
     W0prv  = W0;
     wx0prv = wx0;
     wf0prv = wf0;
@@ -126,16 +126,22 @@ while res > tol
     Rel0_x = wx0*l0x/(eta0/rho0);       % settling Reynolds No at l0, eta0
     Rel0_f = wf0*l0f/(eta0/rho0);       % settling Reynolds No at l0, eta0
 
-    fReL0   = vpa(1-exp(-ReL0));        % Re-dependent ramp factor
-    fRel0_x = vpa(1-exp(-Rel0_x));        % Re-dependent ramp factor
-    fRel0_f = vpa(1-exp(-Rel0_f));        % Re-dependent ramp factor
+    % fReL0   = vpa(1-exp(-ReL0));        % Re-dependent ramp factor
+    % fRel0_x = vpa(1-exp(-Rel0_x));        % Re-dependent ramp factor
+    % fRel0_f = vpa(1-exp(-Rel0_f));        % Re-dependent ramp factor
+    fReL0   = -expm1(-ReL0);              % Re-dependent ramp factor
+    fRel0_x = -expm1(-Rel0_x);            % Re-dependent ramp factor
+    fRel0_f = -expm1(-Rel0_f);            % Re-dependent ramp factor
 
-    % general convective speed
-    W0    = double((sqrt(4./Ri0^2*Drho0  *g0*rho0*fReL0  *L0^2*D0   + eta0^2) - eta0)*D0/(2*fReL0 *L0^2*rho0/Ri0^2));
+    aW  = 4/Ri0^2*Drho0  *g0*rho0*fReL0  *L0^2*D0;
+    ax  = 4        *Drho_x0*g0*rho0*fRel0_x*l0x *dx0^2;
+    af  = 4        *Drho_f0*g0*rho0*fRel0_f*l0f *df0^2;
 
-    % general settling speed
-    wx0   = double((sqrt(4       *Drho_x0*g0*rho0*fRel0_x*l0x*dx0^2 + eta0^2) - eta0)   /(2*fRel0_x*l0x*rho0      ));
-    wf0   = double((sqrt(4       *Drho_f0*g0*rho0*fRel0_f*l0f*df0^2 + eta0^2) - eta0)   /(2*fRel0_f*l0f*rho0      ));
+    % general convective speed (rationalised form of the quadratic-drag solution)
+    W0    = 2*Drho0  *g0*D0^2  / (sqrt(aW + eta0^2) + eta0);
+    % general settling speeds
+    wx0   = 2*Drho_x0*g0*dx0^2 / (sqrt(ax + eta0^2) + eta0);
+    wf0   = 2*Drho_f0*g0*df0^2 / (sqrt(af + eta0^2) + eta0);
 
     res   = abs(W0-W0prv)/W0 + abs(wx0-wx0prv)/wx0 + abs(wf0-wf0prv)/wf0;  % residual
 end
