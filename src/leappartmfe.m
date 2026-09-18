@@ -9,7 +9,7 @@
 %*****  Local Equilibrium Approximation using Pseudo-component PARTitioning
 
 function  [var,cal,flag]  =  leappartmfe(var,cal,type)
-
+%if ~isfield(cal,'mmin'), cal.mmin = 1e-3; end   % guard threshold; frames may carry an older cal
 %*****  compute partition coefficients at P,T *****************************
 
 if strcmp(type,'K')
@@ -40,8 +40,9 @@ function  [cal, flag]  =  Tsolidus(var,cal)
 
 %*****  subroutine to compute solidus temperature at given bulk composition
 
-%***  exclude invalid compositions
-ii  =  sum(var.c,2)<=1+1e-15;
+
+%***  exclude invalid compositions and cells with no silicate melt
+ii  =  sum(var.c,2)<=1+1e-15 ;%    &  var.m(:) > cal.mmin;
 
 %***  get T,P-,MFE-dependent partition coefficients Kxi
 % var.H2Om  = 8.*var.H2O;
@@ -56,6 +57,10 @@ else
     Tsol =  cal.Tsol;
 end
 
+%***  hold a finite placeholder in excluded cells (no Newton there)
+% bad        = ~ii | ~isfinite(Tsol);                         
+% Tsol(bad)  = median(Tsol(ii & isfinite(Tsol)));
+ 
 %***  get T,P-,MFE-dependent partition coefficients Kxi
 var.T      = Tsol;
 [var,cal]  = leappartmfe(var,cal,'K');
@@ -107,7 +112,7 @@ function  [cal, flag]  =  Tliquidus(var,cal)
 %*****  subroutine to compute liquidus temperature at given bulk composition
 
 %***  exclude invalid compositions
-ii  =  sum(var.c,2)<=1+1e-15;
+ii  =  sum(var.c,2)<=1+1e-15 ;%&  var.m(:) > cal.mmin;
 
 %***  get T,P-,H2O-dependent partition coefficients Kxi
 var.H2Om   = min(var.H2O,cal.H2Osat); %var.H2O;
@@ -120,6 +125,8 @@ if ~isfield(cal,'Tliq')
 else
     Tliq =  cal.Tliq;
 end
+% bad        = ~ii | ~isfinite(Tliq);
+% Tliq(bad)  = median(Tliq(ii & isfinite(Tliq)));
 
 %***  get T,P-,H2O-dependent partition coefficients Kxi
 var.T      = Tliq;
@@ -212,7 +219,7 @@ while rnorm > cal.tol     % Newton iteration
 
     varm        = var;
     varm.m      = var.m-eps;
-    varm.H2Om   = max(0,varm.H2O./(varm.m+1e-32) );
+    varm.H2Om   = max(0,min(cal.H2Osat,varm.H2O./(varm.m+1e-32) ));
     varm.MFEm   = max(0,min(cal.MFEsat, varm.MFE./(varm.m+1e-32) ));
     varm.f      = max(0,min(varm.MFE, varm.MFE - varm.m.*cal.MFEsat));
     [varm,calm] = leappartmfe(varm,cal,'K');
@@ -226,7 +233,7 @@ while rnorm > cal.tol     % Newton iteration
     var.m = max(0,min(1, var.m + upd_m ));
 
     %***  get droplet fraction f
-    var.H2Om =  max(0,var.H2O./(var.m+1e-16) );
+    var.H2Om =  max(0,min(cal.H2Osat,var.H2O./(var.m+1e-16) ));
     var.MFEm = max(0,min(cal.MFEsat, var.MFE./(var.m+1e-32) ));
     var.f    = max(0,min(var.MFE, var.MFE - var.m.*cal.MFEsat));
 
