@@ -129,8 +129,10 @@ xifw = (xisfw + xiefw);
 xifu = (xisfu + xiefu);
 
 % get corresponding melt flux (mass conservation: melt compensates for both crystal and fluid)
-ximw = -x_w(:,icx)./m_w(:,icx).*xixw - f_w(:,icx)./m_w(:,icx).*xifw;
-ximu = -x_u(icz,:)./m_u(icz,:).*xixu - f_u(icz,:)./m_u(icz,:).*xifu;
+% ximw = -x_w(:,icx)./m_w(:,icx).*xixw - f_w(:,icx)./m_w(:,icx).*xifw;
+% ximu = -x_u(icz,:)./m_u(icz,:).*xixu - f_u(icz,:)./m_u(icz,:).*xifu;
+ximw = -x_w(:,icx)./max(m_w(:,icx),1e-6).*xixw - f_w(:,icx)./max(m_w(:,icx),1e-6).*xifw; %ximw(m_w(:,icx) ==0) = 0;
+ximu = -x_u(icz,:)./max(m_u(icz,:),1e-6).*xixu - f_u(icz,:)./max(m_u(icz,:),1e-6).*xifu; %ximu(m_u(icz,:) ==0) = 0;
 
 
 

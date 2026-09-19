@@ -464,14 +464,18 @@ if ~bnchm && step>=1
     wf(:,[1 end]) = wf(:,[end-1 2]);
    
     % melt segregation speed   (mass fraction, x_w*wx + f_w*wf + m_w*wm = 0  mass flux)
-    wm  = -x_w(:,icx)./m_w(:,icx).*wx - f_w(:,icx)./m_w(:,icx).*wf;
+   % wm  = -x_w(:,icx)./    m_w(:,icx)     .*wx - f_w(:,icx)./    m_w(:,icx)     .*wf;
+     wm  = -x_w(:,icx)./max(m_w(:,icx),1e-6).*wx - f_w(:,icx)./max(m_w(:,icx),1e-6).*wf; %wm (m_w(:,icx)==0) = 0;
 
     % phase diffusion rates and fluxes
     % (add the diffusive contribution to the phase velocities)
     [dffn_X,wdx,udx] = diffus(x,ks_x,h,[1,2],BCD);
     [dffn_F,wdf,udf] = diffus(f,ks_f,h,[1,2],BCD);
-    wdm = -wdx.*x_w(:,icx)./m_w(:,icx) - wdf.*f_w(:,icx)./m_w(:,icx);
-    udm = -udx.*x_u(icz,:)./m_u(icz,:) - udf.*f_u(icz,:)./m_u(icz,:);
+   %wdm = -wdx.*x_w(:,icx)./    m_w(:,icx)      - wdf.*f_w(:,icx)./    m_w(:,icx);
+    wdm = -wdx.*x_w(:,icx)./max(m_w(:,icx),1e-6) - wdf.*f_w(:,icx)./max(m_w(:,icx),1e-6);%wdm(m_w(:,icx)==0) = 0;
+
+   %udm = -udx.*x_u(icz,:)./    m_u(icz,:)      - udf.*f_u(icz,:)./    m_u(icz,:);
+    udm = -udx.*x_u(icz,:)./max(m_u(icz,:),1e-6) - udf.*f_u(icz,:)./max(m_u(icz,:),1e-6); %udm(m_u(icz,:)==0) = 0;
 
     % update stochastic noise speeds
     noise;  
