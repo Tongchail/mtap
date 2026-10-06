@@ -46,9 +46,14 @@ ii  =  sum(var.c,2)<=1+1e-15 ;%    &  var.m(:) > cal.mmin;
 
 %***  get T,P-,MFE-dependent partition coefficients Kxi
 % var.H2Om  = 8.*var.H2O;
-var.H2Om  = cal.H2Osat .* (var.H2O>0);                      % 如果系统不能出气（no degassing），则固相线处的水含量恒等于 H₂Oₛₐₜ。
+%var.H2Om  = cal.H2Osat .* (var.H2O>0);                     % (old) pointwise switch: flickers where H2O -> 0 in locked cells
+hasH2O    = any(var.H2O(:) > 0);                               % global check (Tobi, 30 Sept 2026): water anywhere in the domain
+var.H2Om  = cal.H2Osat .* hasH2O;                              % -> hydrous (water-saturated) solidus everywhere; anhydrous only if no water at all
+if any(~isfinite(var.H2Om(ii)))
+    error('Tsolidus: H2Osat is NaN/Inf in %d cells; run stopped.', sum(~isfinite(var.H2Om(ii))));
+end
 var.MFEm  = cal.MFEsat .* (var.MFE>0);
-[var,cal] = leappartmfe(var,cal,'K');
+[var,cal] = K(var,cal);                % call K directly: the 'K' branch would reset H2Om to min(H2O/m,H2Osat)
 
 %***  set starting guess for Tsol
 if ~isfield(cal,'Tsol')
@@ -63,7 +68,7 @@ end
  
 %***  get T,P-,MFE-dependent partition coefficients Kxi
 var.T      = Tsol;
-[var,cal]  = leappartmfe(var,cal,'K');
+[var,cal]  = K(var,cal);
 
 %***  get fluid fraction and composition  （now assume system fluid → separate mfe)
 f  = var.MFE;        % x + m + f = 1    bulk 中的mfe,在solidus时，全部都是不混溶相mfe
@@ -73,11 +78,13 @@ n          =  0;     % initialize iteration count
 its_tol    =  100;   % maximum number of iterations
 flag       =  1;     % tells us whether the Newton solver converged
 
+
+
 while rnorm > cal.tol  % iterate down to full accuracy
 
     %***  get partition coefficients Kxi
     var.T      = Tsol;
-    [var,cal]  = leappartmfe(var,cal,'K');
+    [var,cal]  = K(var,cal);
     TK   = Tsol+273.15;
     TmK  = cal.Tm+273.15;
 
@@ -86,9 +93,18 @@ while rnorm > cal.tol  % iterate down to full accuracy
 
     %***  get analytical derivative of residual dr/dT
     drdT = sum( -(cal.Dsx.*var.c(:,1:end-2).*exp((cal.Dsx.*(TK - TmK))./(TmK.*cal.r)))./(TmK.*cal.r.*(f - 1)) ,2);
+
+
+
     
     %***  apply Newton correction to current guess of Tsol
-    Tsol(ii)  =  Tsol(ii) - r(ii)./drdT(ii)/1.1;
+    %    step limited to 5% of the current value [K] (Tobi, 30 Sept 2026): below the
+    %    solidus the residual is nearly flat, so an unlimited step overshoots by >10^4 K
+    dT        =  r(ii)./drdT(ii)/1.1;
+    dT        =  max(-0.05*TK(ii), min(0.05*TK(ii), dT));
+    Tsol(ii)  =  Tsol(ii) - dT;
+
+
 
     %***  compute Newton residual norm
     rnorm  =  norm(r(ii),2)./sqrt(length(r(ii)));
@@ -100,6 +116,11 @@ while rnorm > cal.tol  % iterate down to full accuracy
         flag = 0; break;
     end
 
+end
+
+
+if any(~isfinite(Tsol(ii)))
+    error('Tsolidus returned NaN/Inf in %d cells; run stopped.', sum(~isfinite(Tsol(ii))));
 end
 
 cal.Tsol = Tsol;
@@ -155,7 +176,9 @@ while rnorm > cal.tol  % iterate down to full accuracy
     drdT = sum( (cal.Dsx.*var.c(:,1:end-2).*exp(-(cal.Dsx.*(TK - TmK))./(TmK.*cal.r)))./(TmK.*cal.r.*(f - 1)) ,2);
 
     %***  apply Newton correction to Tliq
-    Tliq(ii)  =  Tliq(ii) - r(ii)./drdT(ii)/1.1;
+    dT        =  r(ii)./drdT(ii)/1.1;                          % step limited to 5% of current value [K]
+    dT        =  max(-0.05*TK(ii), min(0.05*TK(ii), dT));
+    Tliq(ii)  =  Tliq(ii) - dT;
     
     %***  compute Newton residual norm
     rnorm  =  norm(r(ii),2)./sqrt(length(r(ii)));
@@ -167,6 +190,10 @@ while rnorm > cal.tol  % iterate down to full accuracy
         flag = 0; break;
     end
 
+end
+
+if any(~isfinite(Tliq(ii)))
+    error('Tliquidus returned NaN/Inf in %d cells; run stopped.', sum(~isfinite(Tliq(ii))));
 end
 
 cal.Tliq  =  Tliq;
@@ -249,6 +276,9 @@ while rnorm > cal.tol     % Newton iteration
         flag.eql = 0; break;
     end
 
+end
+if any(~isfinite(var.m)) || any(~isfinite(var.f)) || any(~isfinite(var.x))
+    error('Equilibrium returned NaN/Inf phase fractions; run stopped.');
 end
 var.cm = max(0,min(1, var.c        ./(var.m + var.x.*cal.Kx + var.f.*cal.Kf + 1e-16) ));
 var.cx = max(0,min(1, var.c.*cal.Kx./(var.m + var.x.*cal.Kx + var.f.*cal.Kf + 1e-16) ));
